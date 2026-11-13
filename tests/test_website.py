@@ -111,14 +111,21 @@ def test_the_screenshots_come_in_both_themes(builder: ModuleType, site: Path) ->
         builder.read_shots({"shots": [{"key": "../x"}]})
 
 
-def test_every_skin_in_the_menu_comes_along(site: Path) -> None:
+def test_every_skin_in_the_menu_comes_along(builder: ModuleType, site: Path) -> None:
     page = (site / "index.html").read_text()
-    assert f'data-skin="{skins.DEFAULT}"' in page and 'class="backdrop"' in page
+    # The site's own default (site.toml), not necessarily the app's.
+    default = builder.read_config()["default_skin"]
+    assert f'data-skin="{default}"' in page and 'class="backdrop"' in page
+    assert f'<option value="{default}" data-backdrop=' in page
+    assert re.search(rf'<option value="{default}" [^>]*selected>', page)
     for skin in skins.MENU:
         assert f'<option value="{skin.key}" data-backdrop="{skin.backdrop}"' in page, skin.key
         assert f'"{skin.key}": "{skin.backdrop}"' in page, skin.key  # the script in <head>
         if skin.stylesheet:
             assert (site / "static" / skin.stylesheet).is_file(), skin.key
+    # A default that is not in the menu stops the build.
+    with pytest.raises(builder.ConfigError):
+        builder.context({**builder.read_config(), "default_skin": "nonesuch"})
     # In the order the cascade depends on, after the base styles and before the page's own.
     sheets = attributes(page, "link", "href")
     sheets = [href for href in sheets if href.endswith(".css")]

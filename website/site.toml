@@ -7,6 +7,11 @@ url = "https://phylobot.com/"
 repository = "https://github.com/headwatersdiscovery/phylobot2"
 contact = "hello@phylobot.com"
 
+# The skin a first-time visitor sees (a key from the skin menu: clean, dark, legible, ...).
+# A visitor who picks another keeps theirs (the browser remembers it). The app's own
+# default is separate (phylobot.skins.DEFAULT).
+default_skin = "dark"
+
 [tutorial]
 # The tutorial video. Paste the YouTube ID (the eleven characters after "v=" in the video's
 # address) and rebuild: the page gains a "Watch the Tutorial" section after the pipeline, a

@@ -152,6 +152,12 @@ def context(config: dict[str, Any]) -> dict[str, Any]:
 
     menu = skins.MENU
     offered = {skin.key for skin in menu}
+    default = config.get("default_skin") or skins.DEFAULT
+    if default not in offered:
+        raise ConfigError(
+            f"site.toml: default_skin {default!r} is not in the skin menu "
+            f"({', '.join(skin.key for skin in menu)})"
+        )
     return {
         "site": config,
         "tutorial": config["tutorial"],
@@ -163,7 +169,8 @@ def context(config: dict[str, Any]) -> dict[str, Any]:
             skin.stylesheet for skin in skins.SKINS if skin.key in offered and skin.stylesheet
         ],
         "skin_menu": menu,
-        "default_skin": skins.DEFAULT,
+        "default_skin": default,
+        "default_backdrop": next(skin.backdrop for skin in menu if skin.key == default),
         # For the script in <head>: each skin and whether it shows the backdrop. Our own
         # constants, so safe to write into the page as JSON.
         "skins_json": json.dumps({skin.key: skin.backdrop for skin in menu}),
