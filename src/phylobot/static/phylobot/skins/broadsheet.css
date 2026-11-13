@@ -1,0 +1,132 @@
+/* Broadsheet skin (phylobot.skins): Clean's layout (clean.css applies to it) set like a
+   newspaper. Off-white newsprint, near-black ink, serif text (Source Serif 4, made for
+   small sizes), headlines in Playfair Display, and sections divided by rules instead of
+   floating cards; a double rule under the masthead. Links in a muted ink blue; little
+   other colour, so status pills still stand out. The home and About pages' titles are
+   set in Cinzel, Roman inscription capitals. Sequences, code and figures keep their own
+   faces. Text and links meet WCAG AA on the newsprint. */
+
+/* Fonts live in static/phylobot/fonts (see its README); a browser downloads them only
+   when this skin is in use. */
+@font-face { font-family: "Source Serif 4"; font-style: normal; font-weight: 400; font-display: swap;
+  src: url("../fonts/source-serif-4-latin-400-normal.woff2") format("woff2"); }
+@font-face { font-family: "Source Serif 4"; font-style: italic; font-weight: 400; font-display: swap;
+  src: url("../fonts/source-serif-4-latin-400-italic.woff2") format("woff2"); }
+@font-face { font-family: "Source Serif 4"; font-style: normal; font-weight: 600; font-display: swap;
+  src: url("../fonts/source-serif-4-latin-600-normal.woff2") format("woff2"); }
+@font-face { font-family: "Source Serif 4"; font-style: normal; font-weight: 700; font-display: swap;
+  src: url("../fonts/source-serif-4-latin-700-normal.woff2") format("woff2"); }
+@font-face { font-family: "Playfair Display"; font-style: normal; font-weight: 700; font-display: swap;
+  src: url("../fonts/playfair-display-latin-700-normal.woff2") format("woff2"); }
+@font-face { font-family: "Playfair Display"; font-style: normal; font-weight: 900; font-display: swap;
+  src: url("../fonts/playfair-display-latin-900-normal.woff2") format("woff2"); }
+@font-face { font-family: "Cinzel"; font-style: normal; font-weight: 600; font-display: swap;
+  src: url("../fonts/cinzel-latin-600-normal.woff2") format("woff2"); }
+@font-face { font-family: "Cinzel"; font-style: normal; font-weight: 700; font-display: swap;
+  src: url("../fonts/cinzel-latin-700-normal.woff2") format("woff2"); }
+
+:root[data-skin="broadsheet"] {
+  --serif: "Source Serif 4", Georgia, "Times New Roman", serif;
+  --headline: "Playfair Display", Georgia, serif;
+  --inscription: "Cinzel", "Trajan Pro", Georgia, serif;
+  --label: system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;  /* kickers, table heads */
+  --page: #faf8f3;          /* newsprint */
+  --bg: #fffefb;            /* fields and tables, a shade lighter */
+  --bar: #faf8f3;
+  --fg: #121212;            /* ink */
+  --fg-2: #2b2b2b;
+  --muted: #5c5a55;         /* 6.6:1 on the newsprint */
+  --line: #e2ded5;
+  --edge: #b8b3a8;
+  --rule: #121212;
+  --accent: #2f5f86;        /* ink blue, 6.4:1 */
+  --accent-hover: #234a69;
+  --accent-soft: #eaf0f5;
+  --accent-ring: rgba(47, 95, 134, .25);
+  --link-line: rgba(47, 95, 134, .4);
+  --oxblood: #8a1c1c;
+  --on-accent: #fff;
+  --subtle: #f3f0e8;
+  --hover: #f6f3ec;
+  --hover-edge: #8e897e;
+  --row-hover: #f6f3ec;
+  --glass: transparent;
+  --track: #e4e0d6;
+  --radius: 0;
+  --radius-control: 2px;
+  --shadow: none;
+  --title-rim: transparent;
+  --title-shadow: transparent;
+  --running-bg: #e6edf3; --running-fg: #234a69;
+  --neutral-bg: #ece9e2; --neutral-fg: #4a4843;
+  --work-align: #7f9cb5; --work-modelfinder: #c9b48a; --work-trees: #2f5f86;
+  --work-ancestors: #8a1c1c; --work-codeml: #d6a9a0; --work-setup: #c4bfb4;
+
+  & body { font-family: var(--serif); font-size: 16px; line-height: 1.6;
+    font-variant-numeric: lining-nums; -webkit-font-smoothing: auto; }
+  & :is(input, select, textarea, button, a.button) { font-family: inherit; }
+  & textarea { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+
+  /* Masthead: the name in a heavy headline face, the sections as small capitals in a
+     plain sans, and a double rule beneath. */
+  & header { background: var(--bar); border-bottom: 3px double var(--rule); padding: .6rem 1.5rem; }
+  & header .brand { font-family: var(--headline); font-weight: 900; font-size: 1.3rem; letter-spacing: 0; color: var(--fg); }
+  & header nav :is(a, summary) { font-family: var(--label); font-size: .72rem; font-weight: 600; letter-spacing: .06em;
+    text-transform: uppercase; color: var(--fg-2); border-radius: 0; padding: .3rem .42rem; }
+  & header nav :is(a, summary):hover { background: transparent; color: var(--fg); text-decoration: underline; text-underline-offset: .35em; }
+  & header nav :is(a[aria-current="page"], summary.current) { background: transparent; box-shadow: none; color: var(--fg);
+    text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: .35em; }
+  & header :is(.user, .skin-picker) { font-family: var(--label); font-size: .78rem; }
+  & header .user { border: 1px solid var(--edge); border-radius: 0; }
+
+  /* Headlines and kickers. */
+  & h1 { font-family: var(--headline); font-weight: 700; font-size: 2.3rem; letter-spacing: -.005em; line-height: 1.15; }
+  & h2 { font-family: var(--serif); font-weight: 700; font-size: 1.25rem; letter-spacing: 0; }
+  & h3 { font-family: var(--label); font-weight: 700; font-size: .76rem; letter-spacing: .09em;
+    text-transform: uppercase; color: var(--fg-2); }
+  & .hint { color: var(--muted); }
+  & a { text-underline-offset: .15em; }
+
+  /* Sections: columns of the page, not cards: a heavy rule above, nothing around. */
+  & section.step, & section.results, & details.inputs, & details.stages, & details.files, & details.attempts,
+  & details.libraries, & .snippet, & .path-section, & .viewer, & .about > section,
+  & section.alignment-list, & details.alignment-upload, & .aln-save, & .about-toc {
+    background: transparent; border: 0; border-top: 2px solid var(--rule); border-radius: 0; box-shadow: none;
+    padding-left: 0; padding-right: 0; }
+  & section.step > h2:first-child, & section.results > h2:first-child, & .about > section > h2:first-child { border-bottom-color: var(--line); }
+  & .step-number { background: transparent; color: var(--fg); border: 1px solid var(--rule);
+    font-family: var(--headline); font-weight: 700; }
+  & .viewer .path-section { border-top: 1px solid var(--rule); }
+  & .viewer .path-section.viewer-fold { border-top: 0; border-bottom: 1px solid var(--rule); padding-bottom: .6rem; margin-bottom: .8rem; }
+  & .alignment-result { border-top: 1px solid var(--rule); }
+
+  /* Buttons: square, ink-black for the main action. */
+  & button.primary, & a.button, & dialog .actions button.primary, & .path-section button.trace,
+  & .job-panel-foot button.primary {
+    background: var(--fg); border-color: var(--fg); color: #fff; font-family: var(--label);
+    font-size: .82rem; letter-spacing: .06em; text-transform: uppercase; }
+  & :is(button.primary, a.button, dialog .actions button.primary, .path-section button.trace):hover { background: #3a3a3a; border-color: #3a3a3a; }
+  & .job-panel-tab { background: var(--fg); border-radius: 0; }
+
+  /* Tables: hairline rules and aligned figures, like a newspaper's tables of figures. */
+  & table { font-variant-numeric: tabular-nums lining-nums; }
+  & :is(table.results, table.grid, table.jobs) { border-radius: 0; border-color: var(--edge); }
+  & table.jobs, & .deleted .scroll { border: 0; border-top: 2px solid var(--rule); border-bottom: 1px solid var(--rule); }
+  & :is(table.jobs, table.hits) thead th { font-family: var(--label); background: transparent; color: var(--fg-2);
+    border-bottom: 1px solid var(--rule); }
+  & table.results th { font-family: var(--label); font-size: .82rem; }
+  & .status, & .chip { font-family: var(--label); border-radius: 2px; }
+
+  & .viewer-controls, & .review-actions, & pre, & .stage-graph { border-radius: 0; }
+  & dialog { border-radius: 0; border: 1px solid var(--rule); }
+  & .site-footer { font-family: var(--label); font-size: .8rem; border-top: 1px solid var(--line); }
+
+  /* Home and About: the title cut in Roman capitals, the "2" in oxblood; the slogan as a
+     headline beneath, between rules. */
+  & :is(.title-page h1, .about > h1) { font-family: var(--inscription); font-weight: 700; letter-spacing: .06em; }
+  & .title-page h1 { font-size: 4rem; padding: 0 0 .1em; }
+  & .title-page h1 .two { color: var(--oxblood); text-shadow: none; font-weight: 700; }
+  & .about > h1 { font-size: 2.6rem; }
+  & .title-page .slogan { font-family: var(--headline); font-weight: 700; font-style: normal; font-size: 1.9rem;
+    border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule); padding: .35rem 1.5rem; display: inline-block; }
+}

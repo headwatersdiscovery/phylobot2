@@ -1,0 +1,28 @@
+# Golden scenario: lysin/codon-easy
+#
+# Codon smoke test. The simulation model is the one IQ-TREE fits (GY+F3X4+G4, one
+# dN/dS for every site) and there are no indels, so a failure points at a bug rather
+# than at a hard inference problem. Parameters: IQ-TREE 3.1.3 fit to the real lysin
+# alignment on the published topology (see ../source/README.md).
+
+description = "Abalone sperm lysin (25 species, 134 codons); GY+F3X4+G4 codon model, no indels."
+
+[tree]
+file = "../source/gy_g4.nwk"  # branch lengths from the GY+F3X4+G4 fit (tree length 8.94)
+midpoint = true             # no single outgroup species; root at the midpoint
+
+[root]
+# Red abalone (H. rufescens) lysin, the sequence with the 1LIS crystal structure,
+# without its one gap codon (alignment codon 134).
+file = "../root.fasta"
+name = "Haliotis_rufescens_lysin"
+
+[model]
+seqtype = "CODON1"  # standard genetic code
+# omega 1.0172, kappa 1.6247, gamma alpha 1.0997; F3X4 frequencies as observed in the
+# real alignment, A C G T for codon positions 1, 2, 3.
+substitution = "GY{1.0172,1.6247}+F3X4{0.34149/0.22514/0.26352/0.16984/0.30553/0.16440/0.22393/0.30613/0.21154/0.24902/0.25960/0.27984}+G4{1.0997}"
+
+[simulation]
+image = "quay.io/biocontainers/iqtree:3.1.3--h8471819_0"
+seeds = [301]

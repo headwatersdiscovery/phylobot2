@@ -1,0 +1,31 @@
+{# Mutational paths, inside the tree viewer's form. A path is picked on the tree itself #}
+{# ("Trace a Mutational Path" in the tree's toolbar; path_pick.js) and opens on a page of #}
+{# its own (phylobot.path_views); this section lists the saved ones, and the path the #}
+{# tree is showing highlighted, if any. #}
+<section class="path-section viewer-fold">
+  <h2><button type="button" class="fold-toggle" aria-expanded="{% if path_from or saved_paths %}true{% else %}false{% endif %}" aria-controls="mutational-path-body">Mutational Paths{% if saved_paths %} ({{ saved_paths|length }} saved){% endif %}</button></h2>
+  <div class="fold-body" id="mutational-path-body"{% if not path_from and not saved_paths %} hidden{% endif %}>
+  {% if not path_starts %}
+  <p class="hint">Mutational paths need ancestral sequences; this job stopped after the
+    trees.</p>
+  {% else %}
+  {# The path shown on the tree; kept in the address so the highlight survives a reload. #}
+  <input type="hidden" name="path_from" value="{{ path_from }}">
+  <input type="hidden" name="path_to" value="{{ path_to }}">
+  <input type="hidden" name="gaps" value="{{ version }}">
+  {% if traced %}<input type="hidden" name="trace" value="1">{% endif %}
+  {% if path %}<div class="viewer-controls">
+    <a class="button with-icon" href="{{ path_page_url }}">{% include "phylobot/_icon.html" with name="route" size=16 %} Open {{ path.0 }} → {{ path|last }}</a>
+    <button class="trace secondary" name="path_clear" value="1">Clear</button>
+  </div>{% endif %}
+  {% if traced and not path %}<p class="errors">{{ path_to }} is not below {{ path_from }}.</p>{% endif %}
+  {% if saved_paths %}
+  <ul class="saved-paths">{% for s in saved_paths %}
+    <li><a href="{{ s.url }}">{{ s.name }}</a> <span class="hint">{{ s.start }} → {{ s.end }} · {{ s.combination }}</span></li>{% endfor %}
+  </ul>
+  {% else %}<p class="hint">No saved paths yet. Choose <em>Trace a Mutational Path</em> above the tree, click an
+    ancestor and then one of its descendants; the path opens on its own page, where it can be saved.</p>
+  {% endif %}
+  {% endif %}
+  </div>
+</section>

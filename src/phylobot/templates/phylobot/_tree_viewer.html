@@ -1,0 +1,198 @@
+{# The tree viewer: one GET form (as the ancestor viewer), and the tree as SVG from #}
+{# phylobot.treeview.layout. Ancestral nodes are SVG links to the ancestor viewer. #}
+{% if selection %}
+<form id="tree-viewer" class="viewer" method="get" action="{% url 'tree_viewer' job.id %}"
+      data-path-url="{{ path_viewer_url }}"
+      hx-get="{% url 'tree_viewer' job.id %}" hx-trigger="change, submit" hx-target="this"
+      hx-swap="outerHTML" hx-push-url="true">
+  <section class="viewer-fold">
+    <h2><button type="button" class="fold-toggle" aria-expanded="true" aria-controls="select-tree-body">Select Tree</button></h2>
+    <div class="fold-body" id="select-tree-body">
+  <div class="viewer-controls">
+    <label>Alignment
+      <select name="aligner">{% for key, label in aligners.items %}
+        <option value="{{ key }}"{% if key == aligner %} selected{% endif %}>{{ label }}</option>{% endfor %}
+      </select></label>
+    <label>Model
+      <select name="combination">{% for key, label in models %}
+        <option value="{{ key }}"{% if key == combination %} selected{% endif %}>{{ label }}</option>{% endfor %}
+      </select></label>
+    <label>Branch lengths
+      <select name="lengths">{% for key, label in modes %}
+        <option value="{{ key }}"{% if key == mode %} selected{% endif %}>{{ label }}</option>{% endfor %}
+      </select></label>
+    {% if reconciliation %}<label>Species
+      <select name="species">
+        <option value="hide"{% if not show_species %} selected{% endif %}>Hide</option>
+        <option value="show"{% if show_species %} selected{% endif %}>Show</option>
+      </select></label>{% endif %}
+    <noscript><button>Show</button></noscript>
+  </div>
+    </div>
+  </section>
+  <section class="viewer-fold">
+    <h2><button type="button" class="fold-toggle" aria-expanded="false" aria-controls="display-options-body">Display Options</button></h2>
+    <div class="fold-body" id="display-options-body" hidden>
+  {% with m=display %}
+  <div class="viewer-controls branch-display">
+    {% if m.styles|length > 1 %}<label>Branch colour
+      <select name="colour">{% for key, label in m.styles %}
+        <option value="{{ key }}"{% if key == m.colour %} selected{% endif %}>{{ label }}</option>{% endfor %}
+      </select></label>
+    {% if m.colour %}<label>Colours
+      <select name="branch_palette">{% for key, label in m.palettes %}
+        <option value="{{ key }}"{% if key == m.palette %} selected{% endif %}>{{ label }}</option>{% endfor %}
+      </select></label>{% endif %}
+    <label>Branch thickness
+      <select name="width">{% for key, label in m.styles %}
+        <option value="{{ key }}"{% if key == m.width %} selected{% endif %}>{{ label }}</option>{% endfor %}
+      </select></label>{% endif %}
+    {% if m.label_choices %}<label>Support labels
+      <select name="labels">{% for key, label in m.label_choices %}
+        <option value="{{ key }}"{% if key == m.labels %} selected{% endif %}>{{ label }}</option>{% endfor %}
+      </select></label>
+    <label>Shown as
+      <select name="marks">
+        <option value="numbers"{% if not m.stars %} selected{% endif %}>Numbers</option>
+        <option value="stars"{% if m.stars %} selected{% endif %}>Stars</option>
+      </select></label>{% endif %}
+    {% if m.has_rates %}<label>dN/dS labels
+      <select name="dnds">
+        <option value="hide"{% if not m.dnds_labels %} selected{% endif %}>Hide</option>
+        <option value="show"{% if m.dnds_labels %} selected{% endif %}>Show</option>
+      </select></label>{% endif %}
+    <label>Node labels
+      <select name="node_labels">
+        <option value="all"{% if node_labels == "all" %} selected{% endif %}>Show all</option>
+        <option value="named"{% if node_labels == "named" %} selected{% endif %}>Show named only</option>
+        <option value="none"{% if node_labels == "none" %} selected{% endif %}>Hide all</option>
+      </select></label>
+    {# The value shows as it moves; letting go redraws the tree (the form's change). #}
+    <label class="slider-label"><span>Tip spacing <span class="slider-value">×<output>{{ spacing }}</output></span></span>
+      <input type="range" name="spacing" min="{{ spacing_bounds.0 }}" max="{{ spacing_bounds.1 }}" step="0.1" value="{{ spacing }}"
+             oninput="this.previousElementSibling.querySelector('output').value = this.value"></label>
+  </div>
+  {% endwith %}
+    </div>
+  </section>
+
+  {% include "phylobot/_mutational_path.html" %}
+
+  {% with d=drawing %}
+  {# The overview (tree_overview.js): the whole tree as a thumbnail that stays in the window #}
+  {# while the page scrolls, shown only when the tree is taller than the window. Outside #}
+  {# the figure, so the figure's downloads and the scripts that read its SVG never see it. #}
+  <div class="tree-overview-anchor"><div class="tree-overview" hidden
+       title="The whole tree. The box is the part in the window: drag it, or click anywhere, to move.">
+    <canvas></canvas><div class="tree-overview-window"></div></div></div>
+  <figure class="plot tree-figure" data-filename="{{ file_stem }}">
+    <div class="plot-tools tree-toolbar">
+      {% if path_starts %}<button type="button" class="path-pick with-icon" data-path-pick title="Click an ancestor on the tree, then one of its descendants, to see what changed on each branch between them">{% include "phylobot/_icon.html" with name="route" size=16 %} Trace a Mutational Path</button>{% endif %}
+      {% if selection.node_names %}<span class="tree-toolbar-tip">{% if popovers %}Click an ancestor to view, name or fold it{% else %}Click an ancestor to open it{% endif %}{% if labels_auto and node_labels == "named" %} · hover one for its name{% endif %}</span>{% endif %}
+      <span class="tree-toolbar-downloads">Download <button type="button" class="link" data-plot-download="png">PNG</button> · <button type="button" class="link" data-plot-download="svg">SVG</button></span>
+    </div>
+    <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+         viewBox="0 0 {{ d.width }} {{ d.height }}" width="{{ d.width }}" height="{{ d.height }}"
+         font-family="system-ui, -apple-system, 'Segoe UI', sans-serif" role="img"
+         aria-label="Phylogenetic tree, {{ d.leaves|length }} sequences">
+      <rect width="{{ d.width }}" height="{{ d.height }}" fill="#ffffff"/>
+      <g transform="translate(0 {{ d.top }})">{# the tree, below the legends #}
+      {% if d.stem_from is not None %}<line x1="{{ d.stem_from }}" x2="{{ d.root_x }}" y1="{{ d.root_y }}" y2="{{ d.root_y }}" stroke="#1d2330" stroke-width="1.6"/>{% endif %}
+      {% for c in d.connectors %}<line x1="{{ c.x }}" x2="{{ c.x }}" y1="{{ c.y1 }}" y2="{{ c.y2 }}" stroke="#1d2330" stroke-width="1.6"/>
+      {% endfor %}
+      {% for b in d.branches %}<g class="tree-branch" data-child="{{ b.child }}" data-parent="{{ b.parent }}" data-parent-y="{{ b.parent_y }}">{% if b.foreground %}<line x1="{{ b.x1 }}" x2="{{ b.x2 }}" y1="{{ b.y }}" y2="{{ b.y }}" stroke="#8e44ad" stroke-width="{{ b.halo_width|floatformat:"-2" }}" stroke-opacity="0.4" stroke-linecap="round"/>{% endif %}{% if b.on_path and not b.plain %}<polyline points="{{ b.x1 }},{{ b.parent_y }} {{ b.x1 }},{{ b.y }} {{ b.x2 }},{{ b.y }}" fill="none" stroke="#e08214" stroke-width="{{ b.halo_width|floatformat:"-2" }}" stroke-opacity="0.45" stroke-linecap="round" stroke-linejoin="round"/>{% endif %}{% if b.on_path and b.plain %}<line x1="{{ b.x1 }}" x2="{{ b.x1 }}" y1="{{ b.parent_y }}" y2="{{ b.y }}" stroke="#e08214" stroke-width="4" stroke-linecap="round"/>{% endif %}<line class="edge" x1="{{ b.x1 }}" x2="{{ b.x2 }}" y1="{{ b.y }}" y2="{{ b.y }}" stroke="{{ b.drawn_stroke }}" stroke-width="{{ b.drawn_width|floatformat:"-2" }}"{% if b.dashed %} stroke-dasharray="5 3"{% endif %}/>
+        {% if b.label %}<text x="{{ b.middle }}" y="{{ b.y|add:11 }}" text-anchor="middle" font-size="10" fill="#5d6675" stroke="#ffffff" stroke-width="3" stroke-linejoin="round" paint-order="stroke">{{ b.label }}</text>{% endif %}
+        {% if b.clamped == "long" %}<g transform="translate({{ b.middle }} {{ b.y }})"><rect x="-5" y="-6" width="10" height="12" fill="#ffffff"/><line x1="-6" y1="6" x2="-1" y2="-6" stroke="#1d2330" stroke-width="1.4"/><line x1="1" y1="6" x2="6" y2="-6" stroke="#1d2330" stroke-width="1.4"/></g>{% endif %}
+        <line x1="{{ b.x1 }}" x2="{{ b.x2 }}" y1="{{ b.y }}" y2="{{ b.y }}" stroke="transparent" stroke-width="9"><title>{{ b.tooltip }}{% if b.clamped == "long" %} (drawn shorter){% elif b.clamped == "short" %} (drawn longer){% endif %}</title></line></g>
+      {% endfor %}
+      {% for leaf in d.leaves %}<text class="tree-leaf" data-leaf="{{ leaf.name }}" x="{{ leaf.x|add:6 }}" y="{{ leaf.y }}" dominant-baseline="middle" font-size="13"
+        fill="{% if leaf.outgroup %}#5d6675{% else %}#1d2330{% endif %}"{% if leaf.outgroup %} font-style="italic"{% endif %}>{{ leaf.name }}{% if leaf.note %}<tspan fill="#5d6675" font-style="italic"> {{ leaf.note }}</tspan>{% endif %}</text>
+      {% endfor %}
+      {% for cl in d.collapsed %}<g class="tree-clade" data-node="{{ cl.name }}">
+        <polygon points="{{ cl.points }}" fill="{{ cl.fill }}" stroke="{{ cl.border_colour }}" stroke-width="{{ cl.border_width|floatformat:'-2' }}" stroke-linejoin="round"/>
+        {% if cl.label %}<text x="{{ cl.base_x|add:8 }}" y="{{ cl.y }}" dominant-baseline="middle" font-size="13" fill="#1d2330"><tspan font-weight="bold">{{ cl.label }}</tspan>{% if not cl.alike %} ≈{% endif %} <tspan fill="#5d6675" font-size="11">({{ cl.leaves }})</tspan></text>{% else %}<text x="{{ cl.base_x|add:8 }}" y="{{ cl.y }}" dominant-baseline="middle" font-size="12" font-style="italic" fill="#5d6675">{{ cl.name }}{% if not cl.alike %} ≈{% endif %} ({{ cl.leaves }} seqs)</text>{% endif %}
+        <circle class="dot" cx="{{ cl.apex_x }}" cy="{{ cl.y }}" r="4.5" fill="#2457a6"/>
+        {% if cl.called and node_labels != "none" %}<text x="{{ cl.apex_x|add:-6 }}" y="{{ cl.y|add:-6 }}" text-anchor="end" font-size="11" fill="#2457a6" stroke="#ffffff" stroke-width="3" stroke-linejoin="round" paint-order="stroke"><tspan font-weight="bold">{{ cl.called }}</tspan>{% if not cl.called_alike %} ≈{% endif %}</text>{% endif %}
+        <title>{% if cl.called %}{{ cl.called }} — {% elif cl.label %}{{ cl.label }} — {% endif %}{{ cl.name }}: {{ cl.leaves }} sequences folded — click to label, restyle or expand</title></g>
+      {% endfor %}
+      {% for n in d.nodes %}{% if n.event %}<rect x="{{ n.x|add:-7 }}" y="{{ n.y|add:-7 }}" width="14" height="14" fill="none" stroke="#c0392b" stroke-width="{% if n.event.weak %}1.6" stroke-dasharray="3 2{% else %}2{% endif %}"><title>{{ n.name }}: {% if n.event.weak %}doubtful {% endif %}gene {{ n.event.kind }} inferred by GeneRax, in {{ n.event.species }}{% if n.event.overlap %}; {{ n.event.overlap.describe }}{% endif %}{% if n.event.weak %}. A real duplication leaves both copies in many of the same species; copies that share so few usually mean this tree grouped the sequences wrongly and GeneRax explained the mismatch as a duplication plus losses.{% endif %}</title></rect>{% endif %}{% endfor %}
+      {% for n in d.nodes %}{% if n.link %}<a href="{{ n.href }}" class="tree-node" data-node="{{ n.name }}">
+        <title>{% if n.called %}{{ n.called }} ({{ n.name }}){% else %}{{ n.name }}{% endif %} · {{ n.leaves }} sequences{% if n.support %} · support {{ n.support }}{% endif %} — click to view or name this ancestor</title>
+        <circle cx="{{ n.x }}" cy="{{ n.y }}" r="11" fill="transparent"/>
+        {% if n.name == highlight %}<circle cx="{{ n.x }}" cy="{{ n.y }}" r="8" fill="none" stroke="#e08214" stroke-width="2.5"/>{% endif %}
+        <circle class="dot" cx="{{ n.x }}" cy="{{ n.y }}" r="4.5" fill="#2457a6"/>
+        {% if node_labels == "all" or node_labels == "named" and n.called or n.support %}<text x="{{ n.x|add:-6 }}" y="{{ n.y|add:-6 }}" text-anchor="end" font-size="11" fill="#2457a6" stroke="#ffffff" stroke-width="3" stroke-linejoin="round" paint-order="stroke">{% if node_labels == "all" or node_labels == "named" and n.called %}{% if n.called %}<tspan font-weight="bold">{{ n.called }}{% if not n.called_alike %} ≈{% endif %}</tspan> {% endif %}{{ n.name }}{% if n.support %} {% endif %}{% endif %}{% if n.support %}<tspan fill="#5d6675">{{ n.support }}</tspan>{% endif %}</text>{% endif %}
+      </a>{% else %}<circle cx="{{ n.x }}" cy="{{ n.y }}" r="3" fill="#1d2330"/>
+        {% if node_labels == "all" and n.name or n.support %}<text x="{{ n.x|add:-6 }}" y="{{ n.y|add:-6 }}" text-anchor="end" font-size="11" fill="#5d6675" stroke="#ffffff" stroke-width="3" stroke-linejoin="round" paint-order="stroke">{% if node_labels == "all" %}{{ n.name }}{% if n.name and n.support %} {% endif %}{% endif %}{% if n.support %}{{ n.support }}{% endif %}</text>{% endif %}{% endif %}
+      {% endfor %}
+      {% if d.scale_bar %}<g font-size="12" fill="#5d6675"><line x1="{{ d.scale_bar.0 }}" x2="{{ d.scale_bar.1 }}" y1="{{ d.scale_bar.2 }}" y2="{{ d.scale_bar.2 }}" stroke="#1d2330" stroke-width="1.6"/>
+        <text x="{{ d.scale_bar.1|add:8 }}" y="{{ d.scale_bar.2 }}" dominant-baseline="middle">{{ d.scale_bar.3 }}</text></g>{% endif %}
+      </g>
+      {% for g in d.legends %}<g font-size="11" fill="#5d6675"><text x="16" y="{{ g.y }}" dominant-baseline="middle">{{ g.title }}</text>
+        {% for i in g.items %}<line x1="{{ i.x }}" x2="{{ i.x|add:24 }}" y1="{{ g.y }}" y2="{{ g.y }}" stroke="{{ i.stroke }}" stroke-width="{{ i.width }}"{% if i.dashed %} stroke-dasharray="5 3"{% endif %}/><text x="{{ i.x|add:30 }}" y="{{ g.y }}" dominant-baseline="middle">{{ i.label }}</text>
+        {% endfor %}</g>{% endfor %}
+      {% if d.events_y is not None %}<g font-size="11" fill="#5d6675"><text x="16" y="{{ d.events_y }}" dominant-baseline="middle">Reconciliation</text>
+        <rect x="114" y="{{ d.events_y|add:-6 }}" width="12" height="12" fill="none" stroke="#c0392b" stroke-width="2"/><text x="132" y="{{ d.events_y }}" dominant-baseline="middle">gene duplication inferred by GeneRax: the two lineages below it are paralogs · gene losses: hover a branch</text>{% if d.doubtful_y is not None %}
+        <rect x="114" y="{{ d.doubtful_y|add:-6 }}" width="12" height="12" fill="none" stroke="#c0392b" stroke-width="1.6" stroke-dasharray="3 2"/><text x="132" y="{{ d.doubtful_y }}" dominant-baseline="middle">doubtful duplication: its two copies share under 10% of their species, which usually means a tree error, not a real duplication</text>{% endif %}</g>{% endif %}
+    </svg>
+    {% if popovers %}{# tree.js opens one beside its node when the node is clicked #}
+    {% for p in popovers %}<div class="node-popover" data-node="{{ p.node }}" data-combination="{{ combination }}" data-aligner="{{ aligner }}" role="dialog" aria-label="Ancestor {{ p.node }}" hidden>
+      <p class="pop-head"><strong>{% if p.called %}{{ p.called }}</strong> ({{ p.node }}){% else %}{{ p.node }}</strong>{% endif %}
+        <button type="button" class="pop-close" data-pop-close aria-label="Close">×</button></p>
+      <p class="pop-actions"><a class="button primary" href="{{ p.url }}">View ancestor</a>{% if p.nameable %}
+        <button type="button" class="button secondary pop-collapse" data-pop-collapse title="Fold this clade into a triangle to save space"><svg class="tri" width="9" height="9" viewBox="0 0 10 10" aria-hidden="true"><polygon points="1,5 9,1 9,9" fill="currentColor"/></svg> Collapse clade</button>{% endif %}</p>
+      {% if p.own %}<p class="pop-support">Branch support: {% for measure, value in p.own %}{{ measure }} {{ value }}{% if not forloop.last %} · {% endif %}{% endfor %}</p>{% endif %}
+      {% if p.nameable %}{# No name attribute: the tree's GET form never sends it. tree.js #}
+      {# posts it through #tree-ancestor-name (tree.html), as other buttons here do. #}
+      <p class="pop-name"><label>{% if p.called %}Rename{% else %}Name{% endif %}
+        <input type="text" data-pop-name value="{{ p.called }}" maxlength="40" size="16"
+               pattern="[A-Za-z][A-Za-z0-9._\-]{0,39}" placeholder="e.g. Anc.GFP" autocomplete="off"
+               title="{{ name_rules|capfirst }}"></label>
+        <button type="button" data-pop-save>Save</button>{% if p.called %}
+        <button type="button" data-pop-remove>Remove</button>{% endif %}</p>{% endif %}
+      {% if p.others %}<p class="pop-sub">The same ancestor in {{ p.found|length }} of {{ p.others }} other combination{{ p.others|pluralize }}{% if p.found %}:{% else %}.{% endif %}</p>
+      {% if p.found %}<table>{% if p.measures %}
+        <thead><tr><th></th><th></th>{% for m in p.measures %}<th class="num">{{ m }}</th>{% endfor %}</tr></thead>{% endif %}
+        <tbody>{% for l in p.found %}
+        <tr><td><a href="{{ l.url }}"><strong>{{ l.node }}</strong></a>{% if not l.alike %} <span class="pop-flag" title="Same clade, but the branching inside it differs from this tree">≈</span>{% endif %}</td><td>{{ l.label }}</td>{% for value in l.supports %}<td class="num">{{ value }}</td>{% endfor %}</tr>{% endfor %}
+        </tbody>
+      </table>{% endif %}
+      {% if p.missing %}<p class="pop-missing">Not in {{ p.missing|join:"; " }}: {% if p.missing|length == 1 %}its tree lacks{% else %}their trees lack{% endif %} this clade.</p>{% endif %}{% endif %}
+    </div>{% endfor %}{% endif %}
+    {% if d.collapsed %}{# tree.js opens one when its triangle is clicked (expand, label, restyle) #}
+    {% for cl in d.collapsed %}<div class="node-popover clade-popover" data-node="{{ cl.name }}" data-combination="{{ combination }}" data-aligner="{{ aligner }}" role="dialog" aria-label="Collapsed clade {{ cl.name }}" hidden>
+      <p class="pop-head"><strong>{% if cl.label %}{{ cl.label }}{% else %}{{ cl.name }}{% endif %}</strong> <span class="pop-sub">{{ cl.leaves }} sequences{% if not cl.alike %} · <span class="pop-flag" title="Folded on a combination whose branching inside this clade differs">≈</span>{% endif %}</span>
+        <button type="button" class="pop-close" data-pop-close aria-label="Close">×</button></p>
+      <p class="pop-actions"><button type="button" class="button primary" data-pop-expand>Expand clade</button></p>
+      <label class="pop-field">Label
+        <input type="text" data-clade-label value="{{ cl.label }}" maxlength="60" size="18" placeholder="e.g. Fungal IME2s" autocomplete="off"></label>
+      <div class="pop-field"><span class="pop-field-name">Fill</span>
+        <span class="swatches">{% for c in clade_fills %}<button type="button" class="swatch{% if c == 'none' %} swatch-none{% endif %}" data-clade-fill="{{ c }}"{% if c != 'none' %} style="background:{{ c }}"{% endif %} title="{{ c }}" aria-label="fill {{ c }}"></button>{% endfor %}<input type="color" data-clade-fill-input value="{% if cl.fill == 'none' %}#cfd8e6{% else %}{{ cl.fill }}{% endif %}" aria-label="custom fill colour"></span></div>
+      <div class="pop-field"><span class="pop-field-name">Border</span>
+        <span class="swatches">{% for c in clade_borders %}<button type="button" class="swatch" data-clade-border="{{ c }}" style="background:{{ c }}" title="{{ c }}" aria-label="border {{ c }}"></button>{% endfor %}<input type="color" data-clade-border-input value="{{ cl.border_colour }}" aria-label="custom border colour"></span></div>
+      <label class="pop-field">Border width
+        <select data-clade-width>{% for w, wl in clade_border_widths %}<option value="{{ w }}"{% if w == cl.border_width %} selected{% endif %}>{{ wl }}</option>{% endfor %}</select></label>
+      <p class="pop-actions"><button type="button" class="button secondary" data-pop-restyle>Apply</button></p>
+    </div>{% endfor %}{% endif %}
+  </figure>
+  <details class="tree-caption">
+    <summary><strong>Caption</strong></summary>
+    <p class="hint">{% if rooted %}Rooted on the outgroup ({{ outgroup|join:", " }}).{% else %}Not rooted on an
+    outgroup: drawn from the tree's top node, which is not a real root.{% endif %}
+    {% if reconciliation %}{% with r=reconciliation.summary %}Reconciled with the species tree (GeneRax, {{ r.reconciliation_model }}): {{ r.duplications }} duplication{{ r.duplications|pluralize }}{% if reconciliation.weak %} ({{ reconciliation.weak }} doubtful, dashed: {{ reconciliation.weak|pluralize:"its,their" }} two copies share under 10% of their species; a real duplication leaves both copies in many of the same species, so this usually means the tree grouped the sequences wrongly){% endif %}{% if r.transfers %}, {{ r.transfers }} transfer{{ r.transfers|pluralize }}{% endif %} and {{ r.losses }} loss{{ r.losses|pluralize:"es" }} on this tree; GeneRax roots it between {{ r.root_branch|join:" and " }}{% if rooted %} (the drawing keeps the outgroup's root){% endif %}. <a href="{{ reconciliation.tsv_url }}">Events per node</a> · <a href="{{ reconciliation.nwk_url }}">tree rooted by GeneRax</a>{% if reconciliation.species_tree_url %} · <a href="{{ reconciliation.species_tree_url }}">species tree</a>{% endif %}.{% endwith %}
+    {% endif %}    {% if selection.node_names %}{% if popovers %}Click an ancestral node to view it in the <a href="{% url 'ancestor_viewer' job.id %}?aligner={{ aligner|urlencode }}&amp;combination={{ combination|urlencode }}">ancestor viewer</a>, name it, or see the same ancestor in the job's other combinations.{% else %}Click an ancestral node to open it in the <a href="{% url 'ancestor_viewer' job.id %}?aligner={{ aligner|urlencode }}&amp;combination={{ combination|urlencode }}">ancestor viewer</a>.{% endif %}
+    {% endif %}{% if support_measures %}{% if support_stars %}Stars beside nodes are {{ support_measures|join:" / " }} support: {% if "SH-aLRT" in support_measures %}SH-aLRT * &ge; 70, ** &ge; 80, *** &ge; 90, **** &ge; 99{% if "UFBoot" in support_measures %}; {% endif %}{% endif %}{% if "UFBoot" in support_measures %}UFBoot * &ge; 80, ** &ge; 90, *** &ge; 95, **** &ge; 99{% endif %} (· below).{% else %}Numbers beside nodes are {{ support_measures|join:" / " }} support (%).{% endif %} Usually taken as well supported: {% if "SH-aLRT" in support_measures %}SH-aLRT &ge; 80{% if "UFBoot" in support_measures %}, {% endif %}{% endif %}{% if "UFBoot" in support_measures %}UFBoot &ge; 95{% endif %}.{% elif not display.label_choices %}No branch support was computed for this tree.{% endif %}{% if agreement_shown %} {% if support_stars %}Stars for agreement: * half, ** three quarters, *** 90%, **** all of the{% else %}“k/n” beside a node: k of the{% endif %} {{ agreement_total }} other alignment × model combination{{ agreement_total|pluralize }} (same tree source) {% if support_stars %}have{% else %}have{% endif %} the branch above it{% if not support_stars %} (5/5: every one does; 0/5: none){% endif %}.{% endif %}{% if display.has_rates %} dN/dS: codeml's free-ratio estimates, one per branch (noisy; not a test); hover a branch for dN, dS and the expected numbers of changes.{% endif %} <a href="{{ newick_url }}">Newick file</a> ·
+    <a href="{% url 'alignment_viewer' job.id %}?aligner={{ aligner|urlencode }}&amp;combination={{ combination|urlencode }}&amp;order=tree">alignment in tree order</a></p>
+    {% if d.note %}<p class="hint">{{ d.note }}</p>{% endif %}
+  </details>
+  {% endwith %}
+
+  {% if library_highlight_nodes %}<p class="library-actions">{% with add_label="Add "|add:highlight|add:" to" %}
+    {% include "phylobot/_library_add.html" with add_form="library-add-node" add_nodes=library_highlight_nodes %}{% endwith %}</p>{% endif %}
+
+  {% include "phylobot/_branch_site_panel.html" %}
+</form>
+{% else %}
+<div id="tree-viewer"><p>No tree to show: {% if job.status == "succeeded" %}this job stopped after the
+  alignments{% else %}the job has not finished successfully{% endif %}.</p></div>
+{% endif %}

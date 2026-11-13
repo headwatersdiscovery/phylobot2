@@ -1,0 +1,1049 @@
+{% extends "phylobot/base.html" %}
+{% load static %}
+{% block title %}New Job · PhyloBot{% endblock %}
+{% block head %}<script src="{% static 'phylobot/toc.js' %}" defer></script>
+<script src="{% static 'phylobot/fold.js' %}" defer></script>{% endblock %}
+{% block content %}
+<h1>{% if extension %}Extend a Job{% else %}New Job{% endif %}</h1>
+<form method="post" enctype="multipart/form-data" id="submit-form"
+      hx-post="{% url 'preview' %}" hx-trigger="change, load" hx-target="#preview" hx-swap="innerHTML">
+  {% csrf_token %}
+  {% if form.errors %}
+    <div class="errors">
+      {% for message in form.non_field_errors %}<p>{{ message }}</p>{% endfor %}
+      {% for field in form %}{% for message in field.errors %}
+        <p>{{ field.label }}: {{ message }}</p>
+      {% endfor %}{% endfor %}
+    </div>
+  {% endif %}
+
+  {{ form.from_job }}
+  {{ form.extend_job }}
+  {{ form.simulated_from }}
+  {{ form.ambiguity_ack }}
+  {% if from_simulation %}
+    <div class="from-homologs simulated">
+      <p><span class="badge simulated">Simulated data</span>
+        <strong>Step 2 holds replicate {{ from_simulation.seed }} of the simulation
+        “{{ from_simulation.job.name|default:"(unnamed)" }}”</strong>: sequences that evolved
+        on a known tree, so this job's results can be checked against the truth. The job is
+        marked as run on simulated data. <a href="{{ from_simulation.back_url }}">← Back to the simulation</a></p>
+      <p class="hint">To give it the true alignment as well, choose “Load from My alignments”
+        in step 3: each replicate's true alignment is there.</p>
+    </div>
+  {% elif form.simulated_from.value %}
+    <p class="hint"><span class="badge simulated">Simulated data</span> This job runs on a
+      simulation's replicate.</p>
+  {% endif %}
+  {% if extension %}
+    {# Extend (phylobot.extend): steps 1-3 come from the parent and are locked. #}
+    <div class="from-homologs extending">
+      <p><strong>Extending “{{ extension.parent.name|default:"(unnamed)" }}”</strong>:
+        {% if extension.mode == "results" %}its sequences, alignments, trees and ancestors
+        are kept, read from it rather than copied, and every setting is locked. Tick the
+        aligners to add: only they run, exactly as its alignments did, and this job then
+        shows them all together, ready to compare.{% else %}its sequences, alignments and
+        seed are this job's, and can't be changed here. Add aligners or alignments of your
+        own, and choose the trees and ancestors.{% endif %} What you add runs as a new job;
+        that job stays exactly as it is.
+        <a href="{% url 'job_detail' extension.parent.id %}">← Back to it</a></p>
+    </div>
+  {% elif copied %}
+    <div class="from-homologs copied">
+      <p><strong>Duplicating “{{ copied.name|default:"(unnamed)" }}”</strong>: every step is filled
+        in as that job was submitted. Change anything, then <em>Submit job</em>; that job is kept as
+        it is. <a href="{% url 'job_detail' copied.id %}">← Back to it</a></p>
+      {% for kind, labels in copied_files.items %}
+        <p class="hint">Its uploaded {{ kind }}{{ labels|length|pluralize }} ({{ labels|join:", " }})
+          {{ labels|length|pluralize:"is,are" }} reused unless you upload {{ labels|length|pluralize:"a new one,new ones" }}.</p>
+      {% endfor %}
+    </div>
+  {% endif %}
+
+  <p class="hint">Run the whole pipeline, or only part of it: each step can use
+    PhyloBot's tools, your own files, or both — and you can stop after alignments or
+    after trees.</p>
+
+  <div class="submit-layout">
+  {# "On this page": the steps, with the active one marked (toc.js). Each step heading #}
+  {# also folds its body (fold.js); a link here unfolds its target before scrolling. #}
+  <nav class="viewer-toc page-toc submit-toc" data-toc aria-label="On this page">
+    <p class="viewer-toc-title">On this page</p>
+    <ol>
+      <li><a href="#step-1">1 · Name and Seed</a></li>
+      <li><a href="#step-2">2 · Sequences</a></li>
+      <li><a href="#step-3">3 · Alignments</a></li>
+      {% if extension.mode == "results" %}
+      <li><a href="#step-45">4–5 · Trees and Ancestors</a></li>
+      {% else %}
+      <li><a href="#step-4">4 · Trees</a></li>
+      <li><a href="#step-5">5 · Ancestral Sequences</a></li>
+      {% endif %}
+    </ol>
+  </nav>
+  <div class="submit-sections">
+
+  {# Step 1 is the job itself, not a pipeline stage, so it carries no data-stage hook: #}
+  {# in the Spectrum skin its number keeps the page's accent rather than a stage colour. #}
+  <section class="step" id="step-1">
+    <h2><button type="button" class="fold-toggle" aria-controls="step-1-body"
+        aria-expanded="true" aria-label="Fold this step"></button><span class="step-number">1</span> Name and Seed</h2>
+    <div class="fold-body" id="step-1-body">
+    <p>
+      <label for="{{ form.name.id_for_label }}">{{ form.name.label }}</label> {{ form.name }}
+      <button type="button" class="help-dot" popovertarget="help-job-name" aria-label="About job name">?</button><span class="help-popover" popover id="help-job-name"><strong>Job name</strong><span>Only for finding the job again; My Jobs lists it. Hashtags can be added later.</span></span>
+    </p>
+    {% if extension %}
+    <p>Random seed <strong>{{ form.seed.value }}</strong>{{ form.seed.as_hidden }}
+      <span class="hint">The extended job's, so this job gives what one job with every
+        setting from the start would have.</span></p>
+    {% else %}
+    <p><label for="{{ form.seed.id_for_label }}">Random seed</label> {{ form.seed }}
+      <button type="button" class="help-dot" popovertarget="help-seed" aria-label="About random seed">?</button><span class="help-popover" popover id="help-seed"><strong>Random seed</strong><span>Given to every tool that uses randomness (PRANK, IQ-TREE, RAxML-NG): the same inputs, settings and seed give the same results.</span></span></p>
+    {% endif %}
+    </div>
+  </section>
+
+  <section class="step" data-stage="sequences" id="step-2">
+    <h2 class="with-defaults"><button type="button" class="fold-toggle" aria-controls="step-2-body"
+        aria-expanded="true" aria-label="Fold this step"></button><span class="step-number">2</span> Sequences
+      {% if not extension %}<button type="button" class="link use-defaults" data-defaults="sequences">Use defaults</button>{% endif %}</h2>
+    <div class="fold-body" id="step-2-body">
+    {% if extension %}
+      <p class="locked">{% include "phylobot/_icon.html" with name="lock" size=14 %}
+        {% if extension.fasta %}The sequences of{% else %}The sequences (from the alignments) of{% endif %}
+        “{{ extension.parent.name|default:"(unnamed)" }}”{% if extension.parent.params.seqtype == "codon" %}:
+        coding DNA, genetic code {{ extension.parent.params.genetic_code|default:1 }}{% endif %}.</p>
+      {# For the page's own checks and summary only: SubmitForm takes the parent's. #}
+      <textarea name="sequences_text" hidden>{{ extension_fasta }}</textarea>
+      <input type="hidden" name="seqtype" value="{{ extension.parent.params.seqtype|default:'protein' }}">
+      <input type="hidden" name="genetic_code" value="{{ extension.parent.params.genetic_code|default:1 }}">
+      <div class="sequence-type" hx-post="{% url 'sequence_check' %}" hx-encoding="multipart/form-data"
+           hx-include="closest form" hx-target="#sequence-check" hx-swap="outerHTML" hx-trigger="load">
+        {% include "phylobot/_sequence_check.html" %}
+        {% if extension.parent.params.seqtype == "codon" %}
+        <fieldset class="inline-choices">
+          <legend>{{ form.analyses.label }}</legend>
+          {% for option in form.analysis_options %}
+            <label><input type="radio" name="analyses" value="{{ option.value }}"
+                   {% if option.checked %}checked{% endif %}> {{ option.label }}</label>
+          {% endfor %}
+        </fieldset>
+        {% endif %}
+      </div>
+    {% else %}
+    {% if from_homologs %}
+      <div class="from-homologs">
+        <p><strong>Step 2 holds {{ from_homologs.count|floatformat:"0g" }} sequences from
+          {{ from_homologs.label }}</strong>{% if from_homologs.included or from_homologs.excluded %}
+          (including your own choices: {{ from_homologs.included }} included,
+          {{ from_homologs.excluded }} excluded by hand){% endif %}.
+          Review them below, then choose the rest of the job.
+          <a href="{{ from_homologs.back_url }}">← Back to the hits</a></p>
+        {% if from_homologs.missing %}<p class="hint">{{ from_homologs.missing }} selected
+          hit{{ from_homologs.missing|pluralize }} had no full-length sequence and
+          {{ from_homologs.missing|pluralize:"was,were" }} left out.</p>{% endif %}
+        {% if from_homologs.count > limits.max_sequences %}<p class="warning">That is more than
+          your limit of {{ limits.max_sequences }} sequences per job: tighten the filters
+          first, or remove some here.</p>{% endif %}
+      </div>
+    {% endif %}
+    {# Alignments chosen from My alignments, mirrored from step 3's list (submit.html's script). #}
+    <div class="loaded-alignments" id="loaded-alignments" hidden>
+      <p><strong>Loaded from My alignments:</strong></p>
+      <ul></ul>
+      <p class="hint">Its sequences (gaps removed) are this job's input unless you paste or
+        upload others, and the alignment itself is compared alongside the aligners' (step 3).</p>
+    </div>
+    {# The textarea with a permanent, compact "Load examples" sidebar to its right, kept #}
+    {# to the same height as the Sequences box (it scrolls if it ever overflows). The #}
+    {# "About these datasets" popover is a top-layer element, so it is never clipped. #}
+    <div class="sequences-area">
+      <div class="sequences-main">
+        {% include "phylobot/_sequences_field.html" with field=form.sequences_text %}
+      </div>
+      <aside class="examples-sidebar" aria-label="Load an example dataset">
+        <div class="examples-panel-head">
+          <span>Load examples</span>
+          <button type="button" class="examples-help" popovertarget="examples-about"
+                  aria-label="About these datasets" title="About these datasets">?</button>
+        </div>
+        <ul class="examples-list">
+          {% for ex in examples %}
+          {# The family's name is plain text; its two links load the full set or the #}
+          {# subset. A small set with no subset of its own (Ime2) offers it as "subset". #}
+          <li>
+            <span class="example-name">{{ ex.label }}{% if ex.coding %} <span class="example-dna" title="Coding DNA">DNA</span>{% endif %}</span>
+            <span class="example-links">{% if ex.has_subset %}<button type="button" class="link example-load" hx-get="{% url 'example' ex.key %}"
+                    hx-target="#sequences-field" hx-swap="outerHTML" hx-trigger="click consume"
+                    title="Load the full {{ ex.count }}-sequence set">full&nbsp;({{ ex.count }})</button><span class="example-sep" aria-hidden="true">|</span><button type="button" class="link example-load" hx-get="{% url 'example' ex.key %}?variant=subset" hx-target="#sequences-field"
+                    hx-swap="outerHTML" hx-trigger="click consume"
+                    title="Load a {{ ex.subset_count }}-sequence subset for a quick run">subset&nbsp;({{ ex.subset_count }})</button>{% else %}<button type="button" class="link example-load" hx-get="{% url 'example' ex.key %}"
+                    hx-target="#sequences-field" hx-swap="outerHTML" hx-trigger="click consume"
+                    title="Load the {{ ex.count }}-sequence set">subset&nbsp;({{ ex.count }})</button>{% endif %}</span>
+          </li>
+          {% endfor %}
+        </ul>
+      </aside>
+    </div>
+    <div class="sequence-actions">
+      {# Three equal choices, so none is filled as the primary action (a.button is, in Clean). #}
+      <button type="button" class="with-icon" data-open-picker>{% include "phylobot/_icon.html" with name="alignment" size=16 %} Load from My alignments</button>
+      <button type="button" class="with-icon" data-choose-files="sequences_file">{% include "phylobot/_icon.html" with name="upload" size=16 %} Upload FASTA</button>
+      <a class="button plain with-icon" href="{% url 'homologs' %}">{% include "phylobot/_icon.html" with name="view" size=16 %} Load from Homologs</a>
+    </div>
+    {{ form.sequences_file }}<input type="file" multiple hidden data-file-pick="sequences_file">
+    <div id="sequence-files" class="file-list-block"></div>
+    {# About-these-datasets popover: lists every example with its citation link. Native #}
+    {# popover (top layer), so the drawer's overflow clip does not hide it. #}
+    <div id="examples-about" popover class="examples-about">
+      <h3>Load Example Sequences</h3>
+      <ul>
+        {% for ex in examples %}
+        <li><strong>{{ ex.label }}</strong> — {{ ex.blurb }}
+          <span class="hint">{{ ex.count }} sequences{% if ex.has_subset %}, subset {{ ex.subset_count }}{% endif %}.</span>
+          {% for cit, link in ex.references %}{% if link %}<a href="{{ link }}" target="_blank" rel="noopener">{{ cit }}</a>{% else %}{{ cit }}{% endif %}{% if not forloop.last %}; {% endif %}{% endfor %}{% if ex.references %}.{% endif %}
+        </li>
+        {% endfor %}
+      </ul>
+    </div>
+    <p class="hint limits-line">Up to {{ limits.max_sequences }} sequences of
+      {{ limits.max_length }} residues (or codons) · {{ limits.max_upload_bytes|filesizeformat }} per file
+      <button type="button" class="help-dot" popovertarget="help-sequences" aria-label="About sequences">?</button><span class="help-popover" popover id="help-sequences"><strong>Sequences</strong><span><span>FASTA, protein or coding DNA: paste them, upload files, or load a set you curated from a homolog search.</span><span>Optional if you upload your own alignment or choose one from My alignments (step 3): its sequences are used, gaps removed.</span><span>Your limits: {{ limits.max_sequences }} sequences, {{ limits.max_length }} residues (or codons) each, {{ limits.max_upload_bytes|filesizeformat }} per file.</span></span></span></p>
+    <div class="sequence-type" hx-post="{% url 'sequence_check' %}" hx-encoding="multipart/form-data"
+         hx-include="closest form" hx-target="#sequence-check" hx-swap="outerHTML"
+         hx-trigger="load, input[target.name=='sequences_text'] from:body delay:500ms, change[target.name=='sequences_file' || target.name=='sequences_use' || target.name=='duplicate_names' || target.name=='alignment_files' || target.name=='alignment_use' || target.name=='alignment_duplicates' || target.name=='saved_alignments' || target.name=='seqtype' || target.name=='genetic_code'] from:body delay:300ms">
+      {% include "phylobot/_sequence_check.html" %}
+      <fieldset class="inline-choices">
+        <legend>{{ form.seqtype.label }}</legend>
+        {% for radio in form.seqtype %}<label>{{ radio.tag }} {{ radio.choice_label }}</label>{% endfor %}
+      </fieldset>
+      <div data-codon hidden>
+        <p><label for="{{ form.genetic_code.id_for_label }}">{{ form.genetic_code.label }}</label>
+          {{ form.genetic_code }}
+          <button type="button" class="help-dot" popovertarget="help-genetic-code" aria-label="About genetic code">?</button><span class="help-popover" popover id="help-genetic-code"><strong>Genetic code</strong><span>Every code IQ-TREE or PAML offers, with the programs that have it (neither accepts a custom code).</span></span></p>
+        <fieldset class="inline-choices">
+          <legend>{{ form.analyses.label }} <button type="button" class="help-dot" popovertarget="help-coding-dna" aria-label="About coding DNA">?</button><span class="help-popover" popover id="help-coding-dna"><strong>Coding DNA</strong><span><span>Coding DNA is checked (whole codons, no internal stop codons) and translated; every aligner's alignment also comes as a codon alignment.</span><span>Codon models run on the codon alignments, amino-acid models on the translations; with both, the job page ranks each kind separately (their likelihoods aren't comparable) and compares their trees. Choose the models in step 4.</span></span></span></legend>
+          {% for option in form.analysis_options %}
+            <label{% if not option.available %} class="unavailable"{% endif %}>
+              <input type="radio" name="analyses" value="{{ option.value }}"
+                     {% if option.checked %}checked{% endif %}{% if not option.available %} disabled{% endif %}>
+              {{ option.label }}</label>
+          {% endfor %}
+        </fieldset>
+      </div>
+    </div>
+    {% endif %}
+    </div>
+  </section>
+
+  <section class="step" data-stage="alignments" id="step-3">
+    <h2 class="with-defaults"><button type="button" class="fold-toggle" aria-controls="step-3-body"
+        aria-expanded="true" aria-label="Fold this step"></button><span class="step-number">3</span> Alignments
+      {% if not extension %}<button type="button" class="link use-defaults" data-defaults="alignments">Use defaults</button>{% endif %}</h2>
+    <div class="fold-body" id="step-3-body">
+    {% if extension %}
+      <p class="hint">{% include "phylobot/_icon.html" with name="lock" size=14 %} Kept from
+        “{{ extension.parent.name|default:"(unnamed)" }}”:
+        {% for a in extension.alignments %}<strong>{{ a.label }}</strong>{% if not forloop.last %}, {% endif %}{% endfor %}.
+        {% if extension.mode == "results" %}Their trees and ancestors are kept too, read
+        from that job. Tick the aligners to add: each new alignment runs exactly as these
+        did (steps 4 and 5).{% else %}Tick more aligners or add alignments of your own to
+        compare beside them.{% endif %}</p>
+    {% endif %}
+    <p class="hint" data-codon hidden>With coding DNA, every aligner gives a protein alignment
+      and a codon alignment (gaps in whole codons). What each one actually aligns:</p>
+    <div class="aligners">
+      {% for choice in form.aligners %}
+        {% if choice.data.value in extension.aligners %}
+        <label class="aligner" title="Already in the job it extends"><input type="checkbox" checked disabled> {{ choice.choice_label }}
+          <span class="hint">· kept</span></label>
+        {% else %}
+        <label class="aligner">{{ choice.tag }} {{ choice.choice_label }}{% if choice.data.value == "prank_codon" %}
+          <span class="hint how" data-codon hidden>· aligns the <strong>codons</strong> themselves, with a codon substitution model; translated afterwards</span>{% else %}
+          <span class="hint how" data-codon hidden>· aligns the <strong>translated proteins</strong>; each sequence's own codons are put back afterwards</span>{% endif %}</label>
+        {% endif %}
+      {% endfor %}
+    </div>
+    {# Your own alignments, listed with the aligners: chosen from My alignments, then uploaded. #}
+    {# (An extension of a job with trees adds aligners only: SubmitForm.inherit_settings.) #}
+    <div{% if extension.mode == "results" %} hidden{% endif %}>
+    <div class="chosen-alignments">
+      <ul id="chosen-alignments" class="file-list aligner-files">{% for a in chosen_alignments %}
+        <li><label><input type="checkbox" name="saved_alignments" value="{{ a.id }}" checked>
+          <span class="chosen-title">{{ a.title }}</span>
+          <span class="hint">{{ a.sequences }} × {{ a.columns }}{% if a.seqtype == "codon" %} codons{% endif %}</span></label></li>{% endfor %}
+      </ul>
+    </div>
+    <div id="alignment-files" hx-post="{% url 'alignment_files' %}" hx-encoding="multipart/form-data"
+         hx-include="closest form" hx-target="this" hx-swap="innerHTML"
+         hx-trigger="change[target.name=='alignment_files' || target.name=='alignment_use' || target.name=='shared_names' || target.name=='alignment_duplicates' || target.name=='saved_alignments' || target.name=='sequences_file' || target.name=='sequences_use' || target.name=='duplicate_names'] from:body delay:300ms, input[target.name=='sequences_text'] from:body delay:800ms, htmx:afterSettle[target.id=='sequences-field'] from:body"></div>
+    <p class="own upload-row"><span class="own-label">{{ form.alignment_files.label }}</span>
+      <button type="button" data-choose-files="alignment_files">Choose files</button>
+      {{ form.alignment_files }}<input type="file" multiple hidden data-file-pick="alignment_files">
+      <button type="button" data-open-picker>Choose from my alignments</button>
+      <button type="button" class="help-dot" popovertarget="help-own-alignments" aria-label="About your own alignments">?</button><span class="help-popover" popover id="help-own-alignments"><strong>Your own alignments</strong><span><span>FASTA or PHYLIP with gaps (<code>?</code> is read as a gap); choose more to add them.</span><span>Each of your alignments is compared alongside the aligners' and labelled by its file name (or its name in My alignments); untick one to leave it out.</span></span></span></p>
+    </div>
+    </div>
+  </section>
+
+  {% if extension.mode == "results" %}
+  {# Steps 4 and 5 are the parent's (SubmitForm.inherit_settings); the fields below stay #}
+  {# in the page, hidden, for its scripts, and whatever they post is ignored. #}
+  <section class="step" data-stage="trees" id="step-45">
+    <h2><button type="button" class="fold-toggle" aria-controls="step-45-body"
+        aria-expanded="true" aria-label="Fold this step"></button><span class="step-number">4–5</span> Trees and Ancestors</h2>
+    <div class="fold-body" id="step-45-body">
+    <p>Each aligner you tick gets its trees and ancestors here, run exactly as
+      “{{ extension.parent.name|default:"(unnamed)" }}” ran its own, so its results compare
+      directly with the ones kept:</p>
+    <ol class="extension-plan">{% for step in extension_plan %}<li>{{ step|capfirst }}</li>{% endfor %}</ol>
+    <p class="hint">{% include "phylobot/_icon.html" with name="lock" size=14 %} These
+      settings are the extended job's, so only the aligner differs between the alignments.
+      To measure more properties, use <em>Measure</em> in the ancestor viewer (it covers the
+      kept alignments too). To run with different settings, duplicate the job instead.</p>
+    {% if extension.parent.params.seqtype != "codon" %}
+    <h3>Add to every alignment</h3>
+    <p class="hint">Tree sources and models added here run on the kept alignments and the
+      new ones alike. What “{{ extension.parent.name|default:"(unnamed)" }}” already has is
+      read from it, not computed again: its trees and ancestors, and its ModelFinder
+      picks.</p>
+    <div class="extension-additions">
+      <p><strong>Tree sources</strong>
+        {% for key, label in extension_sources %}<label class="aligner">{% if key in extension.parent.params.tree_builders %}<input type="checkbox" checked disabled> {{ label }} <span class="hint">· kept</span>{% else %}<input type="checkbox" name="tree_builders" value="{{ key }}"> {{ label }}{% endif %}</label>{% endfor %}</p>
+      <p><label>{% if extension.parent.params.modelfinder %}<input type="checkbox" checked disabled> Pick the best model (ModelFinder) <span class="hint">· kept</span>{% else %}<input type="checkbox" name="modelfinder"> Pick the best model (ModelFinder, IQ-TREE's default candidates){% endif %}</label></p>
+      <details class="models" data-grid="models">
+        <summary>Models to search in full <span class="hint">({{ extension_models|length }} kept; tick more to add them)</span></summary>
+        {% include "phylobot/_model_grid.html" with name="models" selected=extension_models locked=extension_models grid=fixed_grid variants=fixed_variants %}
+      </details>
+    </div>
+    {% endif %}
+    </div>
+  </section>
+  {% endif %}
+  {# disabled: in an extension of a job with trees these post nothing (the panel above does) #}
+  <fieldset class="plain"{% if extension.mode == "results" %} hidden disabled{% endif %}>
+  <section class="step" data-stage="trees" id="step-4">
+    <h2 class="with-defaults"><button type="button" class="fold-toggle" aria-controls="step-4-body"
+        aria-expanded="true" aria-label="Fold this step"></button><span class="step-number">4</span> <label class="stage">{{ form.run_trees }} Trees</label>
+      <button type="button" class="link use-defaults" data-defaults="trees">Use defaults</button></h2>
+    <div class="fold-body" id="step-4-body">
+    <div data-needs="trees">
+      <h3>Tree sources <button type="button" class="help-dot" popovertarget="help-tree-sources" aria-label="About tree sources">?</button><span class="help-popover" popover id="help-tree-sources"><strong>Tree sources</strong><span><span>Each source gives one tree per alignment and model, and the job page compares them.</span><span>Every tree, whichever program found it, then gets its branch lengths and model parameters fitted by IQ-TREE under the same model, so likelihoods, support and ancestors are comparable across sources.</span></span></span></h3>
+      {{ form.tree_builders }}
+      <p class="own"><label for="{{ form.tree_files.id_for_label }}">{{ form.tree_files.label }}</label>
+        <button type="button" class="help-dot" popovertarget="help-own-trees" aria-label="About your own trees">?</button><span class="help-popover" popover id="help-own-trees"><strong>Your own trees</strong><span>Newick, with or without branch lengths. The topology is kept; branch lengths and the model are fitted to each alignment.</span></span>
+        {{ form.tree_files }}</p>
+
+      <h3>Substitution models</h3>
+      <h4 class="model-kind" data-amino-heading hidden>Amino-acid models <span class="hint">(on the translation)</span></h4>
+      <div class="model-options" data-amino-models>
+        <div class="option-line"><label>{{ form.modelfinder }} Pick the best model (ModelFinder)</label>
+          <button type="button" class="help-dot" popovertarget="help-modelfinder" aria-label="About modelFinder">?</button><span class="help-popover" popover id="help-modelfinder"><strong>ModelFinder</strong><span><span>Scores each candidate model on one quick starting tree (a parsimony tree refined by a fast ML search), not on a fully optimised ML tree, and picks the best by BIC.</span><span>Each tree source then runs one full ML tree search under that model. Runs once per alignment.</span></span></span></div>
+        <details class="models indent" data-grid="candidates">
+          <summary>Candidate models <span class="hint" data-model-count
+            data-whole="the whole grid: IQ-TREE's default candidates">({{ selected.candidates|length }} ticked)</span></summary>
+          <p class="hint">IQ-TREE tests every combination of the ticked matrices and
+            rate/frequency types. The whole grid, or none, is IQ-TREE's default set.</p>
+          {% include "phylobot/_model_grid.html" with name="candidates" selected=selected.candidates %}
+        </details>
+
+        <div class="option-line"><label>{{ form.fixed_models }} Full ML tree search under each ticked model</label>
+          <button type="button" class="help-dot" popovertarget="help-fixed-models" aria-label="About full search under each model">?</button><span class="help-popover" popover id="help-fixed-models"><strong>Full search under each model</strong><span><span>Each model ticked in the grid gets its own complete tree search, branch support and ancestors, reported side by side, so you can see how the model changes them.</span><span>One full search per model, alignment and tree source: pick the few models you want to compare (the work estimate shows the cost).</span><span>The +C20 columns are site-profile mixtures: sites differ in which amino acids they accept, which a single matrix cannot describe. They can fit far better, so compare their BIC with a gamma model's, and try +C20+F too: on some proteins +C20 alone fits worse. They are much slower, IQ-TREE only (RAxML-NG has none), never ModelFinder candidates, and held-out reconstruction (ESR) can't check them yet.</span></span></span></div>
+        <details class="models indent" data-grid="models">
+          <summary>Models to search in full <span class="hint" data-model-count data-names>({{ selected.models|length }} ticked)</span></summary>
+          {% include "phylobot/_model_grid.html" with name="models" selected=selected.models grid=fixed_grid variants=fixed_variants %}
+        </details>
+      </div>
+      <h4 class="model-kind" data-codon-models hidden>Codon models <span class="hint">(on the codon alignment)</span></h4>
+      <div class="model-options codon-models" data-codon-models hidden>
+        <div class="option-line"><label>{{ form.codon_modelfinder }} Pick the best codon model (ModelFinder)</label>
+          <button type="button" class="help-dot" popovertarget="help-codon-modelfinder" aria-label="About codon models">?</button><span class="help-popover" popover id="help-codon-modelfinder"><strong>Codon models</strong><span><span>Codon models use the synonymous changes too. They are much slower than amino-acid models (about 8× for a tree search; the work estimate shows it), and RAxML-NG has none: codon combinations get IQ-TREE's codon search, fits on the amino-acid trees, and fits to your own.</span><span>ModelFinder works as for amino-acid models: it scores each candidate codon model on one quick starting tree and picks the best by BIC; each tree source then runs one full ML tree search under it. Runs once per alignment (about a minute on lysin).</span></span></span></div>
+        <details class="models indent" data-grid="codon_candidates">
+          <summary>Candidate codon models <span class="hint" data-model-count
+            data-whole="the whole grid: IQ-TREE's default codon candidates">({{ selected.codon_candidates|length }} ticked)</span></summary>
+          <p class="hint">IQ-TREE tests every combination of the ticked matrices, frequency and
+            rate types. The whole grid, or none, is IQ-TREE's own default codon set (MG, MGK,
+            GY, ECMK07 and ECMS05 with its frequency and rate types). GY+F3X4 is codeml's M0;
+            empirical codon frequencies (+F) aren't available with MG and MGK.</p>
+          {% include "phylobot/_model_grid.html" with name="codon_candidates" selected=selected.codon_candidates grid=codon_grid variants=codon_variants %}
+        </details>
+
+        <div class="option-line"><label>{{ form.codon_fixed }} Full ML tree search under each ticked codon model</label>
+          <button type="button" class="help-dot" popovertarget="help-codon-fixed" aria-label="About full search under each codon model">?</button><span class="help-popover" popover id="help-codon-fixed"><strong>Full search under each codon model</strong><span>Each codon model ticked in the grid gets its own complete tree search, support and ancestors, side by side. Slow: pick the few you want to compare.</span></span></div>
+        <details class="models indent" data-grid="codon_models">
+          <summary>Codon models to search in full <span class="hint" data-model-count data-names>({{ selected.codon_models|length }} ticked)</span></summary>
+          {% include "phylobot/_model_grid.html" with name="codon_models" selected=selected.codon_models grid=codon_grid variants=codon_variants %}
+        </details>
+        <h4 class="codon-trees">Codon trees</h4>
+        <div class="option-line"><label>{{ form.codon_search }} IQ-TREE search under each codon model</label>
+          <button type="button" class="help-dot" popovertarget="help-codon-search" aria-label="About codon tree search">?</button><span class="help-popover" popover id="help-codon-search"><strong>Codon tree search</strong><span>A tree found with the codon model itself. Slow: about 8× an amino-acid search.</span></span></div>
+        <div class="option-line"><label>{{ form.codon_on_amino }} Fit on the amino-acid tree</label>
+          <button type="button" class="help-dot" popovertarget="help-codon-on-amino" aria-label="About fit on the amino-acid tree">?</button><span class="help-popover" popover id="help-codon-on-amino"><strong>Fit on the amino-acid tree</strong><span>Keeps an amino-acid tree's topology (IQ-TREE's, and RAxML-NG's if ticked) and fits each codon model's branch lengths and parameters on the codon alignment: no codon tree search, so far cheaper for larger jobs. Needs amino-acid models; SH-aLRT support only.</span></span></div>
+        <fieldset class="inline-choices indent" data-codon-amino-trees>
+          {% for radio in form.codon_amino_trees %}<label>{{ radio.tag }} {{ radio.choice_label }}</label>{% endfor %}
+        </fieldset>
+      </div>
+      <p class="hint" data-raxml-note hidden>RAxML-NG has every matrix except JTTDCMut and no
+        site-profile mixtures, so ticking RAxML-NG unticks those in both grids (unticking
+        RAxML-NG ticks them again).</p>
+
+      <h3>Branch support <button type="button" class="help-dot" popovertarget="help-support" aria-label="About branch support">?</button><span class="help-popover" popover id="help-support"><strong>Branch support</strong><span>SH-aLRT is computed by IQ-TREE on every tree. UFBoot comes from IQ-TREE's own tree search, so only IQ-TREE's trees get it (not RAxML-NG's or your own). Tick neither for no support.</span></span></h3>
+      <p class="supports">
+        <label>{{ form.sh_alrt }} SH-aLRT</label>
+        <label class="replicates">{{ form.alrt }} replicates</label>
+        <label data-ufboot>{{ form.ufboot }} UFBoot</label>
+        <label class="replicates">{{ form.bootstrap }} replicates</label>
+      </p>
+
+      <div hx-post="{% url 'outgroup_options' %}" hx-encoding="multipart/form-data"
+           hx-include="closest form" hx-target="#outgroup-section" hx-swap="outerHTML"
+           hx-trigger="change[target.name=='sequences_text' || target.name=='sequences_file' || target.name=='alignment_files' || target.name=='saved_alignments'] from:body delay:300ms">
+        {% include "phylobot/_outgroup.html" %}
+      </div>
+
+      <section id="reconcile-section" class="reconcile">
+        <h3><label>{{ form.reconcile }} {{ form.reconcile.label }}</label> <button type="button" class="help-dot" popovertarget="help-reconcile" aria-label="About reconciling with the species tree">?</button><span class="help-popover" popover id="help-reconcile"><strong>Reconciling with the species tree</strong><span><span>Marks duplications and losses on every tree, using each sequence's species, so you can see which ancestors predate a duplication and which mix paralogs.</span><span>It never holds a job up: without species, the job runs without it and says why.</span></span></span></h3>
+        <div class="indent" data-reconcile-options>
+          {{ form.species_hints }}
+          <div hx-post="{% url 'species_check' %}" hx-encoding="multipart/form-data"
+               hx-include="closest form" hx-target="#species-table" hx-swap="outerHTML"
+               hx-indicator="#species-busy"
+               hx-trigger="load, htmx:afterSettle[target.id=='sequences-field'] from:body, change[target.name=='sequences_text' || target.name=='sequences_file' || target.name=='alignment_files' || target.name=='saved_alignments' || target.name=='reconcile' || target.name=='species_consent' || target.name=='accession_consent' || target.name=='species_paste' || target.name=='species_table_file' || target.name=='species_tree_file' || target.name=='species_query' || target.name=='species_taxid'] from:body delay:300ms">
+            <p id="species-busy" class="hint species-busy">Looking up species…</p>
+            {% include "phylobot/_species.html" %}
+          </div>
+          <details class="advanced">
+            <summary>Advanced</summary>
+            <h4>Many sequences at once</h4>
+            <p class="hint">One sequence per line: its name, its species (or an NCBI taxid), and
+              optionally a taxid, separated by tabs or commas. Or download the table, fill it in
+              with a spreadsheet, and upload it back. A list overrides the headers; what you
+              type in the table overrides the list.</p>
+            <p class="species-bulk">{{ form.species_paste }}</p>
+            <p class="own"><label for="{{ form.species_table_file.id_for_label }}">Upload a list</label>
+              {{ form.species_table_file }}
+              <button type="submit" class="link" formaction="{% url 'species_table' %}" formmethod="post"
+                      formnovalidate>Download the table</button></p>
+            <h4>My own species tree</h4>
+            <p class="own">{{ form.species_tree_file }}
+              <span class="hint">Rooted Newick whose leaves are species names (underscores read
+                as spaces), e.g. from a published phylogeny of your clade. Used instead of the
+                Open Tree of Life, so nothing is sent; species not in your sequences are pruned.</span></p>
+            <h4>Unresolved nodes in the species tree</h4>
+            <fieldset class="inline-choices"><legend class="visually-hidden">{{ form.polytomies.label }}</legend>
+              {% for radio in form.polytomies %}<label>{{ radio.tag }} {{ radio.choice_label }}</label>{% endfor %}
+            </fieldset>
+            <span class="hint">GeneRax needs a fully resolved species tree, and the Open Tree of
+              Life often leaves nodes unresolved. From the gene trees: each is resolved the way
+              most of the job's trees group those species, which adds no events the data do not
+              imply.</span>
+            <h4>A reconciled tree</h4>
+            <label>{{ form.reconciled_tree }} {{ form.reconciled_tree.label }}</label>
+            <span class="hint indent">GeneRax searches for the tree that best fits both the
+              alignment and the species tree, starting from IQ-TREE's (or RAxML-NG's) tree, for
+              each amino-acid model: one more tree source, with an AU test of every source's
+              topology. About one more tree search per alignment and model.</span>
+          </details>
+        </div>
+        <p class="hint indent" data-reconcile-off hidden>Off: no species are read and no
+          reconciliation runs.</p>
+      </section>
+    </div>
+    <p class="hint" data-unless="trees">Off: the job stops after the alignments.</p>
+    </div>
+  </section>
+
+  <section class="step" data-stage="ancestors" id="step-5">
+    <h2 class="with-defaults"><button type="button" class="fold-toggle" aria-controls="step-5-body"
+        aria-expanded="true" aria-label="Fold this step"></button><span class="step-number">5</span> <label class="stage">{{ form.run_ancestors }} Ancestral Sequences</label>
+      <button type="button" class="link use-defaults" data-defaults="ancestors">Use defaults</button></h2>
+    <div class="fold-body" id="step-5-body">
+    <div data-needs="ancestors">
+      <h3>Gaps in ancestral sequences <button type="button" class="help-dot" popovertarget="help-gaps" aria-label="About gaps in ancestral sequences">?</button><span class="help-popover" popover id="help-gaps"><strong>Gaps in ancestral sequences</strong><span><span>Ancestors are always reported as reconstructed, with a residue at every alignment column (<code>ancestors.fasta</code>). Each method ticked here also writes a copy with the columns it judges absent in each ancestor masked as gaps (<code>ancestors.gaps-&lt;method&gt;.fasta</code>).</span><span>Parsimony and ML only mask: they change no residue, tree or alignment. PRANK and GRASP instead reconstruct the ancestors themselves (their own residues and gaps) on the same alignment and tree.</span><span>Both parsimony rules are ticked by default: Fitch uses the outgroup's root when there is one (on simulated data it then places gaps better), shared presence needs no root.</span></span></span></h3>
+      {{ form.gap_methods }}
+
+      <h3>Sequence properties <button type="button" class="help-dot" popovertarget="help-properties" aria-label="About sequence properties">?</button><span class="help-popover" popover id="help-properties"><strong>Sequence properties</strong><span><span>Measures each ancestor's charge, hydrophobic moment and hydrophobic regions — not once, but over draws from the reconstruction's own posterior, so each property comes with the spread its uncertainty implies rather than a single number.</span><span>On by default: measured on the bundled example it took 39 s of a 78 s job, since it measures every ancestor in every gap version.</span><span>Draws are taken per alignment column independently, which is what the posteriors give; that is stated beside the results.</span></span></span></h3>
+      <label>{{ form.properties }} {{ form.properties.label }}</label>
+      <fieldset class="extra-properties" data-extra-properties>
+        <legend>Also measure, with a predictor (slower; off by default) <button type="button" class="help-dot" popovertarget="help-predictors" aria-label="About predictors">?</button><span class="help-popover" popover id="help-predictors"><strong>Predictors</strong><span><span>The disordered fraction comes from metapredict: a few seconds per ancestor at 1000 draws.</span><span>The ESM-2 log-likelihood scores how natural each draw looks to a protein language model, and it is <b>slow</b> — a measured 1.5 h per ancestor per gap version at 1000 draws on the bundled example, where the unmasked ancestors are about 1000 columns.</span><span>Lower the draw count below, or leave these off here and measure one ancestor at a time from the ancestor viewer, which is what they are built for.</span></span></span></legend>
+        {% for box in form.extra_properties %}
+          <label>{{ box.tag }} {{ box.choice_label }}</label>
+        {% endfor %}
+      </fieldset>
+      <div class="option-line draws-line"><label class="draws-field">{{ form.property_draws }} draws per ancestor</label>
+        <button type="button" class="help-dot" popovertarget="help-draws" aria-label="About draws per ancestor">?</button><span class="help-popover" popover id="help-draws"><strong>Draws per ancestor</strong><span>More draws narrow the credible interval and cost in proportion ({{ form.property_draws.field.min_value }}–{{ form.property_draws.field.max_value }}); 1000 is enough for a stable 95% interval. The same choice can be made again, per ancestor, in the ancestor viewer.</span></span></div>
+
+      <div class="codeml" data-codon-models hidden data-paml-codes="{{ paml_codes }}">
+        <h3><label>{{ form.codeml }} PAML codeml</label> <button type="button" class="help-dot" popovertarget="help-codeml" aria-label="About pAML codeml">?</button><span class="help-popover" popover id="help-codeml"><strong>PAML codeml</strong><span>A second codon reconstruction with codeml's site models, which let dN/dS vary among sites (IQ-TREE's codon models have one dN/dS). Runs on a fixed tree (IQ-TREE's), with ancestors under each model, and tests for positive selection. Slow: minutes to hours per model (the work estimate shows it).</span></span></h3>
+        <div class="indent" data-codeml-options>
+          {% for choice in form.codeml_models %}
+            <label class="codeml-model">{{ choice.tag }} {{ choice.choice_label }}{% if choice.data.value in "M1a M2a" %}
+              <span class="hint">· tick both for the M1a vs M2a positive-selection test</span>{% elif choice.data.value == "M8" %}
+              <span class="hint">· with M7: the M7 vs M8 positive-selection test</span>{% elif choice.data.value == "FR" %}
+              <span class="hint">· a branch model: dN/dS beside each branch of a mutational path (estimates, not a test). Slow: about 18 minutes on lysin</span>{% endif %}</label>
+          {% endfor %}
+          <p class="inline-choices">{% for radio in form.codeml_trees %}<label>{{ radio.tag }} {{ radio.choice_label }}</label>{% endfor %}</p>
+          <p class="hint" data-paml-missing hidden>PAML doesn't have the chosen genetic code.</p>
+        </div>
+      </div>
+    </div>
+    <p class="hint" data-unless="ancestors">Off: the job stops after the trees.</p>
+    </div>
+  </section>
+  </fieldset>
+  </div>{# .submit-sections #}
+  </div>{# .submit-layout #}
+
+  {% comment %}The job panel: hidden until the form holds sequences, then slides in from the
+  right (a bottom sheet on narrow screens) with what the job will run and Submit.{% endcomment %}
+  <aside id="job-panel" class="job-panel" aria-labelledby="job-panel-title" inert>
+    {# The collapse handle sits on the panel's left edge, vertically centred, so it stays #}
+    {# reachable even when a wrapped top toolbar would cover a corner button. #}
+    <button type="button" class="job-panel-close" aria-label="Hide job summary"
+            title="Hide" aria-controls="job-panel">»</button>
+    <div class="job-panel-head">
+      <div>
+        <h2 id="job-panel-title">Your Job</h2>
+        <p class="job-panel-name" hidden></p>
+      </div>
+    </div>
+    <div class="job-panel-body">
+      <section id="preview" class="preview"></section>
+    </div>
+    <div class="job-panel-foot"><button type="submit" class="primary">Submit job</button></div>
+  </aside>
+  <button type="button" id="job-panel-tab" class="job-panel-tab" aria-controls="job-panel"
+          aria-expanded="false" hidden>« Your job <span class="tab-units"></span></button>
+</form>
+
+{# "Load from My alignments": search as you type; scrolling fetches older ones. Outside the #}
+{# form, so its search box is never submitted. #}
+<dialog id="alignment-picker" class="alignment-picker" aria-labelledby="picker-title">
+  <div class="picker-head">
+    <h2 id="picker-title">Load from My Alignments</h2>
+    <button type="button" class="icon-button" data-close-picker aria-label="Close">×</button>
+  </div>
+  <input type="search" name="q" placeholder="Search by name or job…" autocomplete="off"
+         aria-label="Search your alignments"
+         hx-get="{% url 'alignment_picker' %}" hx-trigger="input changed delay:200ms, search"
+         hx-target="#picker-list" hx-swap="innerHTML">
+  <ul id="picker-list" class="picker-list" aria-label="Your alignments, most recently used first"></ul>
+  <p class="hint">Most recently used first. Choosing one loads it; choose again to add more
+    (up to 5).</p>
+</dialog>
+{{ section_defaults|json_script:"section-defaults" }}
+<script>
+  // Coding DNA: the sequence type is the chosen one, or with "Detect" what the live
+  // check (#sequence-check) found. Coding-DNA options show only then; PRANK's codon model
+  // is offered only for coding DNA.
+  function syncSeqtype() {
+    const form = document.getElementById("submit-form");
+    const chosen = form.querySelector('input[name="seqtype"]:checked');
+    const check = document.getElementById("sequence-check");
+    const type = chosen && chosen.value !== "auto" ? chosen.value : (check ? check.dataset.seqtype : "");
+    const coding = type === "codon";
+    form.querySelectorAll("[data-codon]").forEach((el) => { el.hidden = !coding; });
+    // Which models apply: amino-acid models (protein, or coding DNA with "amino" or
+    // "both"), codon models (coding DNA with "codon" or "both").
+    const analyses = form.querySelector('input[name="analyses"]:checked');
+    const choice = coding && analyses ? analyses.value : "amino";
+    form.querySelectorAll("[data-codon-models]").forEach((el) => { el.hidden = !(coding && choice !== "amino"); });
+    form.querySelector("[data-amino-models]").hidden = coding && choice === "codon";
+    form.querySelector("[data-amino-heading]").hidden = !(coding && choice === "both");
+    // codeml: only with a genetic code PAML has.
+    const codemlBox = form.querySelector('input[name="codeml"]');
+    const codemlSection = form.querySelector("[data-paml-codes]");
+    const code = form.querySelector('select[name="genetic_code"]');
+    if (codemlBox && codemlSection && code) {
+      const paml = codemlSection.dataset.pamlCodes.split(",").includes(code.value);
+      codemlBox.disabled = !paml;
+      if (!paml) codemlBox.checked = false;
+      codemlSection.querySelector("[data-paml-missing]").hidden = paml;
+      codemlSection.querySelector("[data-codeml-options]").classList.toggle("unavailable", !codemlBox.checked);
+    }
+    // Which amino-acid trees: only matters with "Fit on the amino-acid tree".
+    const onAmino = form.querySelector('input[name="codon_on_amino"]');
+    const aminoTrees = form.querySelector("[data-codon-amino-trees]");
+    if (onAmino && aminoTrees) aminoTrees.classList.toggle("unavailable", !onAmino.checked);
+    const prankCodon = form.querySelector('input[name="aligners"][value="prank_codon"]');
+    if (prankCodon) {
+      prankCodon.disabled = !coding;
+      if (!coding) prankCodon.checked = false;
+      prankCodon.closest("label").hidden = !coding;
+    }
+  }
+  document.addEventListener("change", syncSeqtype);
+  document.addEventListener("htmx:afterSettle", syncSeqtype);
+  document.addEventListener("DOMContentLoaded", syncSeqtype);
+  // File lists (steps 2 and 3): the form's own file input (data-file-store) holds every
+  // file chosen so far, so choosing more adds to them (a file of the same name replaces
+  // the old one) and Remove takes one out; nothing is uploaded until Submit. The server
+  // lists them with tick boxes (_file_list.html; forms.used_files leaves unticked ones out).
+  function fileStore(field) { return document.querySelector(`#submit-form input[data-file-store][name="${field}"]`); }
+  function setStoredFiles(field, files) {
+    const store = fileStore(field);
+    const transfer = new DataTransfer();
+    files.forEach((file) => transfer.items.add(file));
+    store.files = transfer.files;
+    store.dispatchEvent(new Event("change", { bubbles: true }));
+  }
+  document.addEventListener("change", (event) => {
+    const pick = event.target.closest("[data-file-pick]");
+    if (!pick || !pick.files.length) return;
+    event.stopPropagation();
+    const field = pick.dataset.filePick;
+    const added = [...pick.files];
+    const names = new Set(added.map((file) => file.name));
+    setStoredFiles(field, [...fileStore(field).files].filter((file) => !names.has(file.name)).concat(added));
+    pick.value = "";
+  }, true);
+  document.addEventListener("click", (event) => {
+    const choose = event.target.closest("[data-choose-files]");
+    if (choose) {
+      document.querySelector(`[data-file-pick="${choose.dataset.chooseFiles}"]`).click();
+      return;
+    }
+    const remove = event.target.closest("[data-remove-file]");
+    if (!remove) return;
+    const field = remove.dataset.removeFile;
+    remove.closest("li").remove();
+    setStoredFiles(field, [...fileStore(field).files].filter((file) => file.name !== remove.dataset.file));
+  });
+  // Codons with ambiguous bases (the live check's dialog, _sequence_check.html): the user
+  // confirms how they will be treated before submitting. The confirmed fingerprint goes
+  // in ambiguity_ack, which SubmitForm checks against the sequences it receives, so new
+  // sequences with other ambiguous codons need confirming again. The dialog opens by
+  // itself once per set of codons, and again if the user submits without confirming.
+  const ambiguityOffered = new Set();
+  function ambiguityAck() { return document.querySelector('#submit-form input[name="ambiguity_ack"]'); }
+  function syncAmbiguity() {
+    const dialog = document.getElementById("ambiguity-dialog");
+    if (!dialog) return;
+    const done = ambiguityAck().value === dialog.dataset.fingerprint;
+    document.querySelectorAll("[data-ambiguity-pending]").forEach((el) => { el.hidden = done; });
+    document.querySelectorAll("[data-ambiguity-done]").forEach((el) => { el.hidden = !done; });
+    document.querySelectorAll(".ambiguity-line").forEach((el) => { el.classList.toggle("warning", !done); });
+    if (!done && !dialog.open && !ambiguityOffered.has(dialog.dataset.fingerprint)) {
+      ambiguityOffered.add(dialog.dataset.fingerprint);
+      dialog.showModal();
+    }
+  }
+  document.addEventListener("click", (event) => {
+    const dialog = document.getElementById("ambiguity-dialog");
+    if (!dialog) return;
+    if (event.target.closest("[data-ambiguity-open]")) { dialog.showModal(); return; }
+    const choice = event.target.closest("[data-ambiguity-choice]");
+    if (!choice) return;
+    if (choice.dataset.ambiguityChoice === "confirm") ambiguityAck().value = dialog.dataset.fingerprint;
+    dialog.close();
+    syncAmbiguity();
+    if (choice.dataset.ambiguityChoice === "edit") {
+      const text = document.querySelector('#submit-form [name="sequences_text"]');
+      if (text) text.focus();
+    }
+  });
+  document.addEventListener("submit", (event) => {
+    const dialog = document.getElementById("ambiguity-dialog");
+    if (event.target.id !== "submit-form" || !dialog) return;
+    if (event.submitter && event.submitter.hasAttribute("formaction")) return;  // not Submit job
+    if (ambiguityAck().value !== dialog.dataset.fingerprint) {
+      event.preventDefault();
+      dialog.showModal();
+    }
+  });
+  document.addEventListener("htmx:afterSettle", syncAmbiguity);
+  document.addEventListener("DOMContentLoaded", syncAmbiguity);
+  // PRANK and GRASP gap placement need an outgroup: disable them until one is ticked.
+  function syncGapOptions() {
+    const form = document.getElementById("submit-form");
+    const hasOutgroup = form.querySelector('input[name="outgroup"]:checked') !== null;
+    const box = (value) => form.querySelector(`input[name="gap_methods"][value="${value}"]`);
+    for (const value of ["prank", "grasp"]) {
+      const option = box(value);
+      if (!option) continue;
+      option.disabled = !hasOutgroup;
+      if (!hasOutgroup) option.checked = false;
+      option.closest("label").classList.toggle("unavailable", !hasOutgroup);
+    }
+  }
+  // The species table: an offer fills every row it names, a choice fills its own row;
+  // then the table looks them up again (one change event).
+  function fillSpecies(names, query, taxid) {
+    const table = document.getElementById("species-table");
+    let last = null;
+    for (const input of table.querySelectorAll('input[name="species_for"]')) {
+      if (!names.includes(input.value)) continue;
+      const row = input.closest("tr");
+      row.querySelector('input[name="species_query"]').value = query;
+      last = row.querySelector('input[name="species_taxid"]');
+      last.value = taxid;
+    }
+    if (last) last.dispatchEvent(new Event("change", { bubbles: true }));
+  }
+  document.addEventListener("click", (event) => {
+    const button = event.target.closest(".species-offer");
+    if (button) fillSpecies(button.dataset.rows.split("\n"), button.dataset.query, button.dataset.taxid);
+  });
+  document.addEventListener("change", (event) => {
+    const choice = event.target.closest(".species-choice");
+    if (!choice || !choice.value) return;
+    const name = choice.closest("tr").querySelector('input[name="species_for"]').value;
+    fillSpecies([name], choice.value, "");
+  });
+  // Reconciliation: its options show only while it is ticked.
+  function syncReconcile() {
+    const box = document.querySelector('#submit-form input[name="reconcile"]');
+    if (!box) return;
+    document.querySelector("[data-reconcile-options]").hidden = !box.checked;
+    document.querySelector("[data-reconcile-off]").hidden = box.checked;
+  }
+  document.addEventListener("change", syncReconcile);
+  document.addEventListener("DOMContentLoaded", syncReconcile);
+  // Stage switches: without trees there are no ancestors; sections that a stopped
+  // stage would not use are hidden (their inputs stay in the form and are ignored).
+  function syncStages() {
+    const form = document.getElementById("submit-form");
+    const trees = form.querySelector('input[name="run_trees"]');
+    const ancestors = form.querySelector('input[name="run_ancestors"]');
+    if (!trees || !ancestors) return;
+    ancestors.disabled = !trees.checked;
+    const on = { trees: trees.checked, ancestors: trees.checked && ancestors.checked };
+    form.querySelectorAll("[data-needs]").forEach((el) => { el.hidden = !on[el.dataset.needs]; });
+    form.querySelectorAll("[data-unless]").forEach((el) => { el.hidden = on[el.dataset.unless]; });
+  }
+  // Branch support: a replicate count is only editable while its measure is ticked, and
+  // UFBoot needs IQ-TREE's own search.
+  // RAxML-NG lacks some matrices (catalog.RAXML_MISSING) and every mixture: ticking it
+  // unticks their rows and columns, and unticking it ticks back what it unticked.
+  let raxmlUnticked = [];
+  let hadRaxml = null;
+  function syncSupports(event) {
+    const form = document.getElementById("submit-form");
+    const raxml = form.querySelector('input[name="tree_builders"][value="raxml"]');
+    const withRaxml = Boolean(raxml && raxml.checked);
+    form.querySelectorAll(".raxml-missing, [data-raxml-note]").forEach((el) => { el.hidden = !withRaxml; });
+    if (hadRaxml !== null && withRaxml !== hadRaxml) {
+      if (withRaxml) {
+        raxmlUnticked = [...form.querySelectorAll(".raxml-missing")]
+          .flatMap((note) => [...note.closest("tr").querySelectorAll("input:checked")])
+          .concat([...form.querySelectorAll("input[data-mixture]:checked")]);
+        raxmlUnticked.forEach((box) => { box.checked = false; });
+      } else {
+        raxmlUnticked.forEach((box) => { box.checked = true; });
+        raxmlUnticked = [];
+      }
+      if (event) form.dispatchEvent(new Event("change"));
+    }
+    hadRaxml = withRaxml;
+    syncModelGrids(event);
+    // The draw count is only editable while properties are measured, as a replicate
+    // count is only editable while its measure is ticked.
+    const measuring = form.querySelector('input[name="properties"]');
+    const drawsField = form.querySelector('input[name="property_draws"]');
+    if (measuring && drawsField) {
+      drawsField.disabled = !measuring.checked;
+      drawsField.closest("label").classList.toggle("unavailable", !measuring.checked);
+      // The predictors are measured alongside the defaults, so they follow the same box.
+      form.querySelectorAll('input[name="extra_properties"]').forEach((box) => {
+        box.disabled = !measuring.checked;
+        box.closest("label").classList.toggle("unavailable", !measuring.checked);
+      });
+    }
+    const iqtree = form.querySelector('input[name="tree_builders"][value="iqtree"]');
+    const ufboot = form.querySelector('input[name="ufboot"]');
+    if (!iqtree || !ufboot) return;
+    ufboot.disabled = !iqtree.checked;
+    if (!iqtree.checked) ufboot.checked = false;
+    ufboot.closest("label").classList.toggle("unavailable", !iqtree.checked);
+    for (const [box, count] of [["sh_alrt", "alrt"], ["ufboot", "bootstrap"]]) {
+      form.querySelector(`input[name="${count}"]`).disabled =
+        !form.querySelector(`input[name="${box}"]`).checked;
+    }
+  }
+  // The two model grids: each summary counts its ticks; ticking "Full ML tree search"
+  // opens its grid, and ticking a model in that grid ticks the option.
+  function syncModelGrids(event) {
+    const form = document.getElementById("submit-form");
+    // Each "full search" option with its grid: amino-acid and codon models.
+    for (const [option, grid] of [["fixed_models", "models"], ["codon_fixed", "codon_models"]]) {
+      const fixed = form.querySelector(`input[name="${option}"]`);
+      if (!(event && event.type === "change" && fixed)) continue;
+      if (event.target === fixed && fixed.checked) {
+        form.querySelector(`details[data-grid="${grid}"]`).open = true;
+      } else if (event.target.name === grid && event.target.checked && !fixed.checked) {
+        fixed.checked = true;
+        form.dispatchEvent(new Event("change"));  // the summary saw the old state
+      }
+    }
+    form.querySelectorAll("details[data-grid]").forEach((details) => {
+      const boxes = details.querySelectorAll("input[type=checkbox]");
+      const ticked = [...boxes].filter((box) => box.checked).length;
+      const count = details.querySelector("[data-model-count]");
+      const whole = ticked === boxes.length && count.dataset.whole;
+      // A folded grid still says what is in it: the few ticked models by name.
+      const names = [...boxes].filter((box) => box.checked).map((box) => box.value);
+      const named = "names" in count.dataset && ticked > 0 && ticked <= 6;
+      count.textContent = named ? `(${names.join(", ")})`
+        : `(${ticked} ticked${whole ? ": " + count.dataset.whole : ""})`;
+    });
+  }
+  document.addEventListener("change", syncSupports);
+  document.addEventListener("DOMContentLoaded", syncSupports);
+  document.addEventListener("change", syncStages);
+  document.addEventListener("DOMContentLoaded", syncStages);
+  document.addEventListener("change", syncGapOptions);
+  document.addEventListener("htmx:afterSettle", syncGapOptions);
+  document.addEventListener("DOMContentLoaded", syncGapOptions);
+  // The job panel appears once the form holds something to run (pasted or uploaded
+  // sequences, or an uploaded alignment), opening by itself the first time; after that
+  // the user closes and reopens it with the tab. It hides again if the inputs are cleared.
+  const panel = {
+    el: () => document.getElementById("job-panel"),
+    tab: () => document.getElementById("job-panel-tab"),
+    autoOpened: false,
+    open: false,
+    hasInput() {
+      const form = document.getElementById("submit-form");
+      const text = form.querySelector('[name="sequences_text"]');
+      const files = [...form.querySelectorAll('input[type="file"][name="sequences_file"], input[type="file"][name="alignment_files"]')];
+      const saved = form.querySelector('input[name="saved_alignments"]:checked');
+      return Boolean((text && text.value.trim()) || files.some((f) => f.files.length) || saved);
+    },
+    show(open) {
+      this.open = open;
+      this.el().classList.toggle("open", open);
+      this.el().inert = !open;
+      this.tab().hidden = open || !this.hasInput();
+      this.tab().setAttribute("aria-expanded", String(open));
+      document.body.classList.toggle("job-panel-open", open);
+    },
+    sync() {
+      const name = document.querySelector('#submit-form [name="name"]');
+      const label = this.el().querySelector(".job-panel-name");
+      label.textContent = name ? name.value.trim() : "";
+      label.hidden = !label.textContent;
+      if (!this.hasInput()) return this.show(false);
+      if (!this.autoOpened) { this.autoOpened = true; return this.show(true); }
+      this.show(this.open);
+    },
+  };
+  document.addEventListener("DOMContentLoaded", () => panel.sync());
+  document.addEventListener("htmx:afterSettle", (event) => {
+    panel.sync();
+    // A swap elsewhere (the example's sequences, the outgroup list) can change what the
+    // job runs without a change event: refresh the summary.
+    if (event.target.id !== "preview") {
+      document.getElementById("submit-form").dispatchEvent(new Event("change"));
+    }
+  });
+  document.addEventListener("change", () => panel.sync());
+  document.addEventListener("input", (event) => {
+    if (["sequences_text", "name"].includes(event.target.name)) panel.sync();
+  });
+  document.addEventListener("click", (event) => {
+    if (event.target.closest(".job-panel-close")) { panel.show(false); panel.tab().focus(); }
+    else if (event.target.closest("#job-panel-tab")) panel.show(true);
+  });
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && panel.open) { panel.show(false); panel.tab().focus(); }
+  });
+  // Work estimate: show how much the last change added or removed, and keep the
+  // closed panel's tab showing the total.
+  let lastUnits = null;
+  document.addEventListener("htmx:afterSettle", (event) => {
+    const work = event.target.querySelector && event.target.querySelector(".work[data-units]");
+    if (!work) return;
+    const units = parseFloat(work.dataset.units);
+    const delta = lastUnits === null ? 0 : units - lastUnits;
+    lastUnits = units;
+    const fmt = (u) => (Math.abs(u) < 10 ? u.toFixed(1) : Math.round(u).toString());
+    panel.tab().querySelector(".tab-units").textContent = `· ${fmt(units)} units`;
+    if (Math.abs(delta) >= 0.05) {
+      const chip = work.querySelector(".work-delta");
+      chip.textContent = `${delta > 0 ? "+" : "−"}${fmt(Math.abs(delta))}`;
+      chip.classList.add(delta > 0 ? "up" : "down");
+    }
+  });
+  // Filter the outgroup checklist; "Check all shown" / "Clear all shown" act only on
+  // the sequences the filter leaves visible (e.g. every name with a shared prefix).
+  function outgroupCount(section) {
+    const shown = [...section.querySelectorAll(".outgroup-list label")].filter((l) => !l.hidden);
+    const ticked = section.querySelectorAll('.outgroup-list input:checked').length;
+    const filtered = section.querySelector(".outgroup-filter").value.trim() !== "";
+    section.querySelector(".outgroup-count").textContent =
+      (filtered ? `${shown.length} shown · ` : "") + `${ticked} ticked`;
+  }
+  document.addEventListener("input", (event) => {
+    if (!event.target.matches(".outgroup-filter")) return;
+    const section = event.target.closest("#outgroup-section");
+    const query = event.target.value.toLowerCase();
+    section.querySelectorAll(".outgroup-list label").forEach((label) => {
+      label.hidden = !label.textContent.toLowerCase().includes(query);
+    });
+    outgroupCount(section);
+  });
+  document.addEventListener("click", (event) => {
+    const button = event.target.closest("[data-outgroup-shown]");
+    if (!button) return;
+    const section = button.closest("#outgroup-section");
+    const tick = button.dataset.outgroupShown === "on";
+    const boxes = [...section.querySelectorAll(".outgroup-list label")]
+      .filter((label) => !label.hidden)
+      .map((label) => label.querySelector("input"));
+    boxes.forEach((box) => { box.checked = tick; });
+    outgroupCount(section);
+    if (boxes.length) boxes[0].dispatchEvent(new Event("change", { bubbles: true }));
+  });
+  document.addEventListener("change", (event) => {
+    if (event.target.name === "outgroup") outgroupCount(event.target.closest("#outgroup-section"));
+  });
+  function outgroupCountAll() {
+    const section = document.getElementById("outgroup-section");
+    if (section && section.querySelector(".outgroup-count")) outgroupCount(section);
+  }
+  document.addEventListener("DOMContentLoaded", outgroupCountAll);
+  document.addEventListener("htmx:afterSettle", outgroupCountAll);
+  // Check all / Clear all for one model grid; Check all skips the matrices RAxML-NG lacks
+  // while it is ticked (their "not in RAxML-NG" note is showing), and always the mixtures
+  // (56 slow searches is never what it means).
+  document.addEventListener("click", (event) => {
+    const button = event.target.closest("button[data-grid-all]");
+    if (!button) return;
+    const tick = button.dataset.gridAll === "on";
+    const table = button.closest("details").querySelector("table.grid");
+    const boxes = [...table.querySelectorAll("tr")]
+      .filter((row) => !tick || !row.querySelector(".raxml-missing:not([hidden])"))
+      .flatMap((row) => [...row.querySelectorAll("input[type=checkbox]")])
+      .filter((box) => !tick || !box.hasAttribute("data-mixture"));
+    boxes.forEach((box) => { box.checked = tick; });
+    if (boxes.length) boxes[0].dispatchEvent(new Event("change", { bubbles: true }));
+  });
+  // "Use defaults" on a step: its settings back to the fields' initial values
+  // (forms.section_defaults); its sequences, uploads and outgroup are left alone.
+  const SECTION_DEFAULTS = JSON.parse(document.getElementById("section-defaults").textContent);
+  document.addEventListener("click", (event) => {
+    const button = event.target.closest("button[data-defaults]");
+    if (!button) return;
+    const form = document.getElementById("submit-form");
+    const values = SECTION_DEFAULTS[button.dataset.defaults];
+    // Stage switches first: the ancestors switch is disabled while trees are off.
+    const names = Object.keys(values).sort((a, b) => b.startsWith("run_") - a.startsWith("run_"));
+    for (const name of names) {
+      const value = values[name];
+      if (name === "run_ancestors") syncStages();
+      for (const input of form.querySelectorAll(`[name="${name}"]`)) {
+        if (input.type === "checkbox" && Array.isArray(value)) input.checked = value.includes(input.value);
+        else if (input.type === "checkbox") input.checked = Boolean(value);
+        else if (input.type === "radio") input.checked = input.value === String(value);
+        else input.value = value ?? "";
+      }
+    }
+    if ("tree_builders" in values) raxmlUnticked = [];  // the grids are set afresh
+    form.dispatchEvent(new Event("change", { bubbles: true }));
+  });
+  // Row/column toggles for the model grid: tick all, or untick all if all are ticked.
+  document.addEventListener("click", (event) => {
+    const button = event.target.closest("button.toggle");
+    if (!button) return;
+    const table = button.closest("table");
+    const boxes = button.hasAttribute("data-row")
+      ? [...button.closest("tr").querySelectorAll("input")]
+      : [...table.querySelectorAll(`input[data-col="${button.dataset.col}"]`)];
+    const tick = !boxes.every((box) => box.checked);
+    boxes.forEach((box) => { box.checked = tick; });
+    boxes[0].dispatchEvent(new Event("change", { bubbles: true }));
+  });
+  // Alignments from My alignments: step 3's checkboxes are the choice (each one ticked is
+  // posted); the picker adds one, unticking removes it, and step 2 shows what is loaded.
+  const MAX_CHOSEN = 5;
+  const picker = document.getElementById("alignment-picker");
+  const chosenList = () => document.getElementById("chosen-alignments");
+  const chosenBoxes = () => [...chosenList().querySelectorAll('input[name="saved_alignments"]')];
+  function syncLoaded() {
+    const box = document.getElementById("loaded-alignments");
+    const list = box.querySelector("ul");
+    list.replaceChildren();
+    for (const input of chosenBoxes().filter((i) => i.checked)) {
+      const item = document.createElement("li");
+      const label = input.closest("label");
+      item.append(label.querySelector(".chosen-title").textContent, " ");
+      const size = document.createElement("span");
+      size.className = "hint";
+      size.textContent = label.querySelector(".hint").textContent;
+      const remove = document.createElement("button");
+      remove.type = "button";
+      remove.className = "link";
+      remove.textContent = "Remove";
+      remove.addEventListener("click", () => {
+        input.checked = false;
+        input.dispatchEvent(new Event("change", { bubbles: true }));
+      });
+      item.append(size, " ", remove);
+      list.append(item);
+    }
+    box.hidden = !list.children.length;
+    markChosen();
+  }
+  function markChosen() { // the picker's rows already chosen
+    const ids = new Set(chosenBoxes().filter((i) => i.checked).map((i) => i.value));
+    picker.querySelectorAll("[data-pick]").forEach((row) => {
+      row.classList.toggle("chosen", ids.has(row.dataset.pick));
+      row.setAttribute("aria-pressed", String(ids.has(row.dataset.pick)));
+    });
+  }
+  function choose(row) {
+    const existing = chosenBoxes().find((i) => i.value === row.dataset.pick);
+    if (existing && existing.checked) { picker.close(); return; }
+    if (chosenBoxes().filter((i) => i.checked).length >= MAX_CHOSEN) {
+      alert(`At most ${MAX_CHOSEN} of your own alignments in one job.`);
+      return;
+    }
+    let input = existing;
+    if (!input) {
+      const item = document.createElement("li");
+      const label = document.createElement("label");
+      input = document.createElement("input");
+      input.type = "checkbox";
+      input.name = "saved_alignments";
+      input.value = row.dataset.pick;
+      const title = document.createElement("span");
+      title.className = "chosen-title";
+      title.textContent = row.dataset.title;
+      const size = document.createElement("span");
+      size.className = "hint";
+      size.textContent = row.dataset.size;
+      label.append(input, " ", title, " ", size);
+      item.append(label);
+      chosenList().append(item);
+    }
+    input.checked = true;
+    picker.close();
+    input.dispatchEvent(new Event("change", { bubbles: true })); // the checks, outgroup, summary
+  }
+  document.addEventListener("click", (event) => {
+    if (event.target.closest("[data-open-picker]")) {
+      picker.showModal();
+      const list = document.getElementById("picker-list");
+      if (!list.children.length) {
+        htmx.ajax("GET", "{% url 'alignment_picker' %}", { target: list, swap: "innerHTML" });
+      }
+      picker.querySelector('input[type="search"]').focus();
+      markChosen();
+    } else if (event.target.closest("[data-close-picker]") || event.target === picker) {
+      picker.close(); // the close button, or a click on the backdrop
+    } else if (event.target.closest("[data-pick]")) {
+      choose(event.target.closest("[data-pick]"));
+    }
+  });
+  document.addEventListener("change", (event) => {
+    if (event.target.name !== "saved_alignments") return;
+    if (!event.target.checked) event.target.closest("li").remove();
+    syncLoaded();
+  });
+  document.addEventListener("htmx:afterSettle", (event) => {
+    if (picker.contains(event.target)) markChosen();
+  });
+  document.addEventListener("DOMContentLoaded", syncLoaded);
+</script>
+{% endblock %}

@@ -1,0 +1,44 @@
+{% load static %}
+<section class="results simulation-result">
+  <h2>Simulated Replicates <span class="badge simulated">Simulated data</span></h2>
+  {% with spec=simulation.spec source=simulation.source %}
+  <p class="hint">Model {{ spec.model.substitution }}{% if spec.indels %}, indels
+    (rates {{ spec.indels.rates }}, sizes {{ spec.indels.sizes }}){% else %}, no indels{% endif %}.
+    {% if source.kind == "job" %}Tree: <a href="{% url 'job_detail' source.job %}">{{ source.label }}</a>{% if source.node %},
+    root sequence its ancestor {{ source.node }}{% endif %}.{% else %}A random tree per replicate.{% endif %}</p>
+  {% endwith %}
+  {% if simulation.replicates %}
+    <table class="results replicates">
+      <thead><tr><th>Seed</th><th>Sequences</th><th>Columns</th><th>Gaps</th><th class="files">Truth</th><th></th></tr></thead>
+      <tbody>
+        {% for r in simulation.replicates %}
+          <tr>
+            <td class="label">{{ r.seed }}</td>
+            <td>{{ r.sequences }}</td>
+            <td>{{ r.columns }}</td>
+            <td>{% widthratio r.gaps 1 100 %}%</td>
+            <td class="files">{% for name, path in r.files.items %}<a href="{% url 'job_file' job.id path %}">{{ name }}</a>{% if not forloop.last %} · {% endif %}{% endfor %}</td>
+            <td class="actions">
+              {% if r.alignment %}<a href="{% url 'alignment_editor' r.alignment.id %}">View alignment</a> · {% endif %}
+              <a href="{% url 'submit' %}?simulation={{ job.id }}&amp;replicate={{ r.seed }}"
+                 title="Open the New Job page with this replicate's unaligned sequences">Use in a new job →</a>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    <p class="hint">Each replicate's true alignment is also in My alignments (marked
+      simulated), so a job can be given it in step 3.</p>
+  {% elif job.status == "succeeded" %}
+    <p class="hint">No replicates were written.</p>
+  {% endif %}
+  {% if simulation.names %}
+    <details class="names">
+      <summary>Sequence names on the source tree ({{ simulation.names|length }})</summary>
+      <p class="hint">Shown only here: the simulated files never carry real names.</p>
+      <table class="results"><thead><tr><th>Simulated</th><th>Sequence on the job's tree</th></tr></thead>
+        <tbody>{% for simulated, original in simulation.names %}<tr><td>{{ simulated }}</td><td>{{ original }}</td></tr>{% endfor %}</tbody>
+      </table>
+    </details>
+  {% endif %}
+</section>

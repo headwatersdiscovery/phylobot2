@@ -1,0 +1,26 @@
+# Golden scenario: ime2/easy
+#
+# Fast CI smoke test. The simulation model matches what the pipeline infers
+# (LG+G4) and there are no indels, so a failure here points at a bug rather
+# than at a hard inference problem.
+
+description = "Ime2 kinase domain evolved along the 2014 PhyloBot Ime2 tree; LG+G4, no indels."
+
+[tree]
+# Branch lengths and topology from the 2014 run (MAFFT + LG, the best-likelihood tree).
+file = "../../../legacy/ime2/trees/mafft_LG.ml.nwk"
+prune = ["Control1.IME2"]          # 8-residue test sequence, not a real protein
+outgroup = "Yarrowia.lipolytica.IME2"  # root at the midpoint of the outgroup branch
+
+[root]
+# S. cerevisiae Ime2 residues 38-386 (YQLI...MPFF): the kinase domain,
+# excluding the disordered C-terminal tail.
+file = "root.fasta"
+name = "Scer_IME2_kinase_domain"
+
+[model]
+substitution = "LG+G4{0.747}"  # alpha from the 2014 MAFFT + LG tree
+
+[simulation]
+image = "quay.io/biocontainers/iqtree:3.1.3--h8471819_0"
+seeds = [101]

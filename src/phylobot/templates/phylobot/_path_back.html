@@ -1,0 +1,4 @@
+{# The way back to the tree the path was traced on (its own display settings kept, the #}
+{# path highlighted). Outside the viewer's form, so it comes again out of band with each #}
+{# HTMX swap: changing the combination changes which tree it leads to. #}
+<p class="hint path-back" id="path-back"{% if oob %} hx-swap-oob="true"{% endif %}><a href="{% if tree_url %}{{ tree_url }}{% else %}{% url 'tree_viewer' job.id %}{% endif %}">← Return to Tree Viewer</a> · <a href="{% url 'job_detail' job.id %}">{{ job.name|default:"Job" }}</a></p>

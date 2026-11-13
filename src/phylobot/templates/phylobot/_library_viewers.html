@@ -1,0 +1,27 @@
+{# The library as alignment viewers (alignment.js), one per frame (library_glyphs.frames): #}
+{# zoomed out it is the library at a glance, zoomed in its sites. `frames` is the list to #}
+{# draw; the zoom control sits on its first frame (`zoom_here`). Every zoom control on #}
+{# the page sets the same zoom, so a column is as wide in the Design section as above. #}
+{% for frame, data in frames %}
+<div class="library-frame{% if frame.group %} library-frame-{{ frame.group }}{% endif %}">
+  <div class="frame-head">
+    <p class="overview-title">{{ frame.title }}{% if frame.members %} · {{ frame.members }} member{{ frame.members|pluralize }}{% endif %}</p>
+    {% if forloop.first and zoom_here %}
+    <span class="zoom-inputs" role="group" aria-label="Zoom">
+      <span class="zoom-label" aria-hidden="true">Zoom</span>
+      <input type="range" class="zoom-slider" min="0" max="100" value="0" aria-label="Zoom">
+      <button type="button" class="zoom-fit">Fit</button>
+    </span>
+    {% endif %}
+  </div>
+  {% if frame.note %}<p class="hint overview-note">{{ frame.note }}</p>{% endif %}
+  <div class="aln-root">
+    <div class="aln-wrap" data-viewer>
+      <canvas class="aln-canvas"></canvas>
+      <div class="aln-scroller"><div class="aln-sizer"></div></div>
+      <div class="aln-tip" hidden></div>
+    </div>
+    {{ data|json_script:frame.json_id }}
+  </div>
+</div>
+{% endfor %}

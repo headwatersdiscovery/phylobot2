@@ -1,0 +1,633 @@
+[
+ {
+  "body": {
+   "date_created": "2025-12-20 00:55:58",
+   "filtered_flags": [
+    "barren",
+    "environmental",
+    "hidden",
+    "hybrid",
+    "inconsistent",
+    "major_rank_conflict",
+    "major_rank_conflict_inherited",
+    "merged",
+    "not_otu",
+    "viral",
+    "was_container"
+   ],
+   "num_source_studies": 1931,
+   "num_source_trees": 2064,
+   "root": {
+    "node_id": "ott93302",
+    "num_tips": 2385875,
+    "taxon": {
+     "name": "cellular organisms",
+     "ott_id": 93302,
+     "rank": "no rank",
+     "tax_sources": [
+      "ncbi:131567"
+     ],
+     "unique_name": "cellular organisms"
+    }
+   },
+   "synth_id": "opentree16.1",
+   "taxonomy_version": "3.7draft3"
+  },
+  "endpoint": "tree_of_life/about",
+  "payload": {},
+  "status": 200
+ },
+ {
+  "body": {
+   "context": "All life",
+   "governing_code": "undefined",
+   "includes_approximate_matches": false,
+   "includes_deprecated_taxa": false,
+   "includes_suppressed_names": false,
+   "matched_names": [
+    "Candida albicans",
+    "Candida lusitaniae",
+    "Candida parapsilosis",
+    "Kluyveromyces lactis",
+    "Kluyveromyces waltii",
+    "Saccharomyces cerevisiae",
+    "Yarrowia lipolytica"
+   ],
+   "results": [
+    {
+     "matches": [
+      {
+       "is_approximate_match": false,
+       "is_synonym": false,
+       "matched_name": "Candida albicans",
+       "nomenclature_code": "ICN",
+       "score": 1.0,
+       "search_string": "candida albicans",
+       "taxon": {
+        "flags": [],
+        "is_suppressed": false,
+        "is_suppressed_from_synth": false,
+        "name": "Candida albicans",
+        "ott_id": 154960,
+        "rank": "species",
+        "source": "ott3.7draft3",
+        "synonyms": [
+         "Actonia tropicalis",
+         "Atelosaccharomyces harteri",
+         "Atelosaccharomyces laryngitidis",
+         "Blastodendrion cutaneum",
+         "Blastodendrion cutaneum cutaneum",
+         "Blastodendrion cutaneum fujii",
+         "Blastodendrion erectum",
+         "Blastodendrion favrei",
+         "Blastodendrion gifuense",
+         "Blastodendrion intestinale",
+         "Blastodendrion intestinale intestinale",
+         "Blastodendrion oosporoides",
+         "Blastodendrion pinoyi",
+         "Blastodendrion pinoysimilis",
+         "Blastomyces albicans",
+         "Candida alba",
+         "Candida albicans albicans",
+         "Candida albicans claussenii",
+         "Candida albicans metalondinensis",
+         "Candida albicans stellatoidea",
+         "Candida albicans var. stellatoidea",
+         "Candida aldoi",
+         "Candida bethaliensis",
+         "Candida biliaria",
+         "Candida butantanensis",
+         "Candida claussenii",
+         "Candida desidiosa",
+         "Candida favrei",
+         "Candida genitalis",
+         "Candida intestinalis",
+         "Candida langeronii",
+         "Candida metalondinensis",
+         "Candida mycotoruloidea",
+         "Candida nouvelii",
+         "Candida pinoyi",
+         "Candida pinoysimilis",
+         "Candida psilosis",
+         "Candida pulmonalis",
+         "Candida stellatoidea",
+         "Candida stellatoidea type I",
+         "Candida triadis",
+         "Candida truncata",
+         "Candida tumefaciens",
+         "Candida urinae",
+         "Castellania alba",
+         "Castellania copellii",
+         "Castellania decolorans",
+         "Castellania mannitofermentans",
+         "Castellania metalondinensis",
+         "Castellania metchnikoffii",
+         "Castellania metschnikoffii",
+         "Castellania nabarroi",
+         "Castellania pseudolondinensis",
+         "Castellania pseudolondinoides",
+         "Castellania pseudometalondinensis",
+         "Castellania pulmonalis",
+         "Castellania richmondii",
+         "Castellania unguium",
+         "Cryptococcus albus",
+         "Cryptococcus copellii",
+         "Cryptococcus favrei",
+         "Cryptococcus harteri",
+         "Cryptococcus laryngitidis",
+         "Cryptococcus pinoysimilis",
+         "Cryptococcus skutetzkyi",
+         "Cryptococcus tonsillarum",
+         "Dematium albicans",
+         "Dermatium albicans",
+         "Endomyces actoni",
+         "Endomyces albicans",
+         "Endomyces molardii",
+         "Endomyces pinoyi",
+         "Endomyces pulmonalis",
+         "Endomyces tropicalis",
+         "Endomyces vuilleminii",
+         "Endomycopsis albicans",
+         "Geotrichoides tumefaciens",
+         "Geotrichum pseudoalbicans",
+         "Guilliermondella vuilleminii",
+         "Monilia actoni",
+         "Monilia alba",
+         "Monilia albicans",
+         "Monilia albicans non-liquefaciens",
+         "Monilia aldoi",
+         "Monilia alvarezsotoi",
+         "Monilia ashfordii",
+         "Monilia bethaliensis",
+         "Monilia buccalis",
+         "Monilia butantanensis",
+         "Monilia cutanea",
+         "Monilia decolorans",
+         "Monilia favrei",
+         "Monilia fioccoi",
+         "Monilia gifuensis",
+         "Monilia harteri",
+         "Monilia inexorabilis",
+         "Monilia laryngitidis",
+         "Monilia mannitofermentans",
+         "Monilia metalondinensis",
+         "Monilia metalondinensis metalondinensis",
+         "Monilia metalondinensis pseudolondinensis",
+         "Monilia metchnikoffi",
+         "Monilia metschnikoffii",
+         "Monilia nabarroi",
+         "Monilia periunguealis",
+         "Monilia pinoyi",
+         "Monilia pinoyi nabarroi",
+         "Monilia pinoyi pinoyi",
+         "Monilia pinoysimilis",
+         "Monilia pseudoalbicans",
+         "Monilia pseudolondinensis",
+         "Monilia pseudolondinoides",
+         "Monilia pseudometalondinensis",
+         "Monilia psilosis",
+         "Monilia richmondii",
+         "Monilia stellatoidea",
+         "Monilia triadis",
+         "Monilia tumefaciens",
+         "Monilia tumefaciens-alba",
+         "Monilia vaginalis",
+         "Monosporium tulanense mannitolfermentans",
+         "Myceloblastanon albicans",
+         "Myceloblastanon ashfordii",
+         "Myceloblastanon bethaliense",
+         "Myceloblastanon copellii",
+         "Myceloblastanon cutaneum",
+         "Myceloblastanon decolorans",
+         "Myceloblastanon favrei",
+         "Myceloblastanon gifuense",
+         "Myceloblastanon gruetzii",
+         "Myceloblastanon harteri",
+         "Myceloblastanon metalondinense",
+         "Myceloblastanon nabarroi",
+         "Myceloblastanon pinoyi",
+         "Myceloblastanon pseudoalbicans",
+         "Myceloblastanon psilose",
+         "Myceloblastanon pulmonale",
+         "Myceloblastanon skutetskyii",
+         "Myceloblastanon skutetzkyi",
+         "Myceloblastanon tumefaciens-album",
+         "Mycelorrhizodes cutaneum",
+         "Mycelorrhizodes gruetzii",
+         "Mycocandida pinoysimilis",
+         "Mycocandida pinoysimilis pinoysimilis",
+         "Mycocandida skutetzkyi",
+         "Mycoderma desidiosum",
+         "Mycoderma pseudoalbicans",
+         "Mycotorula albicans",
+         "Mycotorula albicans albicans",
+         "Mycotorula albicans vuilleminii",
+         "Mycotorula alvarezsotoi",
+         "Mycotorula periunguealis",
+         "Mycotorula pinoyi",
+         "Mycotorula psilosis",
+         "Mycotorula sinensis",
+         "Mycotorula tonsillae",
+         "Mycotorula tonsillae afla",
+         "Mycotorula tonsillae tonsillae",
+         "Mycotorula verticillata",
+         "Mycotoruloides aldoi",
+         "Mycotoruloides ovalis",
+         "Mycotoruloides triadis",
+         "Oidium albicans",
+         "Parasaccharomyces albicans",
+         "Parasaccharomyces ashfordii",
+         "Parasaccharomyces colardii",
+         "Parasaccharomyces harteri",
+         "Parasaccharomyces intestinalis",
+         "Parasaccharomyces oosporoides",
+         "Parasaccharomyces oosporoides oosporoides",
+         "Parasaccharomyces psilosis",
+         "Parendomyces albus",
+         "Parendomyces butantanensis",
+         "Parendomyces inexorabilis",
+         "Parendomyces periunguealis",
+         "Parendomyces vaginalis",
+         "Procandida albicans",
+         "Procandida biliaria",
+         "Procandida grubyi",
+         "Procandida langeronii",
+         "Procandida stellatoidea",
+         "Pseudomonilia verticillata",
+         "Saccharomyces albicans",
+         "Saccharomyces buccalis",
+         "Saccharomyces gruetzii",
+         "Saccharomyces tumefaciens-albus",
+         "Saccharomyces unguius",
+         "Syringospora albicans",
+         "Syringospora claussenii",
+         "Syringospora cutanea",
+         "Syringospora hasegawae",
+         "Syringospora inexorabilis",
+         "Syringospora negronii",
+         "Syringospora psilosis",
+         "Syringospora robinii",
+         "Syringospora stellatoidea",
+         "Torulopsis copellii",
+         "Torulopsis harteri",
+         "Torulopsis laryngitidis",
+         "Zymonema albicans",
+         "Zymonema album",
+         "Zymonema alvarezsotoi",
+         "Zymonema buccale",
+         "Zymonema harteri",
+         "Zymonema molardii"
+        ],
+        "tax_sources": [
+         "ncbi:5476",
+         "gbif:2599597",
+         "irmng:10482576"
+        ],
+        "unique_name": "Candida albicans"
+       }
+      }
+     ],
+     "name": "Candida albicans"
+    },
+    {
+     "matches": [
+      {
+       "is_approximate_match": false,
+       "is_synonym": true,
+       "matched_name": "Candida lusitaniae",
+       "nomenclature_code": "ICN",
+       "score": 1.0,
+       "search_string": "candida lusitaniae",
+       "taxon": {
+        "flags": [],
+        "is_suppressed": false,
+        "is_suppressed_from_synth": false,
+        "name": "Clavispora lusitaniae",
+        "ott_id": 213939,
+        "rank": "species",
+        "source": "ott3.7draft3",
+        "synonyms": [
+         "Candida lusitaniae",
+         "Candida obtusa",
+         "Candida obtusa obtusa",
+         "Candida parapsilosis obtusa",
+         "Candida sp. MTCC 1001",
+         "Clavispora imtechensis",
+         "Saccharomyces carmosousae"
+        ],
+        "tax_sources": [
+         "ncbi:36911",
+         "gbif:2599011",
+         "irmng:10907303"
+        ],
+        "unique_name": "Clavispora lusitaniae"
+       }
+      }
+     ],
+     "name": "Candida lusitaniae"
+    },
+    {
+     "matches": [
+      {
+       "is_approximate_match": false,
+       "is_synonym": false,
+       "matched_name": "Candida parapsilosis",
+       "nomenclature_code": "ICN",
+       "score": 1.0,
+       "search_string": "candida parapsilosis",
+       "taxon": {
+        "flags": [],
+        "is_suppressed": false,
+        "is_suppressed_from_synth": false,
+        "name": "Candida parapsilosis",
+        "ott_id": 60841,
+        "rank": "species",
+        "source": "ott3.7draft3",
+        "synonyms": [
+         "Blastodendrion globosum",
+         "Blastodendrion gracile",
+         "Blastodendrion intestinale epidermicum",
+         "Brettanomyces petrophilus",
+         "Candida osornensis",
+         "Candida parapsilosis parapsilosis",
+         "Candida quercitrusa",
+         "Candida quercus",
+         "Castellania epidermica",
+         "Monilia onychophila",
+         "Monilia parapsilosis",
+         "Monilia unguis",
+         "Mycocandida onychophila",
+         "Mycocandida parapsilosis",
+         "Mycotorula parapsilopsis",
+         "Mycotorula parapsilosis",
+         "Mycotorula vesica",
+         "Mycotoruloides unguis",
+         "Pseudomycoderma vesicum",
+         "Saccharomyces verticillatus",
+         "Saccharomyces vossii",
+         "Schizoblastosporion globosum",
+         "Schizoblastosporion gracile",
+         "Spicaria unguis",
+         "Zymopichia vossii"
+        ],
+        "tax_sources": [
+         "ncbi:5480",
+         "gbif:2599539",
+         "irmng:10877600"
+        ],
+        "unique_name": "Candida parapsilosis"
+       }
+      }
+     ],
+     "name": "Candida parapsilosis"
+    },
+    {
+     "matches": [
+      {
+       "is_approximate_match": false,
+       "is_synonym": false,
+       "matched_name": "Kluyveromyces lactis",
+       "nomenclature_code": "ICN",
+       "score": 1.0,
+       "search_string": "kluyveromyces lactis",
+       "taxon": {
+        "flags": [],
+        "is_suppressed": false,
+        "is_suppressed_from_synth": false,
+        "name": "Kluyveromyces lactis",
+        "ott_id": 538138,
+        "rank": "species",
+        "source": "ott3.7draft3",
+        "synonyms": [
+         "Candida sphaerica",
+         "Cryptococcus spaericus",
+         "Cryptococcus sphaericus",
+         "Dekkeromyces drosophilarum",
+         "Dekkeromyces krassilnikovii",
+         "Dekkeromyces lactis",
+         "Dekkeromyces phaseolosporus",
+         "Dekkeromyces vanudenii",
+         "Guilliermondella drosophilarum",
+         "Guilliermondella lactis",
+         "Guilliermondella phaseolospora",
+         "Kluyveromyces drosophilarum",
+         "Kluyveromyces lactis drosophilarum",
+         "Kluyveromyces lactis lactis",
+         "Kluyveromyces lactis var. drosophilarum",
+         "Kluyveromyces lactis var. lactis",
+         "Kluyveromyces marxianus drosophilarum",
+         "Kluyveromyces marxianus lactis",
+         "Kluyveromyces marxianus vanudenii",
+         "Kluyveromyces marxianus var. drosophilarum",
+         "Kluyveromyces phaseolosporus",
+         "Kluyveromyces vanudenii",
+         "Saccharomyces chevalieri acellobiosus",
+         "Saccharomyces drosophilarum",
+         "Saccharomyces drosophilarum acellobiosus",
+         "Saccharomyces drosophilarum drosophilarum",
+         "Saccharomyces lactis",
+         "Saccharomyces phaseolosporus",
+         "Saccharomyces sociasi",
+         "Saccharomyces vanudenii",
+         "Torula sphaerica",
+         "Torulaspora lactis",
+         "Torulopsis sphaerica",
+         "Zygofabospora drosophilarum",
+         "Zygofabospora krassilnikovii",
+         "Zygofabospora lactis",
+         "Zygofabospora lactis drosophilarum",
+         "Zygofabospora lactis krassilnikovii",
+         "Zygofabospora lactis lactis",
+         "Zygofabospora lactis phaseolospora",
+         "Zygofabospora lactis vanudenii",
+         "Zygofabospora phaseolospora",
+         "Zygorenospora lactis",
+         "Zygosaccharomyces casei",
+         "Zygosaccharomyces lactis",
+         "Zygosaccharomyces mrakii",
+         "Zygosaccharomyces versicolor"
+        ],
+        "tax_sources": [
+         "ncbi:28985",
+         "worms:147587",
+         "gbif:8681602",
+         "irmng:11444807"
+        ],
+        "unique_name": "Kluyveromyces lactis"
+       }
+      }
+     ],
+     "name": "Kluyveromyces lactis"
+    },
+    {
+     "matches": [
+      {
+       "is_approximate_match": false,
+       "is_synonym": true,
+       "matched_name": "Kluyveromyces waltii",
+       "nomenclature_code": "ICN",
+       "score": 1.0,
+       "search_string": "kluyveromyces waltii",
+       "taxon": {
+        "flags": [],
+        "is_suppressed": false,
+        "is_suppressed_from_synth": false,
+        "name": "Lachancea waltii",
+        "ott_id": 858843,
+        "rank": "species",
+        "source": "ott3.7draft3",
+        "synonyms": [
+         "Kluyveromyces waltii",
+         "Zygofabospora waltii"
+        ],
+        "tax_sources": [
+         "ncbi:4914",
+         "gbif:9207861",
+         "gbif:2599154"
+        ],
+        "unique_name": "Lachancea waltii"
+       }
+      }
+     ],
+     "name": "Kluyveromyces waltii"
+    },
+    {
+     "matches": [
+      {
+       "is_approximate_match": false,
+       "is_synonym": false,
+       "matched_name": "Saccharomyces cerevisiae",
+       "nomenclature_code": "ICN",
+       "score": 1.0,
+       "search_string": "saccharomyces cerevisiae",
+       "taxon": {
+        "flags": [],
+        "is_suppressed": false,
+        "is_suppressed_from_synth": false,
+        "name": "Saccharomyces cerevisiae",
+        "ott_id": 356221,
+        "rank": "species",
+        "source": "ott3.7draft3",
+        "synonyms": [
+         "Candida robusta",
+         "Saccharomyces capensis",
+         "Saccharomyces italicus",
+         "Saccharomyces oviformis",
+         "Saccharomyces uvarum var. melibiosus"
+        ],
+        "tax_sources": [
+         "ncbi:4932",
+         "worms:147593",
+         "gbif:2599166",
+         "irmng:10384091"
+        ],
+        "unique_name": "Saccharomyces cerevisiae"
+       }
+      }
+     ],
+     "name": "Saccharomyces cerevisiae"
+    },
+    {
+     "matches": [
+      {
+       "is_approximate_match": false,
+       "is_synonym": false,
+       "matched_name": "Yarrowia lipolytica",
+       "nomenclature_code": "ICN",
+       "score": 1.0,
+       "search_string": "yarrowia lipolytica",
+       "taxon": {
+        "flags": [],
+        "is_suppressed": false,
+        "is_suppressed_from_synth": false,
+        "name": "Yarrowia lipolytica",
+        "ott_id": 832179,
+        "rank": "species",
+        "source": "ott3.7draft3",
+        "synonyms": [
+         "Azymoprocandida lipolytica",
+         "Candida lipolytica",
+         "Candida lipolytica lipolytica",
+         "Candida lipolytica thermotolerans",
+         "Candida olea",
+         "Candida oleae",
+         "Candida oleophila",
+         "Candida paralipolytica",
+         "Candida petrophilum",
+         "Candida pseudolipolytica",
+         "Candida rignihuensis",
+         "Endomycopsis lipolytica",
+         "Mycotorula lipolytica",
+         "Saccharomycopsis lipolytica",
+         "Saccharomycopsis pseudolipolytica",
+         "Yarrowia lipolytica alkalitolerans",
+         "Yarrowia lipolytica lipolytica"
+        ],
+        "tax_sources": [
+         "ncbi:4952",
+         "gbif:2599452",
+         "irmng:11173987"
+        ],
+        "unique_name": "Yarrowia lipolytica"
+       }
+      }
+     ],
+     "name": "Yarrowia lipolytica"
+    }
+   ],
+   "taxonomy": {
+    "author": "open tree of life project",
+    "name": "ott",
+    "source": "ott3.7draft3",
+    "version": "3.7",
+    "weburl": "https://tree.opentreeoflife.org/about/taxonomy-version/ott3.7"
+   },
+   "unambiguous_names": [
+    "Candida albicans",
+    "Candida parapsilosis",
+    "Kluyveromyces lactis",
+    "Saccharomyces cerevisiae",
+    "Yarrowia lipolytica"
+   ],
+   "unmatched_names": []
+  },
+  "endpoint": "tnrs/match_names",
+  "payload": {
+   "context_name": "All life",
+   "do_approximate_matching": false,
+   "names": [
+    "Candida albicans",
+    "Candida lusitaniae",
+    "Candida parapsilosis",
+    "Kluyveromyces lactis",
+    "Kluyveromyces waltii",
+    "Saccharomyces cerevisiae",
+    "Yarrowia lipolytica"
+   ]
+  },
+  "status": 200
+ },
+ {
+  "body": {
+   "broken": {},
+   "newick": "(((Clavispora_lusitaniae_ott213939)Clavispora_ott176820)Metschnikowiaceae_ott668443,((Saccharomyces_cerevisiae_ott356221)Saccharomyces_ott908546,(Kluyveromyces_lactis_ott538138)Kluyveromyces_ott858846,(Lachancea_waltii_ott858843)Lachancea_ott564854)Saccharomycetaceae_ott989994,(((Candida_albicans_ott154960,Candida_parapsilosis_ott60841)'Candida (genus in Candida/Lodderomyces clade) ott1034970')'Candida/Lodderomyces clade ott5670460')Debaryomycetaceae_ott691987,((Yarrowia_lipolytica_ott832179)Yarrowia_ott959637)Dipodascaceae_ott607423)Saccharomycetales_ott4085960;",
+   "supporting_studies": [
+    "ot_1301@Tr27546"
+   ]
+  },
+  "endpoint": "tree_of_life/induced_subtree",
+  "payload": {
+   "label_format": "name_and_id",
+   "ott_ids": [
+    60841,
+    154960,
+    213939,
+    356221,
+    538138,
+    832179,
+    858843
+   ]
+  },
+  "status": 200
+ }
+]

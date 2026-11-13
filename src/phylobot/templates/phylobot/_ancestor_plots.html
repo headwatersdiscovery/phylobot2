@@ -1,0 +1,59 @@
+{# Support plots for the chosen node (phylobot.ancestors.node_plots): a histogram of the ML #}
+{# residues' posterior probabilities, and the top three states' probabilities along the #}
+{# ancestor (the 2016 paper's Fig. 5B). Hover the trace for a site; click to jump to its row. #}
+{# Styles are SVG attributes, not CSS, so the PNG/SVG downloads look as shown. #}
+{# Emits grid items straight into the Support section's .support-grid, so the AltAll #}
+{# block below lines up with these and both histograms render at the same width -- and #}
+{# so at the same font scale, since their type is SVG at a fixed viewBox. #}
+{% if plots %}
+  <p class="support-summary"><strong>ML {{ unit|default:"residue" }}s:</strong> mean posterior probability {{ plots.mean|floatformat:3 }},
+    standard deviation {{ plots.sd|floatformat:3 }}, over {{ plots.sites }} sites.</p>
+    {% with f=plots.hist_frame %}
+    <figure class="plot histogram" data-filename="{{ file_stem }}.histogram">
+      <div class="plot-tools">Download <button type="button" class="link" data-plot-download="png">PNG</button> · <button type="button" class="link" data-plot-download="svg">SVG</button></div>
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {{ f.width }} {{ f.height }}" width="{{ f.width }}" height="{{ f.height }}"
+           font-family="system-ui, -apple-system, 'Segoe UI', sans-serif" role="img"
+           aria-label="Histogram: proportion of {{ node }}'s sites by the posterior probability of the ML {{ unit|default:"residue" }}">
+        <rect class="background" width="{{ f.width }}" height="{{ f.height }}" fill="#ffffff"/>
+        {% for y, label in f.y_ticks %}<line x1="{{ f.left }}" x2="{{ f.right }}" y1="{{ y }}" y2="{{ y }}" stroke="#d8dde5" stroke-width="1"/>
+        <text x="{{ f.left|add:'-6' }}" y="{{ y }}" text-anchor="end" dominant-baseline="middle" font-size="13" fill="#5d6675">{{ label }}</text>{% endfor %}
+        {% for bar in plots.histogram %}<rect x="{{ bar.x }}" y="{{ bar.y }}" width="{{ bar.width }}" height="{{ bar.height }}" fill="{{ bar.fill }}">
+          <title>{{ bar.label }}: {{ bar.proportion|floatformat:3 }} of sites</title></rect>{% endfor %}
+        {% for x, label in plots.hist_ticks %}<text x="{{ x }}" y="{{ f.bottom|add:'16' }}" text-anchor="middle" font-size="13" fill="#5d6675">{{ label }}</text>{% endfor %}
+        <text x="{{ f.center }}" y="{{ f.height|add:'-4' }}" text-anchor="middle" font-size="14" fill="#1d2330">Posterior probability of the ML {{ unit|default:"residue" }}</text>
+        <text transform="translate(12 {{ f.middle }}) rotate(-90)" text-anchor="middle" font-size="14" fill="#1d2330">Proportion of sites</text>
+      </svg>
+    </figure>
+    {% endwith %}
+    {% with f=plots.trace_frame %}
+    <figure class="plot trace" data-filename="{{ file_stem }}.probabilities">
+      <div class="plot-tools">Download <button type="button" class="link" data-plot-download="png">PNG</button> · <button type="button" class="link" data-plot-download="svg">SVG</button></div>
+      <svg xmlns="http://www.w3.org/2000/svg" class="pp-trace" viewBox="0 0 {{ f.width }} {{ f.height }}" width="{{ f.width }}" height="{{ f.height }}"
+           font-family="system-ui, -apple-system, 'Segoe UI', sans-serif" role="img"
+           data-left="{{ f.left }}" data-width="{{ f.plot_width }}" data-sites="pp-sites"
+           data-top="{{ f.top }}" data-plot-height="{{ f.plot_height }}"
+           aria-label="Posterior probability of the top three states at each site of {{ node }}">
+        <rect class="background" width="{{ f.width }}" height="{{ f.height }}" fill="#ffffff"/>
+        {% for y, label in f.y_ticks %}<line x1="{{ f.left }}" x2="{{ f.right }}" y1="{{ y }}" y2="{{ y }}" stroke="#d8dde5" stroke-width="1"/>
+        <text x="{{ f.left|add:'-8' }}" y="{{ y }}" text-anchor="end" dominant-baseline="middle" font-size="18" fill="#5d6675">{{ label }}</text>{% endfor %}
+        {% for x, number in plots.trace_ticks %}<text x="{{ x }}" y="{{ f.bottom|add:'22' }}" text-anchor="middle" font-size="18" fill="#5d6675">{{ number }}</text>{% endfor %}
+        {% for t in plots.traces reversed %}<polyline points="{{ t.points }}" fill="none" stroke-linejoin="round" stroke="{{ t.colour }}" stroke-width="{{ t.width }}"{% if t.dash %} stroke-dasharray="{{ t.dash }}"{% endif %}/>{% endfor %}
+        {# The AltAll threshold as a level: where the 2nd-best trace rises above it, #}
+        {# AltAll switches that site. ancestors.js moves it with the slider. #}
+        {% if altall_available %}<line class="altall-level" x1="{{ f.left }}" x2="{{ f.right }}" y1="0" y2="0" stroke="#c0392b" stroke-width="2" stroke-dasharray="4 3"/>{% endif %}
+        <line class="guide" x1="0" x2="0" y1="{{ f.top }}" y2="{{ f.bottom }}" stroke="#1d2330" stroke-dasharray="3 3" visibility="hidden" pointer-events="none"/>
+        <rect class="hover" x="{{ f.left }}" y="{{ f.top }}" width="{{ f.plot_width }}" height="{{ f.plot_height }}" fill="transparent"/>
+        <text x="{{ f.center }}" y="{{ f.height|add:'-4' }}" text-anchor="middle" font-size="19" fill="#1d2330">Site in ancestor {{ node }}</text>
+        <text transform="translate(18 {{ f.middle }}) rotate(-90)" text-anchor="middle" font-size="19" fill="#1d2330">Probability</text>
+      </svg>
+      <div class="pp-tip" hidden></div>
+      <figcaption>{% for t in plots.traces %}<span class="key"><svg width="26" height="8" aria-hidden="true"><line x1="0" x2="26" y1="4" y2="4" stroke="{{ t.colour }}" stroke-width="{{ t.width|floatformat:1 }}"{% if t.dash %} stroke-dasharray="{{ t.dash }}"{% endif %}/></svg>{{ t.rank }}</span>
+        {% endfor %}<label class="line-style">Lines
+          <select name="lines">{% for key, label in line_styles %}
+            <option value="{{ key }}"{% if key == lines %} selected{% endif %}>{{ label }}</option>{% endfor %}
+          </select></label>
+        <span class="hint">· hover for a site, click to jump to its row</span></figcaption>
+    </figure>
+    {% endwith %}
+  {{ plots.tooltip|json_script:"pp-sites" }}
+{% endif %}

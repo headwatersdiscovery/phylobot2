@@ -1,0 +1,27 @@
+# Original run settings (keyword	value)
+geneid	ime2
+project_title	 Ime2
+ergseqpath	ime2.fasta
+raxml_exe	raxml -T 2
+phyml_exe	phyml
+lazarus_exe	python /common/lazarus/lazarus.py
+mmfolder	/common/lazarus/paml/dat/
+anccomp_exe	python ~/Documents/SourceCode/anccomp/compare_ancs.py
+fasttree_exe	FastTree
+run_exe	 sh
+msaprobs_exe	msaprobs
+muscle_exe	muscle
+mafft_exe	mafft
+zorro_exe	zorro
+seedtaxa	Saccharomyces.cerevisiae.IME2
+zorro_thresholds	0.01
+zorro_thresholds	0.05
+zorro_thresholds	0.1
+zorro_thresholds	1.0
+start_motif	YQLI
+end_motif	MPFF
+
+# Ancestor definitions (group	taxa)
+AncKLSC	Kluyveromyces.waltii.IME2, Saccharomyces.cerevisiae.IME2
+AncSKCTG	Candida.albicans.IME2, Saccharomyces.cerevisiae.IME2
+outgroup	Yarrowia.lipolytica.IME2

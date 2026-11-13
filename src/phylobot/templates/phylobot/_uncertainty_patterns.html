@@ -1,0 +1,7 @@
+{# Hatch patterns, one per component colour: the presence part of a segment (residue or gap?). #}
+<defs>{% for n, colour in fills %}
+  <pattern id="{{ prefix }}-hatch-{{ n }}" patternUnits="userSpaceOnUse" width="5" height="5" patternTransform="rotate(45)">
+    <rect width="5" height="5" fill="{{ colour }}" fill-opacity="0.3"/>
+    <line x1="1.5" y1="0" x2="1.5" y2="5" stroke="{{ colour }}" stroke-width="2.4"/>
+  </pattern>{% endfor %}
+</defs>

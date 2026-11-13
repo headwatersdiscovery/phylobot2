@@ -1,0 +1,31 @@
+{# Each ancestor's depth against one part of its uncertainty (uncertainty_overview.depth_scatter). #}
+{% with s=scatter %}
+<div class="viewer-controls">
+  <label>Show
+    <select name="depth_y" form="uncertainty" data-submit-to="depth">{% for key, label in depth_components %}
+      <option value="{{ key }}"{% if key == depth_y %} selected{% endif %}>{{ label }}</option>{% endfor %}
+    </select></label>
+  {% if depth_y != "total" %}<label>As
+    <select name="depth_scale" form="uncertainty" data-submit-to="depth">{% for key, label in depth_scales %}
+      <option value="{{ key }}"{% if key == depth_scale %} selected{% endif %}>{{ label }}</option>{% endfor %}
+    </select></label>{% endif %}
+  <label>Against
+    <select name="depth_x" form="uncertainty" data-submit-to="depth">{% for key, label in depth_axes %}
+      <option value="{{ key }}"{% if key == depth_x %} selected{% endif %}>{{ label }}</option>{% endfor %}
+    </select></label>
+</div>
+<p class="uncertainty-lead">{{ s.note }} <button type="button" class="help-dot" popovertarget="help-depth" aria-label="About uncertainty with depth">?</button><span class="help-popover" popover id="help-depth"><strong>Uncertainty with depth</strong><span><span>One dot per ancestor; click one for its sites. The line joins the medians of eight groups of ancestors from the tips inwards.</span><span>Distance to the nearest tip is measured on the reference tree, in substitutions per site: how much evolution separates the ancestor from the closest sequence you gave.</span></span></span></p>
+<figure class="plot uncertainty-depth" data-tips data-filename="uncertainty.{{ mode }}.depth"><div class="pp-tip" hidden></div>
+  <div class="plot-tools">Download <button type="button" class="link" data-plot-download="png">PNG</button> · <button type="button" class="link" data-plot-download="svg">SVG</button></div>
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {{ s.width }} {{ s.height }}" width="{{ s.width }}" height="{{ s.height }}" role="img"
+       font-family="system-ui, -apple-system, 'Segoe UI', sans-serif" aria-label="{{ s.y_label }} against {{ s.x_label }}">
+    {% for y, label in s.y_ticks %}<line x1="{{ s.left }}" x2="{{ s.left|add:s.plot_width }}" y1="{{ y }}" y2="{{ y }}" stroke="#d8dde5"/>
+    <text x="{{ s.left|add:-6 }}" y="{{ y|add:3.5 }}" text-anchor="end" font-size="10.5" fill="#5d6675">{{ label }}</text>{% endfor %}
+    {% for x, label in s.x_ticks %}<text x="{{ x }}" y="{{ s.top|add:s.plot_height|add:15 }}" text-anchor="middle" font-size="10.5" fill="#5d6675">{{ label }}</text>{% endfor %}
+    <text x="{{ s.left }}" y="{{ s.height|add:-6 }}" font-size="11" fill="#5d6675">{{ s.x_label }}</text>
+    <text x="12" y="{{ s.top|add:s.plot_height|floatformat:0 }}" font-size="11" fill="#5d6675" transform="rotate(-90 12 {{ s.top|add:s.plot_height }})">{{ s.y_label }}</text>
+    {% for x, y, tip, href in s.dots %}<a href="{{ href }}"><circle cx="{{ x }}" cy="{{ y }}" r="3.6" fill="{{ s.fill }}" fill-opacity="0.55" stroke="{{ s.fill }}" data-tip="{{ tip }}"/></a>{% endfor %}
+    {% if s.trend %}<path d="{{ s.trend }}" fill="none" stroke="#1d2330" stroke-width="2" stroke-linejoin="round"/>{% endif %}
+  </svg>
+</figure>
+{% endwith %}

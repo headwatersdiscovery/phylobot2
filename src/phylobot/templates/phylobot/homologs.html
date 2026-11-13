@@ -1,0 +1,182 @@
+{% extends "phylobot/base.html" %}
+{% load static %}
+{% load phylobot_extras %}
+{% block title %}Find Homologs · PhyloBot{% endblock %}
+{% block content %}
+<div class="homologs-layout">
+<nav class="about-toc page-toc" data-toc aria-label="On this page">
+  <p class="about-toc-title">On this page</p>
+  <ol>
+    <li><a href="#find-sequence">Find a Sequence by Name</a></li>
+    <li><a href="#search">Search</a></li>
+    {% if searches %}<li><a href="#your-searches">Your Searches</a></li>{% endif %}
+    {% if examples %}<li><a href="#saved-searches">Try a Saved Search</a></li>{% endif %}
+  </ol>
+</nav>
+<div class="homologs-main">
+<h1>Find Homologs</h1>
+
+<section class="step" data-stage="sequences" id="find-sequence">
+  <h2><button type="button" class="fold-toggle" aria-expanded="true" aria-controls="find-sequence-body">Find a Sequence by Name</button> {% include "phylobot/_help.html" with id="find-sequence-help" title="Finding a sequence by name" body="Do you have a protein or gene name, but not its amino acid sequence? Look it up at UniProt, then send a hit into the homolog search below. Only the gene name and species are sent to UniProt." %}</h2>
+  <div class="fold-body" id="find-sequence-body">
+  <form hx-get="{% url 'find_sequence' %}" hx-target="#lookup-results" hx-swap="innerHTML"
+        hx-indicator="#lookup-working" method="get" action="{% url 'find_sequence' %}"
+        class="sequence-lookup-form" data-suggest-url="{% url 'homolog_suggest' %}">
+    <datalist id="species-list">{% for sci, common in model_species %}<option value="{{ sci }}">{{ common }}</option>{% endfor %}</datalist>
+    <datalist id="gene-list"></datalist>
+    <div class="lookup-fields">
+      <p>{{ lookup_form.protein.label_tag }}<br>{{ lookup_form.protein }}
+        {% for error in lookup_form.protein.errors %}<span class="errors inline-error">{{ error }}</span>{% endfor %}</p>
+      <p>{{ lookup_form.species.label_tag }}<br>{{ lookup_form.species }}
+        {% for error in lookup_form.species.errors %}<span class="errors inline-error">{{ error }}</span>{% endfor %}</p>
+    </div>
+    <p class="check">{{ lookup_form.reviewed_only }} {{ lookup_form.reviewed_only.label_tag }}</p>
+    <p class="consent">{{ lookup_form.consent }}
+      <label for="{{ lookup_form.consent.id_for_label }}">{{ lookup_form.consent.label }}</label>
+      {% include "phylobot/_help.html" with id="lookup-consent" title="Looking up a sequence at UniProt" body="Only the protein or gene name and the species you type are sent to UniProt, to find a matching sequence. Your own sequences are never sent. The lookup runs at UniProt, not on this machine, and UniProt's terms apply." %}
+      <span class="required-tag">Required</span>
+      {% for error in lookup_form.consent.errors %}<span class="errors inline-error">{{ error }}</span>{% endfor %}</p>
+    <p><button type="submit" class="primary">Look up</button>
+      <span id="lookup-working" class="htmx-indicator hint">Searching UniProt…</span></p>
+  </form>
+  <div id="lookup-results" aria-live="polite">{% include "phylobot/_sequence_lookup_results.html" %}</div>
+  </div>
+</section>
+
+<section class="step" data-stage="sequences" id="search">
+  <h2>Search {% include "phylobot/_help.html" with id="homologs" title="Finding homologs" body="Start with an amino acid sequence. Search a public database for its homologs. After results arrive, you can filter the hits and review the proposed set; your curated set of sequences can be used in a new PhyloBot job." %}</h2>
+  <form method="post" action="{% url 'homologs' %}">
+    {% csrf_token %}
+    {% for error in search_form.non_field_errors %}<p class="errors">{{ error }}</p>{% endfor %}
+    <p>{{ search_form.name.label_tag }} {{ search_form.name }}</p>
+    <p>{{ search_form.query.label_tag }}<br>{{ search_form.query }}
+      {% for error in search_form.query.errors %}<span class="errors inline-error">{{ error }}</span>{% endfor %}</p>
+    <fieldset class="search-databases">
+      <legend>{{ search_form.database.label }}</legend>
+      <div class="database-options">
+        {% for option in search_form.database_options %}
+          <label class="database-option" for="{{ option.radio.id_for_label }}">
+            {{ option.radio.tag }}
+            <span class="option-text">
+              <span class="option-title">{{ option.radio.choice_label }}
+                <span class="speed {{ option.about.speed }}">{{ option.about.speed }}</span></span>
+              <span class="option-timing">{{ option.about.timing|capfirst }}{% if option.typical_seconds is not None %} · recent searches here: typically {{ option.typical_seconds|duration }}{% endif %}</span>
+              <span class="option-note">{{ option.about.note }}</span>
+            </span>
+          </label>
+        {% endfor %}
+      </div>
+      {% for error in search_form.database.errors %}<span class="errors inline-error">{{ error }}</span>{% endfor %}
+    </fieldset>
+    <p class="consent">{{ search_form.consent }}
+      <label for="{{ search_form.consent.id_for_label }}">Consent to send my sequence to <span data-search-service>the search service</span></label>
+      {% include "phylobot/_help.html" with id="search-consent" title="Sending your sequence" body=search_form.consent.help_text %}
+      <span class="required-tag">Required</span>
+      {% for error in search_form.consent.errors %}<span class="errors inline-error">{{ error }}</span>{% endfor %}</p>
+    <p><button type="submit" class="primary">Search</button></p>
+  </form>
+</section>
+
+{% if searches %}
+<section class="step" id="your-searches">
+  <h2>Your Searches</h2>
+  <form method="post" action="{% url 'delete_homolog_searches' %}" id="searches-form">
+    {% csrf_token %}
+    <input type="hidden" name="next" value="{{ request.get_full_path }}">
+    <div class="toolbar">
+      <button type="button" id="delete-selected" class="danger-outline" disabled>Delete selected</button>
+    </div>
+    <table class="hits searches">
+      <thead><tr><th class="select"><input type="checkbox" id="select-all" aria-label="Select all searches"></th>
+        <th>Search</th><th>Status</th><th>Service</th><th class="num">Query</th>
+        <th class="num">Hits</th><th>Started</th><th></th></tr></thead>
+      <tbody>
+        {% for s in searches %}
+          <tr><td class="select"><input type="checkbox" name="search" value="{{ s.id }}"
+                   data-name="{{ s.name|default:'Search' }}" data-status="{{ s.status }}"
+                   aria-label="Select {{ s.name|default:'search' }}"></td>
+            <td><a href="{% url 'homolog_search' s.id %}">{{ s.name|default:"Search" }}</a></td>
+            <td><span class="status {{ s.status }}">{{ s.status }}</span></td>
+            <td>{{ s.service|upper }} · {{ s.database }}</td>
+            <td class="num">{{ s.query_length }} aa</td>
+            <td class="num">{{ s.hit_count|default_if_none:"" }}</td>
+            <td>{{ s.created_at|date:"Y-m-d H:i" }}</td>
+            <td class="row-actions">
+              {% if s.status == "succeeded" %}<button type="submit" class="link"
+                formaction="{% url 'duplicate_homolog_search' s.id %}">Duplicate</button> ·{% endif %}
+              <button type="button" class="link danger" data-delete="{{ s.id }}">Delete</button></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </form>
+</section>
+{% include "phylobot/_delete_dialog.html" %}
+<script>
+  (() => {
+    const form = document.getElementById("searches-form");
+    const boxes = [...form.querySelectorAll('input[name="search"]')];
+    const selectAll = document.getElementById("select-all");
+    const deleteSelected = document.getElementById("delete-selected");
+
+    function refresh() {
+      const n = boxes.filter((box) => box.checked).length;
+      deleteSelected.disabled = n === 0;
+      deleteSelected.textContent = n ? `Delete selected (${n})` : "Delete selected";
+      selectAll.checked = n === boxes.length;
+      selectAll.indeterminate = n > 0 && n < boxes.length;
+    }
+
+    function deleteSearches(targets) {
+      const items = targets.map((box) => ({ name: box.dataset.name, status: box.dataset.status }));
+      confirmDelete(items, () => {
+        boxes.forEach((box) => { box.checked = targets.includes(box); });
+        form.submit();
+      }, "search");
+    }
+
+    boxes.forEach((box) => box.addEventListener("change", refresh));
+    selectAll.addEventListener("change", () => {
+      boxes.forEach((box) => { box.checked = selectAll.checked; });
+      refresh();
+    });
+    deleteSelected.addEventListener("click", () => deleteSearches(boxes.filter((b) => b.checked)));
+    form.querySelectorAll("[data-delete]").forEach((button) => {
+      button.addEventListener("click", () =>
+        deleteSearches(boxes.filter((box) => box.value === button.dataset.delete)));
+    });
+    refresh();
+  })();
+</script>
+{% endif %}
+
+{% if examples %}
+<section class="step" id="saved-searches">
+  <h2>Try a Saved Search</h2>
+  <p class="hint">Real searches, saved so you can try the review, the filters and the downloads
+    without searching yourself.</p>
+  <table class="hits searches">
+    <thead><tr><th>Search</th><th>Service</th><th class="num">Query</th>
+      <th class="num">Hits</th><th>Took</th><th>Searched</th><th></th></tr></thead>
+    <tbody>
+      {% for row in examples %}
+        <tr><td><a href="{% url 'homolog_example' row.key %}">{{ row.example.label }}</a></td>
+          <td>{{ row.example.source|upper }} · {{ row.example.database }}</td>
+          <td class="num">{{ row.result.query_length }} aa</td>
+          <td class="num">{{ row.result.hits|length|floatformat:"0g" }}</td>
+          <td>{{ row.example.took }}</td>
+          <td>{{ row.example.searched }}</td>
+          <td class="row-actions"><form method="post" action="{% url 'duplicate_homolog_example' row.key %}">
+            {% csrf_token %}<input type="hidden" name="next" value="{{ request.get_full_path }}">
+            <button type="submit" class="link" title="Copy it into your searches, to rename or delete">Duplicate</button></form></td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</section>
+{% endif %}
+</div>{# .homologs-main #}
+</div>{# .homologs-layout #}
+
+<script src="{% static 'phylobot/toc.js' %}" defer></script>
+<script src="{% static 'phylobot/fold.js' %}" defer></script>
+<script src="{% static 'phylobot/sequence_lookup.js' %}" defer></script>
+{% endblock %}

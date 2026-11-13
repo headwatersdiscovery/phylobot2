@@ -1,0 +1,20 @@
+{% load static %}<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sign in · PhyloBot</title>
+  <link rel="stylesheet" href="{% static 'phylobot/site.css' %}">
+</head>
+<body>
+  <main>
+    <h1>PhyloBot</h1>
+    <form method="post">
+      {% csrf_token %}
+      {{ form.as_p }}
+      <button type="submit" class="primary">Sign in</button>
+    </form>
+  </main>
+  {% include "phylobot/_footer.html" %}
+</body>
+</html>

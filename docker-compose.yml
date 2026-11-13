@@ -1,0 +1,156 @@
+# Local full stack: web, worker, Postgres, Garage, plus an on-demand pipeline runner.
+# All images pinned.
+name: phylobot
+
+services:
+  web:
+    build:
+      context: .
+      dockerfile: docker/web.Dockerfile
+      target: web
+    env_file: .env
+    command: >
+      sh -c "python manage.py migrate --noinput &&
+             gunicorn phylobot.wsgi:application --bind 0.0.0.0:8000 --workers 2 --reload"
+    ports:
+      - "127.0.0.1:8000:8000"   # this machine only; see PHYLOBOT_MODE
+    volumes:
+      # Live reload of Python code during development.
+      - ./src:/app/src
+    depends_on:
+      db:
+        condition: service_healthy
+      garage:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/healthz', timeout=3)"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  # Runs queued jobs: launches the Nextflow runner image through the host Docker socket,
+  # with the project mounted at its real path (PROJECT_ROOT, set by make). Socket
+  # access is root-equivalent on the host: local development only.
+  worker:
+    build:
+      context: .
+      dockerfile: docker/web.Dockerfile
+      target: worker
+    env_file: .env
+    environment:
+      PROJECT_ROOT: ${PROJECT_ROOT:-/PROJECT_ROOT-not-set--use-make}
+    volumes:
+      - ./src:/app/src
+      - ${PROJECT_ROOT:-/PROJECT_ROOT-not-set--use-make}:${PROJECT_ROOT:-/PROJECT_ROOT-not-set--use-make}
+      - /var/run/docker.sock:/var/run/docker.sock
+    stop_grace_period: 30s
+    depends_on:
+      db:
+        condition: service_healthy
+      garage:
+        condition: service_healthy
+      web:
+        condition: service_healthy  # web applies migrations first
+
+  # Follows homolog searches at EBI and NCBI (phylobot.searches). Only outbound HTTPS,
+  # Postgres and object storage: no Docker socket, no pipeline.
+  searches:
+    build:
+      context: .
+      dockerfile: docker/web.Dockerfile
+      target: web
+    env_file: .env
+    command: ["python", "manage.py", "run_searches"]
+    restart: unless-stopped  # searches wait on EBI/NCBI; never leave them unfollowed
+    volumes:
+      - ./src:/app/src
+    stop_grace_period: 20s
+    depends_on:
+      db:
+        condition: service_healthy
+      garage:
+        condition: service_healthy
+      web:
+        condition: service_healthy  # web applies migrations first
+
+  # Test suite (make test): the web image plus dev tools, against this Postgres.
+  test:
+    build:
+      context: .
+      dockerfile: docker/web.Dockerfile
+      target: test
+    profiles: ["test"]
+    env_file: .env
+    volumes:
+      - ./src:/app/src
+      - ./tests:/app/tests
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    image: postgres:18.6-trixie
+    # For a desktop client (e.g. Postico): 127.0.0.1:5433, credentials from .env.
+    # Containers still use db:5432; 5433 avoids clashing with a Postgres on the Mac.
+    ports:
+      - "127.0.0.1:5433:5432"
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - pgdata:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  garage:
+    image: dxflrs/garage:v2.4.1
+    environment:
+      GARAGE_RPC_SECRET: ${GARAGE_RPC_SECRET}
+      GARAGE_ADMIN_TOKEN: ${GARAGE_ADMIN_TOKEN}
+    ports:
+      - "127.0.0.1:3900:3900"
+    volumes:
+      - ./docker/garage/garage.toml:/etc/garage.toml:ro
+      - garagemeta:/var/lib/garage/meta
+      - garagedata:/var/lib/garage/data
+    healthcheck:
+      test: ["CMD", "/garage", "status"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  # Nextflow runner. Not started by `up`; used via `make pipeline`.
+  # It launches each tool as a sibling container through the host's Docker socket,
+  # so the project must be mounted at the same absolute path as on the host:
+  # Nextflow hands those paths to Docker. The Makefile sets PROJECT_ROOT.
+  # Socket access is root-equivalent on the host: local development only.
+  runner:
+    image: nextflow/nextflow:26.04.6
+    platform: linux/amd64
+    profiles: ["pipeline"]
+    # Compose interpolates this file for every command, so a missing PROJECT_ROOT
+    # must not be an error here; the placeholder makes a direct `run` fail loudly.
+    working_dir: ${PROJECT_ROOT:-/PROJECT_ROOT-not-set--use-make}
+    entrypoint:
+      - sh
+      - -c
+      - test -f pipeline/main.nf || { echo "PROJECT_ROOT not set; run via make pipeline" >&2; exit 1; }; exec "$$@"
+      - runner
+    environment:
+      NXF_HOME: ${PROJECT_ROOT:-/PROJECT_ROOT-not-set--use-make}/.nextflow-home
+      NXF_ANSI_LOG: "false"
+      DOCKER_DEFAULT_PLATFORM: linux/amd64  # see the docker profile in nextflow.config
+      PHYLOBOT_DOCKER_CPUSET: ${PHYLOBOT_DOCKER_CPUSET:-}  # .env; see .env.example
+    volumes:
+      - ${PROJECT_ROOT:-/PROJECT_ROOT-not-set--use-make}:${PROJECT_ROOT:-/PROJECT_ROOT-not-set--use-make}
+      - /var/run/docker.sock:/var/run/docker.sock
+
+volumes:
+  pgdata:
+  garagemeta:
+  garagedata:

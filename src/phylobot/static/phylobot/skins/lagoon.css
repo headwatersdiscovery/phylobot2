@@ -1,0 +1,77 @@
+/* Lagoon skin (phylobot.skins): Clean's layout (clean.css applies to it) in the colours of
+   a shallow sea: a warm sand page, white cards edged in sand, a sea-glass top bar with a
+   thin wave beneath it, deep-sea ink for text, teal for links and actions, coral kept for
+   the title's "2". A light skin meant for daily use: text and links meet WCAG AA on both
+   the sand and the white, and status colours keep their usual meanings. */
+:root[data-skin="lagoon"] {
+  --page: #f6f1e7;          /* dry sand */
+  --bg: #fffdf9;            /* cards: shell white */
+  --bar: #d9efed;           /* sea glass */
+  --fg: #15343c;            /* deep water */
+  --fg-2: #2b4d56;
+  --muted: #5b767c;
+  --line: #ece5d8;          /* wet sand, inside cards */
+  --edge: #ddd3c2;
+  --accent: #0b7a86;        /* lagoon teal */
+  --accent-hover: #086a75;
+  --accent-soft: #e2f3f2;
+  --accent-ring: rgba(11, 122, 134, .22);
+  --link-line: rgba(11, 122, 134, .35);
+  --coral: #e8603f;
+  --surf: #43b8c0;          /* shallow water, for the wave and the title's light end */
+  --title-rim: #fff;
+  --title-shadow: #efcf9a;  /* sand */
+  --subtle: #f1f6f4;        /* table heads, wells: a trace of sea foam */
+  --hover: #f7fbfa;
+  --hover-edge: #b5c9c6;
+  --row-hover: #f6faf9;
+  --glass: rgba(255, 255, 255, .55);
+  --track: #e2ebe9;
+  --shadow: 0 1px 2px rgba(21, 52, 60, .05), 0 3px 10px rgba(21, 52, 60, .05);
+  --running-bg: #dff1f2; --running-fg: #0c5c66;
+  --neutral-bg: #efebe3; --neutral-fg: #55605f;
+  --select-arrow: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%235b767c' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");
+  /* The work estimate's bar: water to sand, one hue per step. */
+  --work-align: #5bb8c9;
+  --work-modelfinder: #9fd6cf;
+  --work-trees: #0b7a86;
+  --work-ancestors: #e8a66f;
+  --work-codeml: #f1cfa4;
+  --work-setup: #c9c1b2;
+
+  & ::selection { background: #bfe6e4; color: var(--fg); }
+
+  /* Top bar: sea glass, with a gentle wave along its lower edge. */
+  & header { border-bottom: 0; background: linear-gradient(180deg, #e3f4f2, var(--bar)); }
+  & header::after { content: ""; position: absolute; left: 0; right: 0; bottom: -5px; height: 6px; pointer-events: none;
+    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='6'%3E%3Cpath d='M0 3q10-4 20 0t20 0' fill='none' stroke='%2343b8c0' stroke-width='1.6'/%3E%3C/svg%3E") repeat-x; }
+  & header .brand { color: var(--accent); }
+  & header nav :is(a[aria-current="page"], summary.current) { color: var(--accent); }
+
+  /* Headings in deep water; step numbers as teal pebbles. */
+  & main h1 { color: var(--fg); }
+  & section.step .step-number { background: var(--accent); color: #fff; }
+  & section.step > h2, & section.results > h2 { color: var(--fg); }
+
+  /* Main actions: teal; the panel's head a strip of shallow water. */
+  & .job-panel-head { position: relative; }
+  & .job-panel-head::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 3px;
+    background: linear-gradient(90deg, var(--accent), var(--surf)); }
+  & .job-panel-tab { background: var(--accent); }
+  & :is(details.stages, .snippet) { border-top: 3px solid var(--surf); }
+
+  /* Home: the title from deep to shallow water, the "2" in coral on a sand shadow
+     (solid, since shadows would paint over a clipped background). */
+  & .title-page h1 { display: inline-block; background: linear-gradient(90deg, #0a5f6a, var(--accent) 55%, var(--surf));
+    -webkit-background-clip: text; background-clip: text; color: transparent; }
+  & .title-page h1 .two { color: var(--coral); }
+  & .title-page .slogan { color: var(--fg); }
+}
+
+/* The landing and About pages' backdrop (backdrop.js): structures adrift in teal, shallow
+   blue, sea foam and a little coral, faint enough to read as water. */
+:root[data-skin="lagoon"] .backdrop {
+  --backdrop-colors: #2a9d9a, #5bb8c9, #7cc3a8, #e9876b;
+  --backdrop-count: 9;
+  --backdrop-alpha: .28;
+}

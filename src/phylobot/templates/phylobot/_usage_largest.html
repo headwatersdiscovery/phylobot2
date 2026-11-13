@@ -1,0 +1,8 @@
+{% load phylobot_extras %}
+{% if rows %}<table class="usage-largest">
+  <tbody>{% for job in rows %}<tr>
+    <td>{% if job.deleted_at %}<span class="deleted-name">{{ job.name|default:"(unnamed)" }}</span>{% else %}<a href="{% url 'job_detail' job.id %}">{{ job.name|default:"(unnamed)" }}</a>{% endif %}
+      <span class="hint">{{ job.created_at|date:"Y-m-d" }}{% if job.deleted_at %} · deleted{% endif %}</span></td>
+    <td class="num">{% if measure == "cpu" %}{{ job.cpu_seconds|duration }}{% else %}{{ job.storage_bytes|filesizeformat }}{% endif %}</td>
+  </tr>{% endfor %}</tbody>
+</table>{% else %}<p class="usage-empty">{% if measure == "cpu" %}No CPU time recorded in this window.{% else %}No stored files.{% endif %}</p>{% endif %}

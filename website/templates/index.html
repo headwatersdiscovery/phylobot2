@@ -1,0 +1,295 @@
+<!doctype html>
+{# phylobot.com (website/build.py). A landing page: the app's title, a pipeline that plays, #}
+{# the viewers in pictures, then how to get it and how to cite it. Links are relative, so the #}
+{# site works from any folder or straight from disk; nothing is fetched from another site #}
+{# until the tutorial video is played. #}
+<html lang="en" data-skin="{{ default_skin }}" data-backdrop="structures" data-backdrop-preference="structures"
+      data-backdrop-speed="1" data-backdrop-density="1">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>PhyloBot 2 · Ancestral Sequence Reconstruction</title>
+  <meta name="description" content="PhyloBot 2 takes protein sequences to reconstructed ancestors: alignment, phylogeny, ancestral sequence reconstruction, and the mutational paths between ancestors. Open source; runs on your own computer.">
+  <link rel="canonical" href="{{ site.url }}">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="PhyloBot 2">
+  <meta property="og:description" content="Every protein has a past. Find homologs, build trees, reconstruct ancestors, and send them to the bench.">
+  <meta property="og:url" content="{{ site.url }}">
+  <meta property="og:image" content="{{ site.url }}static/phylobot/phylobot-logo_new.png">
+  <link rel="icon" type="image/png" href="static/phylobot/phylobot-logo_new.png">
+  {# The reader's skin, before the first paint (website.js keeps it in localStorage). #}
+  <script>
+    (function () {
+      var skins = {{ skins_json|safe }};
+      var key = null;
+      try { key = localStorage.getItem("phylobot_skin"); } catch (error) { return; }
+      if (!Object.prototype.hasOwnProperty.call(skins, key)) return;
+      document.documentElement.dataset.skin = key;
+      document.documentElement.dataset.backdrop = skins[key];
+    })();
+  </script>
+  <link rel="stylesheet" href="static/phylobot/site.css">
+  {% for stylesheet in stylesheets %}<link rel="stylesheet" href="static/{{ stylesheet }}">
+  {% endfor %}<link rel="stylesheet" href="static/website.css">
+  {# The backdrop's structures, inline, so they rain even when the page is opened from disk. #}
+  <script src="static/structures.js" defer></script>
+  <script src="static/phylobot/backdrop.js" defer></script>
+  <script src="static/phylobot/matrix-rain.js" defer></script>
+  <script src="static/phylobot/copy.js" defer></script>
+  <script src="static/website.js" defer></script>
+</head>
+<body class="website">
+  <div class="backdrop" aria-hidden="true" data-clear=".title-page .logo"></div>
+  {# Not the app's bar: a few links to this page's own sections, shown once the title has scrolled away. #}
+  <nav class="site-nav" aria-label="On this page" data-site-nav hidden>
+    <a class="brand" href="#top">PhyloBot <span class="two">2</span></a>
+    <a href="#how">How It Works</a>
+    <a href="#tour">A Look Inside</a>
+    {% if tutorial %}<a href="#tutorial">Tutorial</a>{% endif %}
+    <a href="#quick-start">Quick Start</a>
+    <a href="#cite">Cite</a>
+  </nav>
+  <label class="skin-picker site-skin">Skin
+    <select data-skin-picker>{% for s in skin_menu %}
+      <option value="{{ s.key }}" data-backdrop="{{ s.backdrop }}"{% if s.key == default_skin %} selected{% endif %}>{{ s.label }}</option>{% endfor %}
+    </select>
+  </label>
+  <main id="top">
+    <section class="title-page hero">
+      {# The Matrix skin rains residues behind the title (matrix-rain.js), there being no top bar. #}
+      <div class="title" data-matrix-rain>
+        {# The PhyloBot '95 skin's homepage furniture; site.css hides .retro-only elsewhere. #}
+        <p class="retro-only retro-marquee" aria-hidden="true"><span>Welcome to PhyloBot 2</span></p>
+        <p class="retro-only retro-construction" aria-hidden="true"><span>🚧 UNDER CONSTRUCTION 🚧</span></p>
+        <h1>PhyloBot <span class="two">2</span></h1>
+        <img class="logo" src="static/phylobot/phylobot-logo_new.png" width="350" height="236"
+             alt="PhyloBot, a friendly robot with a phylogenetic tree in one hand, the other making a peace sign">
+        <p class="slogan">Every protein has a past.</p>
+        <p class="intro">Find homologs, build trees, reconstruct ancestors, and send them to the bench.</p>
+        <p class="intro audience">For protein engineers and evolutionary biologists</p>
+        <p class="actions">
+          <a class="button" href="#quick-start">Quick Start</a>
+          {% if tutorial %}<a class="head-action" href="#tutorial"><span class="play" aria-hidden="true">▶</span> {{ tutorial.title }}</a>{% endif %}
+          <a class="quiet" href="{{ site.repository }}">GitHub</a>
+        </p>
+        <p class="retro-only retro-counter" data-visits hidden>You have visited this homepage<span class="digits">000001</span>times!</p>
+      </div>
+      <aside class="retro-only retro-helper" data-retro-helper aria-label="Helper">
+        <div class="bubble">
+          <p>It looks like you're reconstructing an ancestor! Would you like help?</p>
+          <button type="button" data-retro-dismiss>Don't show this again</button>
+        </div>
+        <img src="static/phylobot/phylobot-logo_new.png" width="350" height="236" alt="">
+      </aside>
+      <a class="scroll-cue" href="#how">How it works</a>
+    </section>
+
+    {# The pipeline, played: website.js draws the stage from a small invented family and steps #}
+    {# through it. The list is the page's own account of the five steps, and its controls. #}
+    <section class="band how" id="how">
+      <div class="wrap">
+        <div class="band-head">
+          <h2>From Sequences to Ancestors</h2>
+          <p>One workflow, automated start to finish.</p>
+        </div>
+        <figure class="demo" data-demo>
+          <div class="demo-stage" data-demo-stage aria-hidden="true"></div>
+          <ol class="demo-steps">
+            <li><button type="button" data-step="1"><b>Sequences</b>
+              <span>Start with a protein family, or build one from a single protein by BLAST.</span></button></li>
+            <li><button type="button" data-step="2"><b>Alignment</b>
+              <span>Up to four aligners line up the columns; each alignment stays its own analysis.</span></button></li>
+            <li><button type="button" data-step="3"><b>Tree</b>
+              <span>IQ-TREE and RAxML-NG search for the phylogeny, under your models or ModelFinder's.</span></button></li>
+            <li><button type="button" data-step="4"><b>Ancestors</b>
+              <span>Every node gets a sequence, with a posterior probability at every site.</span></button></li>
+            <li><button type="button" data-step="5"><b>Paths</b>
+              <span>Read what changed on each branch between an ancestor and a descendant, and test a branch for positive selection.</span></button></li>
+          </ol>
+          <p class="demo-note"></p>
+        </figure>
+        <p class="tools">{% for tool in tools %}<span>{{ tool }}</span>{% endfor %}
+          <a href="#methods">every citation</a></p>
+      </div>
+    </section>
+
+    {% if tutorial %}
+    {# Nothing comes from YouTube until the reader presses play (website.js swaps the player in); #}
+    {# without scripts the panel is a link to the video. #}
+    <section class="band tutorial" id="tutorial">
+      <div class="wrap narrow">
+        <div class="band-head">
+          <h2>{{ tutorial.title }}</h2>
+          {% if tutorial.blurb %}<p>{{ tutorial.blurb }}</p>{% endif %}
+        </div>
+        <div class="video" data-video="{{ tutorial.youtube_id }}" data-title="{{ tutorial.title }}">
+          <a class="video-poster" href="https://www.youtube.com/watch?v={{ tutorial.youtube_id }}"
+             {% if tutorial.poster %}style="background-image: url('static/{{ tutorial.poster }}')"{% endif %}>
+            <span class="video-play" aria-hidden="true"></span>
+            <span class="visually-hidden">Play the video: {{ tutorial.title }}</span>
+            <span class="video-note">Plays from YouTube</span>
+          </a>
+        </div>
+      </div>
+    </section>
+    {% endif %}
+
+    {% if shots %}
+    <section class="band tour" id="tour">
+      <div class="wrap">
+        <div class="band-head">
+          <h2>A Look Inside</h2>
+          <p>Interactive results, saved and repeatable. Every view has an address, and every job keeps its settings and seed, so it can be run again exactly.</p>
+        </div>
+        {% for shot in shots %}
+        <article class="feature">
+          <div class="feature-text">
+            <h3>{{ shot.title }}</h3>
+            <p>{{ shot.text }}</p>
+          </div>
+          <figure class="shot">
+            <div class="frame">
+              <img class="light" src="static/shots/{{ shot.key }}-light.webp" width="{{ shot.width }}" height="{{ shot.height }}" loading="lazy" alt="{{ shot.alt }}">
+              <img class="dark" src="static/shots/{{ shot.key }}-dark.webp" width="{{ shot.width }}" height="{{ shot.height }}" loading="lazy" alt="{{ shot.alt }}">
+            </div>
+            <figcaption>{{ shot.caption }}</figcaption>
+          </figure>
+        </article>
+        {% endfor %}
+      </div>
+    </section>
+    {% endif %}
+
+    <section class="band who" id="who">
+      <div class="wrap">
+        <div class="band-head">
+          <h2>Why Reconstruct Ancestors</h2>
+        </div>
+        <ul class="audiences">
+          <li><h3>AI &amp; Generative Protein Design</h3>
+            <p>Ancestors are functional sequences, filtered by evolution, that modern databases
+              do not hold: stable scaffolds to start from, and out-of-distribution data for
+              training generative models and testing fitness predictors.</p></li>
+          <li><h3>Gene Therapy &amp; Vector Engineering</h3>
+            <p>Ancestral capsids and viral enzymes, such as AAVs and Cas endonucleases, are
+              robust starting templates with better packaging, new PAM specificities, or
+              less pre-existing immune recognition.</p></li>
+          <li><h3>Evolutionary &amp; Mechanistic Biology</h3>
+            <p>Find the mutations behind a historical shift in function, an allosteric
+              transition or an adaptation, without getting lost in modern neutral drift.</p></li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="band evidence" id="distinctive">
+      <div class="wrap">
+        <div class="band-head">
+          <h2>Confidence You Can Measure</h2>
+          <p>An ancestor is an estimate. PhyloBot 2 is built so you can see how far to trust one.</p>
+        </div>
+        <ul class="claims">
+          <li><h3>One Alignment Is One Opinion</h3>
+            <p>Every combination of aligner, tree and model runs as its own traceable
+              analysis, ranked by BIC, with the same ancestor matched across all of them.</p></li>
+          <li><h3>Tested Against Known Answers</h3>
+            <p>The pipeline is tested continuously on simulated families whose true ancestors
+              are known, and thresholds on those tests guard every change.</p></li>
+          <li><h3>Gaps Placed on Purpose</h3>
+            <p>Five ways to decide where an ancestor had no residue, each scored on
+              simulations with insertions and deletions. The unmasked reconstruction is
+              always kept.</p></li>
+          <li><h3>Pinned, Local, Open</h3>
+            <p>Every tool is pinned to an exact version. It runs on your own computer with no
+              account, and nothing leaves it unless you ask for a lookup, such as a homolog search.</p></li>
+        </ul>
+        <details class="fold">
+          <summary>The long version: what is distinctive about PhyloBot 2</summary>
+          <div class="about">{% include "phylobot/about/_distinctive.html" %}</div>
+        </details>
+        <details class="fold">
+          <summary>Compare with {{ other_tools }} other tools, feature by feature</summary>
+          <div class="about">{% include "phylobot/about/_comparison.html" %}</div>
+        </details>
+      </div>
+    </section>
+
+    <section class="band get" id="quick-start">
+      <div class="wrap">
+        <div class="band-head">
+          <h2>Quick Start</h2>
+          <p>Needs Docker and make. Three commands, then open <code>http://localhost:8000</code>.</p>
+        </div>
+        <div class="get-it">
+          <div class="terminal">
+            <h3>Run on Your Local Computer</h3>
+            <div class="command">
+              <pre><code>curl -L {{ site.repository }}/releases/latest/download/phylobot.tar.gz | tar xz
+cd phylobot
+make up</code></pre>
+              <button type="button" class="mini copy">Copy</button>
+            </div>
+            <p class="hint">Downloads PhyloBot and starts it. The first run builds the images, so allow a while.</p>
+          </div>
+          <div class="terminal">
+            <h3>Developers: Clone the Repository</h3>
+            <div class="command">
+              <pre><code>git clone {{ site.repository }}.git</code></pre>
+              <button type="button" class="mini copy">Copy</button>
+            </div>
+            <p class="hint">For development, or to follow updates with <code>git pull</code>. PhyloBot is open source under the
+              <a href="{{ site.repository }}/blob/main/LICENSE">BSD 3-Clause License</a>;
+              feel free to edit or expand its code, but please cite and attribute our work.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="band refs" id="cite">
+      <div class="wrap narrow about">
+        <div class="band-head">
+          <h2>How to Cite PhyloBot</h2>
+        </div>
+        <blockquote>{% include "phylobot/_ref.html" with ref=reference %}</blockquote>
+        <p class="hint">PhyloBot 2 is a ground-up rewrite of the PhyloBot this paper describes. If you
+          use it in published work, please cite the paper together with the
+          <a href="#methods">methods</a> your analysis used. The repository's
+          <a href="{{ site.repository }}/blob/main/CITATION.cff">CITATION.cff</a> has
+          the same information for citation managers.</p>
+
+        <h2 id="methods">Included Methods</h2>
+        <p>PhyloBot 2 is a workflow around other people's methods. Please cite the ones your
+          analysis used.
+          <button type="button" class="link" data-unfold="#cite .method-group" hidden>Show every citation</button></p>
+        {% for heading, group in methods %}
+        <details class="method-group">
+          <summary><span class="method-heading">{{ heading }}</span>
+            <span class="hint">{% for m in group %}{{ m.name }}{% if not forloop.last %}, {% endif %}{% endfor %}</span></summary>
+          <ul class="methods">
+            {% for m in group %}
+            <li><b>{{ m.name }}</b> <span class="hint">({{ m.note }})</span>
+              {% for ref in m.refs %}<br>{% include "phylobot/_ref.html" %}{% endfor %}</li>
+            {% endfor %}
+          </ul>
+        </details>
+        {% endfor %}
+        <details class="method-group" id="models">
+          <summary><span class="method-heading">Substitution Models</span>
+            <span class="hint">The amino-acid matrices and the rate and frequency variants on offer</span></summary>
+          {% include "phylobot/about/_models.html" %}
+        </details>
+        <details class="method-group" id="related">
+          <summary><span class="method-heading">Related Work</span>
+            <span class="hint">FireProtASR, EnzymeMiner, Topiary, GRASP, AncFlow, ARPIP, indelMaP, Nextstrain, MEGA</span></summary>
+          {% include "phylobot/about/_related.html" %}
+        </details>
+
+        <p class="source" id="source">PhyloBot 2 is developed at
+          <a href="{{ site.repository }}">{{ site.repository|cut:"https://" }}</a>; the tools it
+          runs keep their own licences. If we have missed or misdescribed your work, please
+          contact us at <a href="mailto:{{ site.contact }}">{{ site.contact }}</a>.</p>
+      </div>
+    </section>
+  </main>
+  {% include "phylobot/_footer.html" %}
+</body>
+</html>

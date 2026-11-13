@@ -1,0 +1,15 @@
+{# A stacked bar chart (uncertainty_views.bar_chart): one row per bar, each component's #}
+{# residue part solid and its presence part hatched. Inside a figure with data-tips. #}
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {{ chart.width }} {{ chart.height }}"
+     width="{{ chart.width }}" height="{{ chart.height }}" role="img"
+     font-family="system-ui, -apple-system, 'Segoe UI', sans-serif"
+     aria-label="Expected differing positions, split by source">
+  {% include "phylobot/_uncertainty_patterns.html" with prefix=chart.patterns %}
+  {% for x, label in chart.ticks %}<line x1="{{ x }}" x2="{{ x }}" y1="0" y2="{{ chart.baseline }}" stroke="#d8dde5" stroke-width="1"/>
+  <text x="{{ x }}" y="{{ chart.baseline|add:14 }}" text-anchor="middle" font-size="11" fill="#5d6675">{{ label }}</text>{% endfor %}
+  {% for bar in chart.bars %}<g>
+    {% if bar.href %}<a href="{{ bar.href }}">{% endif %}<text x="{{ chart.left|add:-8 }}" y="{{ bar.y|add:15 }}" text-anchor="end" font-size="12.5" font-weight="600" fill="#1d2330">{{ bar.label }}</text>{% if bar.href %}</a>{% endif %}
+    {% for s in bar.segments %}<rect x="{{ s.x }}" y="{{ bar.y }}" width="{{ s.width }}" height="{{ chart.row|add:-8 }}" rx="2" fill="{{ s.fill }}" data-tip="{{ bar.label }} · {{ s.title }}"/>{% endfor %}
+    <text x="{{ bar.end|add:6 }}" y="{{ bar.y|add:15 }}" font-size="12" fill="#1d2330">{{ bar.text }}{% if bar.present %} <tspan fill="#5d6675">· {{ bar.present }}</tspan>{% endif %}</text>
+  </g>{% endfor %}
+</svg>

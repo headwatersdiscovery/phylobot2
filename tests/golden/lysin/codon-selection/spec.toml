@@ -1,0 +1,33 @@
+# Golden scenario: lysin/codon-selection
+#
+# The deciding experiment for codon support: dN/dS varies among sites, simulated under
+# codeml's M3 model (three dN/dS classes) as fitted to the real lysin alignment (PAML
+# 4.10.10; lnL -4464.31 vs -4490.58 for GY+F3X4+G4). IQ-TREE's single-dN/dS codon models
+# are slightly misspecified here, codeml M3 is exact, and the amino-acid models run on
+# the translation, so the scenario compares codon and amino-acid reconstruction on
+# realistic data. A single-dN/dS simulation came out far more divergent than the real
+# data (mean amino-acid identity 0.43 vs 0.63); site classes give a realistic 0.60.
+# See generate.py for how M3 is simulated, and true_site_classes.tsv per replicate.
+
+description = "Abalone sperm lysin (25 species, 134 codons); codeml M3 (dN/dS 0.085, 0.91, 3.07 among sites), no indels."
+
+[tree]
+file = "../source/m3.nwk"  # branch lengths from the codeml M3 fit (tree length 8.94)
+midpoint = true
+
+[root]
+file = "../root.fasta"
+name = "Haliotis_rufescens_lysin"
+
+[model]
+seqtype = "CODON1"
+kappa = 1.57610
+f3x4 = [0.34149, 0.22514, 0.26352, 0.16984,  0.30553, 0.16440, 0.22393, 0.30613,  0.21154, 0.24902, 0.25960, 0.27984]  # A C G T per codon position, as observed
+
+[model.site_classes]  # codeml M3 estimates (p0..p2, w0..w2)
+proportions = [0.32902, 0.40231, 0.26868]
+omegas = [0.08519, 0.91120, 3.06543]
+
+[simulation]
+image = "quay.io/biocontainers/iqtree:3.1.3--h8471819_0"
+seeds = [302, 303, 304, 305, 306, 307, 308, 309, 310, 311]  # first = quick tier

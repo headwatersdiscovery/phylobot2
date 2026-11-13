@@ -1,0 +1,287 @@
+{# The design half (L5a): the axes, a budget and a strategy turn the targets into #}
+{# members. The controls sit beside the table they change, as the viewer's zoom does; #}
+{# the form is a GET so every view has a shareable address, and Save writes the spec. #}
+{# "Design the set", the "Members" it produces and the "Exports" of it are three sections, #}
+{# wrapped in `#design` so one HTMX swap refreshes them together. #}
+<div id="design" class="library-design-group">
+  <section class="step library-design" id="design-the-set">
+  <h2><button type="button" class="fold-toggle" aria-expanded="true" aria-controls="design-the-set-body">Design the Set</button> {% include "phylobot/_help.html" with id="design-help" title="Design the set" body="Two different things happen here. The uncertainty threshold (in the Controls panel) and the variants below decide what could be in the library — lower the threshold and more sites count as uncertain, so there are more sequences to choose from and more states to cover. The budget and the strategy then decide which of them you take; they never change what exists, only what is picked." %}</h2>
+  <div class="fold-body" id="design-the-set-body">
+  {% if not designable %}
+  <p class="hint">No ancestor here has posterior probabilities, so there is nothing to vary.
+    PRANK's and GRASP's reconstructions carry their own residues but no distributions.</p>
+  {% else %}
+
+  {# The controls refresh this section rather than the page: a change of budget or of #}
+  {# variants must not throw away the reader's place (owner, 2026-10-08). Without #}
+  {# JavaScript the same form submits normally and the page reloads. #}
+  <form method="get" action="{{ request.path }}" class="design-controls" id="design-form"
+        hx-get="{{ request.path }}" hx-target="#design" hx-select="#design"
+        hx-swap="outerHTML" hx-trigger="change, submit" hx-replace-url="true">
+    {# The View panel's own parameters ride along, so designing never resets the view. #}
+    <input type="hidden" name="altall" value="{{ threshold }}" data-design-threshold>
+    <input type="hidden" name="palette" value="{{ palette }}" data-save-palette>
+    <input type="hidden" name="scheme" value="{{ scheme }}" data-save-scheme>
+    <input type="hidden" name="zoom" value="{{ zoom }}" data-save-zoom>
+    <input type="hidden" name="aln" value="{{ viewers.layout.alignment }}">
+    {% for name in viewers.layout.extant %}<input type="hidden" name="extant" value="{{ name }}">{% endfor %}
+
+    <div class="design-grid">
+      <div class="design-field budget-field">
+        <label for="budget-number">I can order</label>
+        <input type="number" name="budget" id="budget-number" value="{{ design.budget }}"
+               min="1" max="{{ max_budget }}">
+        <span class="hint">wells (1 sequence per well)</span>
+        {# Unnamed: the number field is what submits, and the slider drives it. The slider #}
+        {# reaches 192 by default; past that, library.js widens it to twice the value. The #}
+        {# min and max sit at either end of the slider's line. #}
+        <span class="budget-slider-row">
+          <span class="slider-end">1</span>
+          <input type="range" class="budget-slider" min="1" max="{{ budget_slider_max }}"
+                 value="{{ design.budget }}" aria-label="Wells to order">
+          <span class="slider-end budget-slider-max">{{ budget_slider_max }}</span>
+        </span>
+      </div>
+
+      <fieldset class="design-field">
+        <legend>Fill them with</legend>
+        {# A "?" beside each strategy, all opening one popup (owner, 2026-10-13): the #}
+        {# three are only meaningful against each other, and three separate panels #}
+        {# would repeat the same citations. The panel is rendered with the first and #}
+        {# the rest are buttons pointing at it. Its text is about.strategy_help(), #}
+        {# built from the About page's own citations, so the two cannot drift. #}
+        {% for s in strategies %}
+        <label class="check"><input type="radio" name="strategy" value="{{ s.key }}"
+          {% if s.key == design.strategy %}checked{% endif %}>
+          <span><strong>{{ s.name }}</strong>
+            {% if forloop.first %}{% include "phylobot/_help.html" with id="strategies" title="Filling the wells" body=strategy_help %}{% else %}{% include "phylobot/_help.html" with id="strategies" title="Filling the wells" %}{% endif %}
+            <span class="hint">{{ s.hint }}</span></span></label>
+        {% endfor %}
+        {# Open when the saved spec uses one of these, so a library never hides the #}
+        {# setting it is running under. #}
+        <details class="advanced-strategies"{% if advanced_open %} open{% endif %}>
+          <summary>Advanced</summary>
+          {% for s in advanced_strategies %}
+          <label class="check"><input type="radio" name="strategy" value="{{ s.key }}"
+            {% if s.key == design.strategy %}checked{% endif %}>
+            <span><strong>{{ s.name }}</strong>
+              {% include "phylobot/_help.html" with id="strategies" title="Filling the wells" %}
+              <span class="hint">{{ s.hint }}</span></span></label>
+          {% endfor %}
+        </details>
+      </fieldset>
+
+      <fieldset class="design-field axes-field">
+        <legend>Variants of each ancestor</legend>
+        <p class="axis-row control">
+          {# The ML sequence is always generated, so its box is checked and disabled (locked): #}
+          {# it is a label, not a control, and submits nothing. #}
+          <label class="check locked"><input type="checkbox" checked disabled aria-label="Include ML sequence — always included">
+            <span><strong>Include ML Sequence</strong> <svg class="lock-icon" width="11" height="11" viewBox="0 0 24 24" aria-hidden="true" fill="currentColor"><path d="M12 1a5 5 0 0 0-5 5v3H6a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-9a2 2 0 0 0-2-2h-1V6a5 5 0 0 0-5-5zm-3 8V6a3 3 0 0 1 6 0v3z"/></svg> <span class="hint">always included</span></span></label>
+          {# Affirmative, on by default: a hidden "off" before the box, so an unticked box #}
+          {# reads "off" and a ticked one wins (QueryDict.get takes the last value). #}
+          <input type="hidden" name="altall_on" value="off">
+          <label class="check"><input type="checkbox" name="altall_on" value="on"{% if axes.alt_all %} checked{% endif %}>
+            <span><strong>Include AltAll</strong></span></label>
+          {% include "phylobot/_help.html" with id="altall" title="AltAll" body="AltAll is the standard robustness control for ancestral sequence reconstruction: one sequence that takes the second-most-likely state at every uncertain site at once. If a result holds for both the ML sequence and AltAll, it is robust to the reconstruction's uncertainty. Reference: <a href='https://doi.org/10.1093/molbev/msw223' target='_blank' rel='noopener noreferrer'>Eick et al. 2017</a>." %}
+        </p>
+        <label class="axis-row">
+          <span><strong>Posterior draws</strong> per ancestor</span>
+          <input type="number" name="samples" value="{{ axes.samples }}" min="0" max="10000">
+          <span class="presets">{% for n in sample_presets %}<button type="submit" name="samples"
+            value="{{ n }}" class="mini{% if n == axes.samples %} on{% endif %}">{{ n }}</button>{% endfor %}</span>
+          <span class="hint">one state drawn at each site from its own posterior; only “Spanning” picks them</span>
+        </label>
+        <label class="axis-row">
+          <span><strong>Single-site alternates</strong></span>
+          <select name="subs">
+            <option value="0"{% if axes.max_substitutions == 0 %} selected{% endif %}>none</option>
+            <option value="1"{% if axes.max_substitutions == 1 %} selected{% endif %}>one swap at a time</option>
+            <option value="2"{% if axes.max_substitutions == 2 %} selected{% endif %}>up to two at once</option>
+          </select>
+          <span class="hint">one member per uncertain site; they do not address epistasis</span>
+        </label>
+      </fieldset>
+    </div>
+
+    <p class="design-actions">
+      <button type="submit">Update</button>
+      <span class="hint">Until it is saved (in the Controls panel), the design and the view
+        live in this page's address.</span>
+    </p>
+  </form>
+
+  {# Save posts the same values; it is its own form so the controls stay a GET. The #}
+  {# Controls panel's Save button submits it through form=, so one Save stores the #}
+  {# design and the view the reader left the library in. #}
+  <form method="post" action="{% url 'library_design' job.id library.id %}" id="design-save">{% csrf_token %}
+    <input type="hidden" name="altall" value="{{ threshold }}">
+    <input type="hidden" name="palette" value="{{ palette }}" data-save-palette>
+    <input type="hidden" name="scheme" value="{{ scheme }}" data-save-scheme>
+    <input type="hidden" name="zoom" value="{{ zoom }}" data-save-zoom>
+    <input type="hidden" name="aln" value="{{ viewers.layout.alignment }}">
+    {% for name in viewers.layout.extant %}<input type="hidden" name="extant" value="{{ name }}">{% endfor %}
+    <input type="hidden" name="members" value="{{ members_shown }}" data-save-members>
+    <input type="hidden" name="budget" value="{{ design.budget }}">
+    <input type="hidden" name="strategy" value="{{ design.strategy }}">
+    <input type="hidden" name="samples" value="{{ axes.samples }}">
+    <input type="hidden" name="subs" value="{{ axes.max_substitutions }}">
+    {% if axes.alt_all %}<input type="hidden" name="alt_all" value="1">{% endif %}
+    <input type="hidden" name="next" value="{{ request.get_full_path }}">
+  </form>
+
+  {% if too_many %}
+  <p class="errors">These axes imply {{ too_many }} sequences, over the {{ candidate_limit }}
+    this page will generate. Lower the samples or the single-site alternates.</p>
+  {% else %}
+  <p class="design-count">{{ candidates }} candidate{{ candidates|pluralize }} →
+    <strong>{{ distinct }} distinct sequence{{ distinct|pluralize }}</strong> →
+    {{ selection.members|length }} selected{% if dropped %} ({{ dropped }} left out by the budget){% endif %}.</p>
+  <p class="design-coverage hint">{{ coverage.sentence }}</p>
+
+  {% if chart and not chart.empty %}
+  <figure class="coverage-chart">
+    <svg width="{{ chart.width }}" height="{{ chart.height }}" viewBox="0 0 {{ chart.width }} {{ chart.height }}"
+         role="img" aria-label="Share of the plausible states covered, against the number of wells, for each strategy">
+      {% for y, label in chart.grid %}
+      <line x1="{{ chart.pad }}" x2="{{ chart.width }}" y1="{{ y }}" y2="{{ y }}" class="grid"/>
+      <text x="{{ chart.pad }}" y="{{ y }}" class="axis" text-anchor="end" dx="-4" dy="3">{{ label }}</text>
+      {% endfor %}
+      {% for x, wells in chart.ticks %}
+      <text x="{{ x }}" y="{{ chart.height }}" class="axis" text-anchor="middle" dy="-16">{{ wells }}</text>
+      {% endfor %}
+      <text x="{{ chart.middle_x }}" y="{{ chart.height }}" class="axis axis-name" text-anchor="middle" dy="-2">wells</text>
+      <line x1="{{ chart.budget_x }}" x2="{{ chart.budget_x }}" y1="2" y2="{{ chart.height|add:'-28' }}" class="at-budget"/>
+      {% for line in chart.lines %}
+      <polyline points="{{ line.points }}" fill="none" class="curve {{ line.key }}"/>
+      {% endfor %}
+    </svg>
+    <figcaption>
+      <ul class="chart-key">
+        {% for line in chart.lines %}
+        <li class="{{ line.key }}{% if line.key == design.strategy %} on{% endif %}">
+          <span class="swatch"></span>{{ line.label }}:
+          <strong>{{ line.percent|floatformat:1 }}%</strong>
+          <span class="hint">({{ line.covered }} of {{ chart.total }})</span></li>
+        {% endfor %}
+      </ul>
+      {% if chart.tied %}<p class="hint">At {{ chart.budget }} wells every strategy reaches the
+        same states here, so the lines sit on top of one another; they differ at smaller
+        budgets, and whenever the variants outnumber the wells by more.</p>{% endif %}
+      {% if chart_capped %}<p class="hint">With this many variants the chart stops at your
+        budget: looking further would cost more than it tells you.</p>{% endif %}
+    </figcaption>
+  </figure>
+  {% endif %}
+  {% endif %}{# too_many #}
+  {% endif %}{# designable #}
+  </div>
+  </section>
+
+  {% if designable and not too_many %}
+  {# The resultant set: the sequences this design produces, one per well. #}
+  <section class="step library-members" id="members">
+  <h2><button type="button" class="fold-toggle" aria-expanded="true" aria-controls="members-body">Members ({{ design.budget }})</button> {% include "phylobot/_help.html" with id="members-help" title="Members" body="The resultant set: the sequences this design produces, one per well you ordered (“I can order” above). Each member is drawn on its ancestor's columns, beneath the other members of the same ancestor, coloured by that ancestor's posterior probability for the state it carries — outlined where it differs from the ML sequence, dimmed where the budget left it out. Click a row to find it in the table below; change the design above and this set is recomputed." %}</h2>
+  <div class="fold-body" id="members-body">
+  {% if member_frames or members %}
+  {# The members as sequences (L5c): the same layout as the ancestors' viewers above, so #}
+  {# a column is the same column in both. The choice is part of the design form, which #}
+  {# refreshes this section; library.js submits it on change. #}
+  <div class="members-viewer-head">
+    <div class="members-viewer-tools">
+    <fieldset class="members-shown">
+      <legend>Draw</legend>
+      {% for key, label in members_shown_options %}
+      <label class="check"><input type="radio" name="members" value="{{ key }}" form="design-form"
+        data-members-shown{% if key == members_shown %} checked{% endif %}> <span>{{ label }}</span></label>
+      {% endfor %}
+    </fieldset>
+    {% if member_frames %}<div class="table-tools"><a href="{{ excel_url }}" data-excel
+      title="These rows as coloured cells, their probabilities, the members table and what was drawn">Download Excel</a></div>{% endif %}
+    </div>
+  </div>
+  {% include "phylobot/_library_viewers.html" with frames=member_frames zoom_here=True %}
+  {% if not member_frames %}<p class="hint">No member can be drawn here.</p>{% endif %}
+  {% endif %}
+  <h3 class="fold-head"><button type="button" class="fold-toggle" aria-expanded="true" aria-controls="design-members-body">Members table</button></h3>
+  <div class="fold-body" id="design-members-body">
+  <p class="hint">One row per distinct protein. Hover or click a <span class="help-dot">?</span>
+    for what a column means.</p>
+  <div class="library-table-scroll">
+    <table class="jobs members-table">
+      <thead><tr>
+        <th>Name</th>
+        <th>Variant {% include "phylobot/_help.html" with id="variant" title="Variant" body="How this sequence was made. <b>Most likely</b> is the ancestor itself — the state with the highest posterior at every site. <b>AltAll</b> takes the second-most-likely state at every uncertain site at once, the standard robustness control. <b>Draw 3</b> is the third draw from the site-by-site posteriors: each site rolled independently, so samples sit far from the ML sequence. <b>K300R</b> is a single swap: lysine to arginine at alignment column 300, the ML sequence otherwise unchanged." %}</th>
+        <th class="num">Support {% include "phylobot/_help.html" with id="support" title="Support" body="How many of your reconstructions gave this exact protein. One ancestor reconstructed under two gap methods that agree counts twice. Higher means more of your settings agree on it, which is what “Most supported” fills the wells with." %}</th>
+        <th class="num">Weight {% include "phylobot/_help.html" with id="weight" title="Weight" body="The summed BIC weight of the combinations behind this sequence, from the job's model comparison. A BIC weight is the share of the fit a model carries against the others for its alignment, so 1.000 means it was the only model there. It separates a sequence supported by well-fitting choices from one supported by poor ones." %}</th>
+        <th class="num">Mean pp {% include "phylobot/_help.html" with id="meanpp" title="Mean pp" body="The average posterior probability of the states this sequence carries, over the sites where its ancestor has a residue. The ML sequence has the highest mean pp of any variant of its ancestor, by construction; a sample has a lower one." %}</th>
+        <th class="num">Length</th>
+        <th class="num">Changes {% include "phylobot/_help.html" with id="changes" title="Changes" body="How many alignment columns this sequence differs from its own ML ancestor at — gaps included. Most likely is 0 by definition. AltAll equals the number of uncertain sites at the current threshold. It is a distance from the reference, not an error." %}</th>
+        <th>From {% include "phylobot/_help.html" with id="from" title="From" body="The ancestor this variant was made of: the node on the tree, in the combination and gap version you added to the library." %}</th>
+      </tr></thead>
+      <tbody>
+        {% for row in members %}
+        <tr id="{{ row.anchor }}" class="{% if row.picked %}picked{% else %}cut{% endif %}">
+          <td class="member-name">{% if multi_aligner and row.aligner_label %}<span class="aligner-tag" title="From the {{ row.aligner_label }} alignment">{{ row.aligner_label }}</span> {% endif %}<button type="button" class="link member-find" data-member="{{ row.anchor }}"
+            title="Show it in the viewer above"><code>{{ row.name }}</code></button>
+            {% if not row.fits %}<span class="warning" title="Longer than a vendor's order form allows">!</span>{% endif %}</td>
+          <td>{{ row.variant_label }}{% if row.member.is_control %} <span class="chip muted" title="The ML sequence and AltAll are always kept: they are the reference and its robustness control">control</span>{% endif %}</td>
+          <td class="num">{{ row.member.support }}</td>
+          <td class="num">{{ row.member.weight|floatformat:3 }}</td>
+          <td class="num">{% if row.mean_pp %}{{ row.mean_pp|floatformat:3 }}{% else %}–{% endif %}</td>
+          <td class="num">{% include "phylobot/_length_cell.html" with length=row.member.length warning=row.length_warning tip_id=row.anchor|add:"-length" %}</td>
+          <td class="num">{% if row.differences is not None %}{{ row.differences }}{% else %}–{% endif %}</td>
+          <td class="hint">{% if row.source_url %}<a href="{{ row.source_url }}">{{ row.member.source.node }}</a>{% else %}{{ row.member.source.node }}{% endif %}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <p class="hint">The {{ selection.members|length }} above the rule are the set; the rest are
+    what the budget left out.</p>
+  </div>
+
+  {# An export freezes the design: the files and a copy of the spec are kept, so a set that #}
+  {# was ordered can be read back. Its button lives in the Controls panel (grouped with Save #}
+  {# and Duplicate); this form holds the values that the button submits through form=. #}
+  <form method="post" action="{% url 'library_export' job.id library.id %}" id="design-export" data-busy="Exporting…">{% csrf_token %}
+    <input type="hidden" name="altall" value="{{ threshold }}">
+    <input type="hidden" name="budget" value="{{ design.budget }}">
+    <input type="hidden" name="strategy" value="{{ design.strategy }}">
+    <input type="hidden" name="samples" value="{{ axes.samples }}">
+    <input type="hidden" name="subs" value="{{ axes.max_substitutions }}">
+    {% if axes.alt_all %}<input type="hidden" name="alt_all" value="1">{% endif %}
+    <input type="hidden" name="next" value="{{ request.get_full_path }}">
+  </form>
+  </div>
+  </section>
+  {% endif %}
+
+  {% if exports %}
+  <section class="step library-exports" id="exports">
+  <h2><button type="button" class="fold-toggle" aria-expanded="true" aria-controls="exports-body">Exports</button></h2>
+  <div class="fold-body" id="exports-body">
+  <table class="jobs exports-table">
+    <thead><tr><th>#</th><th>Taken</th><th class="num">Sequences</th><th>PhyloBot</th>
+      <th>Files</th><th></th></tr></thead>
+    <tbody>
+      {% for e in exports %}
+      <tr>
+        <td>{{ e.export.number }}</td>
+        <td>{{ e.export.created_at|date:"Y-m-d H:i" }}</td>
+        <td class="num">{{ e.export.member_count }}</td>
+        <td class="hint">{{ e.export.phylobot_version }}</td>
+        <td class="export-files">{% for name, label in e.files %}<a
+          href="{% url 'library_export_file' job.id library.id e.export.number name %}">{{ label }}</a>{% if not forloop.last %} · {% endif %}{% endfor %}</td>
+        <td><form method="post" action="{% url 'library_export_restore' job.id library.id e.export.number %}">{% csrf_token %}
+          <button type="submit" class="link">Restore these settings</button></form></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  <p class="hint">Restoring puts an export's ancestors and design back into this library;
+    the export itself is never changed.</p>
+  </div>
+  </section>
+  {% endif %}
+</div>

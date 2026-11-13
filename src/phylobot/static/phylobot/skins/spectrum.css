@@ -1,0 +1,130 @@
+/* Spectrum skin (phylobot.skins): Clean's layout (clean.css applies to it) where colour
+   means the pipeline stage, the same hue wherever the stage appears:
+     sequences: violet   alignments: cerulean   trees: green   ancestors: amber
+   Hooks: data-stage on the New Job steps (and the homolog search), data-group on the
+   steps graph's boxes (phylobot.stages.Stage.group, the work estimate's groups),
+   data-section on <body>, link targets (tree / ancestor files and viewers), and the
+   viewer forms. The whole pipeline (top bar, job panel, main buttons) is the spectrum. */
+:root[data-skin="spectrum"] {
+  --violet: #7b4fd0;   --violet-soft: #f3eefc;   --violet-ink: #5a32a8;
+  --cerulean: #1f8ac9; --cerulean-soft: #e8f4fb; --cerulean-ink: #14689a;
+  --green: #22a060;    --green-soft: #e6f6ed;    --green-ink: #15703f;
+  --amber: #e0900f;    --amber-soft: #fdf3e1;    --amber-ink: #95560a;
+  /* Not stages: a job's results (its outputs) and its files. */
+  --rose: #d6457a;     --rose-soft: #fcebf2;     --rose-ink: #a3265a;
+  --slate: #7a8699;    --slate-ink: #4a5568;
+  --spectrum: linear-gradient(90deg, var(--violet), var(--cerulean), var(--green), var(--amber));
+  --spectrum-ink: linear-gradient(90deg, var(--violet-ink), var(--cerulean-ink), var(--green-ink), var(--amber-ink));
+  /* The work estimate's bar and legend (site.css tokens): one hue per stage. */
+  --work-align: var(--cerulean);
+  --work-modelfinder: #8fd0ad;   /* part of the Trees step: a lighter green */
+  --work-trees: var(--green);
+  --work-ancestors: var(--amber);
+  --work-codeml: #f3cf8a;        /* part of the Ancestors step: a lighter amber */
+  --work-setup: #b8bfca;
+
+  /* Each stage's hue as --stage / --stage-soft / --stage-ink, wherever it is named. */
+  & :is([data-stage="sequences"], body[data-section="homologs"] main, details.inputs, [data-settings="homolog-search"]) {
+    --stage: var(--violet); --stage-soft: var(--violet-soft); --stage-ink: var(--violet-ink); }
+  & :is([data-stage="alignments"], .alignment-result, [data-group="align"]) {
+    --stage: var(--cerulean); --stage-soft: var(--cerulean-soft); --stage-ink: var(--cerulean-ink); }
+  & :is([data-stage="trees"], main:has(#tree-viewer), [data-group="trees"], [data-group="modelfinder"]) {
+    --stage: var(--green); --stage-soft: var(--green-soft); --stage-ink: var(--green-ink); }
+  /* PROPERTIES is its own group for costing (it can dwarf the reconstruction), but on the
+     steps graph it is still ancestor work, so it wears the ancestors colour here. */
+  & :is([data-stage="ancestors"], main:has(#viewer.viewer), .path-section,
+        [data-group="ancestors"], [data-group="properties"]) {
+    --stage: var(--amber); --stage-soft: var(--amber-soft); --stage-ink: var(--amber-ink); }
+
+  /* Top bar: a thin spectrum under it. */
+  & header { border-bottom: 0; }
+  & header::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 3px; background: var(--spectrum); }
+
+  /* Cards of one stage: a coloured top edge, the number in the stage's colour. */
+  & :is(section.step, details.inputs, .viewer)[data-stage], & details.inputs,
+  & main:has(#tree-viewer) .viewer, & main:has(#viewer.viewer) .viewer { border-top: 4px solid var(--stage); }
+  & section.step[data-stage] > h2 { color: var(--stage-ink); }
+  & section.step[data-stage] .step-number { background: var(--stage); color: #fff; }
+  & section.step[data-stage] { accent-color: var(--stage); }
+  & section.step[data-stage] :is(input, select, textarea):focus { border-color: var(--stage); box-shadow: 0 0 0 3px var(--stage-soft); }
+  /* Whole-pipeline cards (the job's status, the home page's): the spectrum. */
+  & :is(details.stages, .snippet) { border-top: 0; position: relative; overflow: hidden; }
+  & :is(details.stages, .snippet)::before { content: ""; position: absolute; left: 0; right: 0; top: 0;
+    height: 4px; background: var(--spectrum); }
+
+  /* Job page: each card its own colour (inputs violet, status the spectrum, results
+     rose, files slate), its heading to match. */
+  & details.inputs > summary strong { color: var(--violet-ink); }
+  & section.results { border-top: 4px solid var(--rose); }
+  & section.results > h2 { color: var(--rose-ink); }
+  & details.files, & details.libraries { border-top: 4px solid var(--slate); }
+  & details.files > summary h2, & details.libraries > summary h2 { color: var(--slate-ink); }
+
+  /* Settings: homolog search violet (it makes sequences), the worker the spectrum (it
+     runs the whole pipeline), users' limits rose (no stage). */
+  & section.step[data-settings] { border-top: 4px solid var(--stage, var(--rose)); }
+  & section.step[data-settings] > h2 { color: var(--stage-ink, var(--rose-ink)); }
+  & section.step[data-settings="jobs-and-worker"] { border-top: 0; position: relative; overflow: hidden; }
+  & section.step[data-settings="jobs-and-worker"]::before { content: ""; position: absolute; left: 0; right: 0; top: 0;
+    height: 4px; background: var(--spectrum); }
+  & section.step[data-settings="jobs-and-worker"] > h2 { color: var(--fg); }
+  & section.step[data-settings] .source.here { color: var(--stage-ink, var(--rose-ink)); }
+
+  /* Pages of one stage: the viewers and Find homologs. */
+  & main:is(:has(#tree-viewer), :has(#viewer.viewer)) h1, & body[data-section="homologs"] main h1 { color: var(--stage-ink); }
+  & main:is(:has(#tree-viewer), :has(#viewer.viewer)) .viewer-controls { background: var(--stage-soft); border-color: transparent; }
+  & .viewer .path-section h2 { color: var(--stage-ink); }
+  & .path-section .viewer-controls { background: var(--amber-soft); }
+  & [data-stage] .database-option:has(input:checked) { background: var(--stage-soft); border-color: var(--stage); }
+  & .path-section button.trace:not(.secondary) { background: var(--amber-ink); border-color: var(--amber-ink); }
+
+  /* Results: each alignment's block marked in cerulean; tree and ancestor links in their colours. */
+  & .alignment-result { border-top: 0; border-left: 4px solid var(--stage); padding: .25rem 0 .25rem 1rem; margin-top: 1.5rem; }
+  & .alignment-result h3 { color: var(--stage-ink); }
+  & main :is(a[href*="/tree/"], a[href*="tree."], a[href$=".nwk"]) { color: var(--green-ink); }
+  & main :is(a[href*="/ancestors/"], a[href*="ancestors"]) { color: var(--amber-ink); }
+  & main a[href*="alignment.fasta"] { color: var(--cerulean-ink); }
+  & a.viewer-card[href*="/alignment/"] { border-top: 4px solid var(--cerulean); }
+  & a.viewer-card[href*="/tree/"] { border-top: 4px solid var(--green); }
+  & a.viewer-card[href*="/ancestors/"] { border-top: 4px solid var(--amber); }
+
+  /* Steps graph ("simple" colours): each box in its stage's colour; status still reads. */
+  & .stage-graph:not([data-scheme="vivid"], [data-scheme="mono"], [data-scheme="safe"]) {
+    & .stage[data-group] .box { fill: var(--stage-soft); stroke: var(--stage); }
+    & .stage[data-group] .name { fill: var(--stage-ink); }
+    & .stage[data-group="setup"] .box { fill: #f4f5f7; stroke: #c3c9d2; }
+    & .stage[data-group="setup"] .name { fill: var(--fg); }
+    & .stage:is(.waiting, .not-run) .box { fill: #fff; }
+    & .stage.running .box { stroke-width: 2.25; }
+    & .stage.running .dot { fill: var(--stage); }
+    & .stage.failed .box { fill: #fdf1ef; stroke: #c0392b; stroke-width: 2; }
+  }
+
+  /* Main actions: the spectrum, in its darker inks so white text stays readable. */
+  & :is(button.primary, a.button, dialog .actions button.primary, .job-panel-foot button.primary) {
+    background: var(--spectrum-ink); border-color: transparent; color: #fff; }
+  & :is(button.primary, a.button, dialog .actions button.primary, .job-panel-foot button.primary):hover {
+    background: var(--spectrum-ink); filter: brightness(1.12); }
+  & .job-panel-head { position: relative; }
+  & .job-panel-head::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 3px; background: var(--spectrum); }
+  & .job-panel-tab { background: var(--spectrum-ink); }
+
+  /* Home: the title in the spectrum. */
+  & .title-page h1 { display: inline-block; background: var(--spectrum-ink); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  /* The "2" (after the Super Mario Bros. 2 logo): a bright red that stands apart from
+     the title's gradient (solid, since shadows would paint over a clipped background),
+     a white rim, the spectrum stacked behind it in reverse, and a soft drop. */
+  & .title-page h1 .two { color: #e3262e; text-shadow:
+      .03em .03em 0 #fff, .07em .07em 0 var(--green), .11em .11em 0 var(--cerulean),
+      .15em .15em 0 var(--violet), .19em .21em .1em rgba(30, 20, 60, .3); }
+}
+
+/* The landing and About pages' backdrop (backdrop.js) in the four stage hues, each structure
+   taking the hue of the column it falls in, so both pages read violet -> cerulean -> green
+   -> amber across like the rest of the skin. */
+:root[data-skin="spectrum"] .backdrop {
+  --backdrop-colors: var(--violet), var(--cerulean), var(--green), var(--amber);
+  --backdrop-count: 11;
+  --backdrop-alpha: .32;
+  --backdrop-hue-by-x: 1;
+}

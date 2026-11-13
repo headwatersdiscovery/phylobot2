@@ -1,0 +1,32 @@
+# Python / uv
+.venv/
+__pycache__/
+*.pyc
+*.egg-info/
+dist/
+build/
+
+# Tool caches
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# Secrets
+.env
+
+# Pipeline data and Nextflow scratch. All regenerable; `make clean` removes work/,
+# results/ and the Nextflow logs. Submitted jobs live in Docker volumes, not here.
+# Anchored with a leading /: these are the top-level folders only (an unanchored jobs/
+# also matched the src/phylobot/jobs package).
+/data/
+/work/
+.nextflow/
+.nextflow.log*
+/results/
+/jobs/
+.nextflow-home/
+
+# OS / editor
+.DS_Store
+.idea/
+.vscode/

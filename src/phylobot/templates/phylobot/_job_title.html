@@ -1,0 +1,18 @@
+{# A job's title with a pencil to rename it in place (views.rename_job): the pencil #}
+{# shows the form (rename.js); saving swaps this part back, done editing. #}
+<div class="editable-title" id="job-title">
+  <div class="title-view">
+    <h1>{{ job.name|default:"Job" }}</h1>
+    <button type="button" class="icon-button" data-rename aria-label="Rename this job" title="Rename">
+      {% include "phylobot/_icon.html" with name="pencil" %}
+    </button>
+  </div>
+  <form class="title-edit" hidden method="post" action="{% url 'rename_job' job.id %}"
+        hx-post="{% url 'rename_job' job.id %}" hx-target="#job-title" hx-swap="outerHTML">
+    {% csrf_token %}
+    <input name="name" value="{{ job.name }}" maxlength="100" placeholder="Job"
+           aria-label="Job name" autocomplete="off">
+    <button type="submit" class="primary">Save</button>
+    <button type="button" class="link" data-rename-cancel>Cancel</button>
+  </form>
+</div>

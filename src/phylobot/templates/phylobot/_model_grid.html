@@ -1,0 +1,39 @@
+{% comment %}A model grid: matrices down, rate/frequency variants across; checkboxes named
+`name`, those in `selected` ticked, those in `locked` ticked and fixed (an extension's
+parent's: not posted, kept whatever is sent). Row and column headers tick or untick a
+whole line.{% endcomment %}
+<p class="grid-actions">
+  <button type="button" class="link" data-grid-all="on">Check all</button> ·
+  <button type="button" class="link" data-grid-all="off">Clear all</button>
+  {% if name != "codon_models" %}<span class="hint" data-raxml-note hidden>(Check all leaves out what RAxML-NG lacks while it is ticked.)</span>{% endif %}
+</p>
+<table class="grid">
+  <thead>
+    <tr>
+      <th></th>
+      {% for v in variants %}
+        <th><button type="button" class="toggle" data-col="{{ forloop.counter0 }}"
+                    title="{{ v.label }}">{{ v.suffix|default:"plain" }}</button></th>
+      {% endfor %}
+    </tr>
+  </thead>
+  {% for group in grid %}
+    <tbody>
+      <tr class="group"><th colspan="{{ variants|length|add:1 }}">{{ group.group }}</th></tr>
+      {% for row in group.rows %}
+        <tr>
+          <th><button type="button" class="toggle" data-row{% if row.title %} title="{{ row.title }}"{% endif %}>{{ row.matrix }}</button>{% if row.matrix in raxml_missing %}<span class="hint raxml-missing" hidden> not in RAxML-NG</span>{% endif %}</th>
+          {% for cell in row.cells %}
+            {% if cell.model %}
+            <td><input type="checkbox" name="{{ name }}" value="{{ cell.model }}"
+                       title="{{ cell.model }}" data-col="{{ forloop.counter0 }}"{% if cell.mixture %} data-mixture{% endif %}
+                       {% if cell.model in selected %}checked{% endif %}{% if cell.model in locked %} disabled{% endif %}></td>
+            {% else %}
+            <td class="hint" title="IQ-TREE does not offer {{ row.matrix }}{{ cell.variant.suffix }}">–</td>
+            {% endif %}
+          {% endfor %}
+        </tr>
+      {% endfor %}
+    </tbody>
+  {% endfor %}
+</table>

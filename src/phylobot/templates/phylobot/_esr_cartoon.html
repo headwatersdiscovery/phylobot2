@@ -1,0 +1,55 @@
+{# The ESR page's cartoon, in the Simulations cartoon's style: one tip's sequence is held #}
+{# out, its branch is reconstructed as if it led to an ancestor, the reconstruction #}
+{# (bars: posteriors) is compared with the true sequence, and the posteriors' expected #}
+{# count of right residues is set against the real one. Animated in site.css (esr-cartoon); #}
+{# still, in its final state, for reduced motion. #}
+<svg class="sim-cartoon esr-cartoon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 330 108" width="330" height="108"
+     role="img" aria-label="A cartoon of ESR: one tip's sequence, MRVLA, is held out and reconstructed from the rest of the tree as MRVLS; four of five residues are right, and the posteriors expected 4.4"
+     font-family="ui-monospace, 'SF Mono', Menlo, Consolas, monospace" font-size="13">
+  <defs><linearGradient id="esr-time" gradientUnits="userSpaceOnUse" x1="20" y1="0" x2="150" y2="0">
+    <stop offset="0" stop-color="#2a78d6"/><stop offset="1" stop-color="#eb6834"/></linearGradient></defs>
+  <g font-size="9.5" font-family="system-ui, sans-serif" fill="#5d6675">
+    <text x="156" y="10">tips</text>
+    <text class="esr-label" x="226" y="66">held out</text>
+    <text class="esr-r" x="156" y="105">reconstructed</text>
+  </g>
+  <path d="M20 49.5 V32.5 H80" fill="none" stroke="url(#esr-time)" stroke-width="2.6" stroke-linecap="round"/>
+  <path d="M20 49.5 V66.5 H80" fill="none" stroke="url(#esr-time)" stroke-width="2.6" stroke-linecap="round"/>
+  <path d="M80 32.5 V24 H150" fill="none" stroke="url(#esr-time)" stroke-width="2.6" stroke-linecap="round"/>
+  <path d="M80 32.5 V41 H150" fill="none" stroke="url(#esr-time)" stroke-width="2.6" stroke-linecap="round"/>
+  <path d="M80 66.5 V58 H150" fill="none" stroke="url(#esr-time)" stroke-width="2.6" stroke-linecap="round"/>
+  {# The held-out tip's branch: gone (dashed), then reconstructed. #}
+  <path class="esr-gone" d="M80 66.5 V75 H150" fill="none" stroke="#b3bac5" stroke-width="2" stroke-dasharray="3 3"/>
+  <path class="sim-branch esr-regrow" d="M80 66.5 V75 H150" pathLength="1" fill="none" stroke="url(#esr-time)" stroke-width="2.6" stroke-linecap="round"/>
+  <circle class="sim-mut esr-node" cx="150" cy="75" r="4" fill="#2a78d6"/>
+  <circle cx="20" cy="49.5" r="4" fill="#2a78d6"/>
+  <text fill="#1d2330" x="156" y="28.5">MKILS</text>
+  <text fill="#1d2330" x="156" y="45.5">MKIFA</text>
+  <text fill="#1d2330" x="156" y="62.5">MRVLG</text>
+  {# The held-out sequence slides aside; "?" while it is unknown; then the reconstruction. #}
+  <text class="esr-move" fill="#1d2330" x="156" y="79.5">MRVLA</text>
+  <text class="esr-unknown" fill="#b3bac5" x="156" y="79.5">?????</text>
+  <g fill="#1d2330" text-anchor="middle">
+    <text class="esr-r esr-d1" x="159.9" y="79.5">M</text>
+    <text class="esr-r esr-d2" x="167.7" y="79.5">R</text>
+    <text class="esr-r esr-d3" x="175.5" y="79.5">V</text>
+    <text class="esr-r esr-d4" x="183.3" y="79.5">L</text>
+    <text class="esr-r esr-d5" x="191.1" y="79.5">S</text>
+  </g>
+  {# Posterior of each reconstructed residue: 0.99, 0.97, 0.98, 0.95, 0.55. #}
+  <g fill="#2a78d6">
+    <rect class="esr-r esr-d1" x="156.9" y="84.1" width="6" height="9.9"/>
+    <rect class="esr-r esr-d2" x="164.7" y="84.3" width="6" height="9.7"/>
+    <rect class="esr-r esr-d3" x="172.5" y="84.2" width="6" height="9.8"/>
+    <rect class="esr-r esr-d4" x="180.3" y="84.5" width="6" height="9.5"/>
+    <rect class="esr-r esr-d5" x="188.1" y="88.5" width="6" height="5.5"/>
+  </g>
+  {# The comparison: right residues green, the wrong one orange. #}
+  <g class="esr-compare" text-anchor="middle">
+    <text fill="#1baf7a" x="229.9" y="79.5">M</text><text fill="#1baf7a" x="237.7" y="79.5">R</text>
+    <text fill="#1baf7a" x="245.5" y="79.5">V</text><text fill="#1baf7a" x="253.3" y="79.5">L</text>
+    <text fill="#eb6834" font-weight="700" x="261.1" y="79.5">A</text>
+  </g>
+  <text class="esr-verdict" font-size="9.5" font-family="system-ui, sans-serif" fill="#5d6675">
+    <tspan x="226" y="93" fill="#1d2330" font-weight="600">4 of 5 right</tspan><tspan x="226" y="105">posteriors expected 4.4</tspan></text>
+</svg>

@@ -1,0 +1,8 @@
+{
+  "_note": "Set by the project owner 2026-09-27. Apply to the parsimony gap-masked ancestors (the default) of the full pipeline (mafft/iqtree/modelfinder). First run: gap recall 0.897, precision 0.842, mean |length error| 4.0 residues, identity 0.808. 2026-09-28: max_mean_abs_length_error 10 -> 12 by the owner after the ten-replicate average (10.14 +/- 3.8); applied to the average in the full tier.",
+  "gap_method": "parsimony",
+  "min_gap_recall": 0.85,
+  "min_gap_precision": 0.75,
+  "max_mean_abs_length_error": 12,
+  "min_mean_identity": 0.75
+}

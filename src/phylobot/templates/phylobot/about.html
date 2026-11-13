@@ -1,0 +1,87 @@
+{% extends "phylobot/base.html" %}
+{% load static %}
+{% block title %}About · PhyloBot 2{% endblock %}
+{% block head %}<script src="{% static 'phylobot/toc.js' %}" defer></script>{% endblock %}
+{% block backdrop %}{% include "phylobot/_backdrop.html" %}{% endblock %}
+{% block content %}
+<div class="about-layout">
+<nav class="about-toc page-toc" data-toc aria-label="On this page">
+  <p class="about-toc-title">On this page</p>
+  <ol>
+    <li><a href="#whatphylobotdoes">What PhyloBot 2 Does</a></li>
+    <li><a href="#why-asr">Why ASR Matters</a></li>
+    <li><a href="#reference">Reference</a></li>
+    <li><a href="#distinctive">What Is Distinctive</a>
+      <ol><li><a href="#comparison">Feature Comparison</a></li></ol></li>
+    <li><a href="#methods">Methods</a>
+      <ol><li><a href="#models">Substitution Models</a></li></ol></li>
+    <li><a href="#related">Related Work</a></li>
+    <li><a href="#source">Source Code</a></li>
+  </ol>
+</nav>
+<article class="about">
+  <h1>About PhyloBot 2</h1>
+  {% include "phylobot/about/_lead.html" %}
+
+  <section id="whatphylobotdoes">
+    {% include "phylobot/about/_does.html" %}
+  </section>
+
+  <section id="why-asr">
+    {% include "phylobot/about/_why.html" %}
+  </section>
+
+  <section class="about-reference" id="reference">
+    <h2>Reference</h2>
+    <p>PhyloBot 2 is a ground-up rewrite of PhyloBot, described in:</p>
+    <blockquote>{% include "phylobot/_ref.html" with ref=reference %}</blockquote>
+    <p class="hint">If you use PhyloBot 2 in published work, please cite this paper, together with
+      the <a href="#methods">methods</a> your analysis used. The repository's
+      <a href="https://github.com/headwatersdiscovery/phylobot2/blob/main/CITATION.cff">CITATION.cff</a> has
+      the same information for citation managers.</p>
+  </section>
+
+  <section id="distinctive">
+    <h2>What Is Distinctive About PhyloBot 2</h2>
+    {% include "phylobot/about/_distinctive.html" %}
+
+    {% include "phylobot/about/_comparison.html" %}
+  </section>
+
+  <section id="methods">
+    <h2>Included Methods</h2>
+    <p>PhyloBot 2 is a workflow around other people's methods. Please cite the ones your
+      analysis used.</p>
+    {% for heading, group in methods %}
+    <h3>{{ heading }}</h3>
+    <ul class="methods">
+      {% for m in group %}
+      <li><b>{{ m.name }}</b> <span class="hint">({{ m.note }})</span>
+        {% for ref in m.refs %}<br>{% include "phylobot/_ref.html" %}{% endfor %}</li>
+      {% endfor %}
+    </ul>
+    {% endfor %}
+
+    <h3 id="models">Substitution Models</h3>
+    {% include "phylobot/about/_models.html" %}
+  </section>
+
+  <section id="related">
+    <h2>Related Work</h2>
+    {% include "phylobot/about/_related.html" %}
+  </section>
+
+  <section id="source">
+    <h2>Source Code</h2>
+    <p>PhyloBot 2 is developed at
+      <a href="https://github.com/headwatersdiscovery/phylobot2">github.com/headwatersdiscovery/phylobot2</a>; installation
+      instructions are at <a href="https://phylobot.com">phylobot.com</a> and in the repository's
+      README. It is open source,
+      released under the
+      <a href="https://github.com/headwatersdiscovery/phylobot2/blob/main/LICENSE">BSD 3-Clause License</a>;
+      the tools it runs keep their own licences. If we have missed or misdescribed
+      your work, please contact us at <a href="mailto:hello@phylobot.com">hello@phylobot.com</a>.</p>
+  </section>
+</article>
+</div>
+{% endblock %}

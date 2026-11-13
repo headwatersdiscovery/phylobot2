@@ -1,0 +1,16 @@
+{# "Add to library": hidden inputs, the library menu and a button for a page-level POST #}
+{# form (add_form). The viewers are GET forms, so the POST form lives outside them #}
+{# (tree.html, ancestors.html); `form=` ties these controls to it alone, so they never #}
+{# reach the viewer's URL. Each button has its own form, or their node lists would merge. #}
+<span class="library-add">
+  <input type="hidden" name="combination" value="{{ combination }}" form="{{ add_form }}">
+  <input type="hidden" name="gaps" value="{{ version }}" form="{{ add_form }}">
+  {% for n in add_nodes %}<input type="hidden" name="node" value="{{ n }}" form="{{ add_form }}">{% endfor %}
+  <input type="hidden" name="next" value="{{ canonical_url }}" form="{{ add_form }}">
+  {% if library_choices %}<button type="submit" form="{{ add_form }}">{{ add_label }}</button>
+  <select name="library" form="{{ add_form }}" aria-label="Library to add to">{% for lib in library_choices %}
+    <option value="{{ lib.id }}"{% if forloop.first %} selected{% endif %}>{{ lib.name }}</option>{% endfor %}
+    <option value="new">a new library</option>
+  </select>
+  {% else %}<button type="submit" form="{{ add_form }}">{{ add_label }} a new library</button>{% endif %}
+</span>

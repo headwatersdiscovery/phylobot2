@@ -1,0 +1,20 @@
+<section id="outgroup-section"{% if oob %} hx-swap-oob="true"{% endif %}>
+  <h3>Outgroup <button type="button" class="help-dot" popovertarget="help-outgroup" aria-label="About outgroup">?</button><span class="help-popover" popover id="help-outgroup"><strong>Outgroup</strong><span><span>Sequences outside the group whose ancestors you want. Trees are rooted on them; PRANK and GRASP gap placement need one.</span><span>Picking a few representatives is fine: if they don't form a single group on a tree, the job page warns rather than fails.</span></span></span></h3>
+  {% if outgroup_names %}
+    <div class="outgroup-tools">
+      <input type="search" class="outgroup-filter" placeholder="Filter sequences…"
+             aria-label="Filter the outgroup list" autocomplete="off">
+      <button type="button" class="link" data-outgroup-shown="on">Check all shown</button> ·
+      <button type="button" class="link" data-outgroup-shown="off">Clear all shown</button>
+      <span class="hint outgroup-count" aria-live="polite"></span>
+    </div>
+    <div class="outgroup-list" style="--name-width: {{ outgroup_width|default:20 }}ch">
+      {% for name in outgroup_names %}
+        <label><input type="checkbox" name="outgroup" value="{{ name }}"
+               {% if name in outgroup_checked %}checked{% endif %}> {{ name }}</label>
+      {% endfor %}
+    </div>
+  {% else %}
+    <p class="hint">Enter or upload sequences above to choose an outgroup.</p>
+  {% endif %}
+</section>

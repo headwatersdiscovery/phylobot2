@@ -1,0 +1,15 @@
+{% comment %}Rows of a New Job file list (input_views): each chosen file with a tick box (ticked: used),
+what it holds, and a remove button. `kind` names the form fields (<kind>_listed, <kind>_use;
+forms.used_files), `field` the file input submit.html's script keeps the files in.{% endcomment %}
+{% for row in rows %}
+  <li class="file-row{% if not row.used %} unused{% endif %}">
+    <input type="hidden" name="{{ kind }}_listed" value="{{ row.name }}">
+    <label><input type="checkbox" name="{{ kind }}_use" value="{{ row.name }}"{% if row.used %} checked{% endif %}>
+      <span class="file-name">{{ row.name }}</span></label>
+    {% if row.stats.error %}<span class="file-problem">{% if row.stats.kind %}{{ row.stats.kind }}: {% endif %}{{ row.stats.error }}</span>{% else %}<span class="hint">{{ row.stats.summary }}</span>{% endif %}
+    <button type="button" class="remove-file" data-remove-file="{{ field }}" data-file="{{ row.name }}"
+            title="Remove {{ row.name }}" aria-label="Remove {{ row.name }}">
+      <svg viewBox="0 0 16 16" width="15" height="15" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 4h11M6 4V2.5h4V4M4 4l.7 9.5h6.6L12 4M6.6 6.5v4.5M9.4 6.5v4.5"/></svg>
+    </button>
+  </li>
+{% endfor %}

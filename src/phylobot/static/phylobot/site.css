@@ -1,0 +1,2385 @@
+/* Pilot styling: readable, nothing more. The real UI is designed later. */
+:root { --fg: #1d2330; --muted: #5d6675; --line: #d8dde5; --accent: #2457a6; --bg: #fff; }
+/* Simulated data is badged wherever it appears (phylobot.simulations): one colour for it. */
+:root { --sim: #7a3ca8; --sim-soft: #f4ecfa; --recon: #1b8a8a; --imported: #8a5300; --imported-soft: #fdf3e2; }
+* { box-sizing: border-box; }
+/* The hidden attribute must win over any display rule below (e.g. .outgroup-list label),
+   or scripts that set element.hidden silently do nothing. */
+[hidden] { display: none !important; }
+body { margin: 0; font: 15px/1.5 system-ui, sans-serif; color: var(--fg); background: var(--bg); }
+/* The site bar stays at the top while the page scrolls; in-page links (#anchors) stop
+   below it rather than under it. */
+html { scroll-padding-top: 4rem; }
+header { display: flex; flex-wrap: wrap; gap: .5rem 1.5rem; align-items: center; padding: .75rem 1.5rem; border-bottom: 1px solid var(--line);
+         position: sticky; top: 0; z-index: 10; background: var(--bg); }
+header .brand { font-weight: 700; color: var(--fg); text-decoration: none; }
+header nav { display: flex; flex-wrap: wrap; gap: 0 1rem; flex: 1; }
+/* The bar's menus (base.html, nav.js): a <details> whose summary sits among the links and
+   whose items drop below it. Colours are the skins' tokens, so every skin gets a panel. */
+header nav { align-items: center; }
+header nav .nav-menu { position: relative; }
+header nav .nav-menu > summary { display: inline-flex; align-items: center; gap: .35rem; list-style: none;
+  cursor: pointer; user-select: none; color: var(--accent); white-space: nowrap; }
+header nav .nav-menu > summary::-webkit-details-marker { display: none; }
+header nav .nav-menu > summary::after { content: ""; width: .38em; height: .38em; margin-top: -.2em;
+  border: solid currentColor; border-width: 0 1.5px 1.5px 0; transform: rotate(45deg); opacity: .7; }
+header nav .nav-menu[open] > summary::after { transform: rotate(225deg); margin-top: .15em; }
+header nav .nav-menu > summary.current { font-weight: 600; }
+header nav .nav-menu-items { position: absolute; top: calc(100% + .4rem); left: 0; z-index: 40; min-width: 11rem;
+  display: flex; flex-direction: column; gap: .1rem; padding: .35rem; background: var(--bg);
+  border: 1px solid var(--line); border-radius: 10px; box-shadow: 0 10px 30px rgba(20, 30, 50, .18); }
+header nav .nav-menu-items a { display: block; white-space: nowrap; padding: .3rem .6rem; }
+header .user { color: var(--muted); display: flex; gap: .5rem; align-items: center; }
+header form { display: inline; }
+a { color: var(--accent); }
+main { max-width: 1100px; padding: 1rem 1.5rem 3rem; }
+section { margin: 1.5rem 0; }
+h2 { font-size: 1.1rem; margin: 1.5rem 0 .5rem; }
+h3 { font-size: .95rem; margin: 1rem 0 .25rem; }
+textarea { width: 100%; font-family: ui-monospace, monospace; font-size: 13px; }
+label { margin-right: .5rem; }
+ul { list-style: none; padding: 0; margin: .25rem 0; }
+.hint { color: var(--muted); font-size: .9em; }
+.errors { color: #a4161a; background: #fdecea; padding: .5rem .75rem; border-radius: 4px; }
+.errors ul { margin: 0; }
+.list-bulleted {
+  list-style: disc;
+  padding-left: 1.5rem;
+  margin: .25rem 0;
+}
+button.link { background: none; border: 0; color: var(--accent); cursor: pointer; padding: 0; font: inherit; }
+table.grid { border-collapse: collapse; font-size: 13px; }
+table.grid th, table.grid td { border: 1px solid var(--line); padding: 2px 6px; text-align: center; }
+table.grid tbody th { text-align: left; }
+table.grid tr.group th { background: #f4f6f9; text-align: left; font-weight: 600; }
+button.toggle { background: none; border: 0; cursor: pointer; font: inherit; color: var(--accent); padding: 0; }
+.preview { background: #f4f6f9; padding: .5rem 1rem; border-radius: 4px; }
+table.jobs { border-collapse: collapse; width: 100%; }
+table.jobs th, table.jobs td { text-align: left; padding: .4rem .6rem; border-bottom: 1px solid var(--line); }
+table.jobs .day { white-space: nowrap; }
+table.jobs td.job-name { min-width: 11rem; max-width: 19rem; }  /* long names wrap */
+/* What sits under a job's name and under its status: second lines, not columns. */
+table.jobs .job-made { white-space: normal; }
+table.jobs .job-made .phrase { white-space: nowrap; }
+table.jobs .job-tags { display: flex; flex-wrap: wrap; gap: .2rem; margin-top: .2rem; }
+table.jobs td.job-status { white-space: nowrap; }
+table.jobs td.job-status .when, table.jobs td.job-status .eta { display: block; margin-top: .2rem;
+  font-size: .8rem; color: var(--muted); }
+.jobs-scroll { overflow-x: auto; }  /* narrow screens: the table scrolls, not the page */
+td.row-actions .icon-button.danger:hover, td.row-actions .icon-button.danger:focus-visible { color: #c0392b; }
+/* Stop is the one row action that is red at rest, not only on hover: it ends work that
+   is running now, and (cancelled being terminal) cannot be undone. The fallback is the
+   red above, for skins that define no token of their own. */
+td.row-actions .icon-button.stop { color: var(--danger, #c0392b); }
+/* My Jobs: sortable headers (job_types.Sort); the arrows are faint until the column is the sort. */
+table.jobs th.sortable a { position: relative; color: inherit; text-decoration: none; white-space: nowrap; }
+table.jobs th.sortable a:hover { color: var(--accent); }
+table.jobs th.sortable .sort-arrow { position: absolute; left: 100%; top: 50%; transform: translateY(-50%);
+  margin-left: .2rem; font-size: .75em; opacity: .3; }  /* in the cell's padding: no column width */
+table.jobs th.sortable a:hover .sort-arrow { opacity: .6; }
+/* Headers shared by two sort keys (Job/Tags, Status/Finished, CPU/Storage): stacked, as
+   the cells stack their two lines. */
+table.jobs th[aria-sort]:not(.multi) a, table.jobs th.multi a.current { color: var(--fg); }
+table.jobs th.multi .sort-arrow { opacity: .3; color: inherit; }
+table.jobs th.multi a.current .sort-arrow { opacity: 1; color: var(--accent); }
+table.jobs th.multi a { display: table; line-height: 1.35; }
+table.jobs td.usage { white-space: nowrap; font-variant-numeric: tabular-nums; }
+table.jobs td.usage .storage { display: block; color: var(--muted); font-size: .88em; }
+table.jobs th[aria-sort]:not(.multi) .sort-arrow { opacity: 1; color: var(--accent); }  /* a time may wrap below its date, never mid-date */
+.status { padding: 1px 8px; border-radius: 10px; font-size: .85em; background: #eef1f5; }
+.status.running { background: #e3edfb; } .status.succeeded { background: #e2f4e6; }
+.status.failed { background: #fdecea; } .status.cancelled { background: #f1f1f1; }
+progress { width: 20rem; vertical-align: middle; }
+pre { background: #f6f8fa; padding: .75rem; overflow-x: auto; font-size: 12.5px; }
+pre.sequences { white-space: pre-wrap; word-break: break-all; }
+pre.log { max-height: 24rem; }
+table.results { border-collapse: collapse; font-size: 13px; margin-bottom: .5rem; }
+table.results th, table.results td { border: 1px solid var(--line); padding: 3px 8px; text-align: right; }
+table.results th { background: #f4f6f9; font-weight: 600; }
+/* Sortable headers (sort.js): the heading is the button; the arrow shows the order. The
+   arrow sits in the heading's right padding, so it costs the table no width, and a
+   heading may wrap ("BIC weight"), so a column is about as wide as its numbers. */
+table.results th.sortable { position: relative; }
+table.results th.sortable button.sort { background: none; border: 0; padding: 0; margin: 0; font: inherit;
+  color: inherit; cursor: pointer; text-align: inherit; }
+/* Only the column the table is sorted by shows an arrow: a 6px triangle drawn in the
+   heading's right padding, so it costs the table no width and cannot print over a narrow
+   heading (the old "↕" glyph was wider than the padding, and sat on "Rank" and "log L").
+   The other headings say they sort by their dotted underline, pointer and colour. */
+table.results th[aria-sort] button.sort::after { content: ""; position: absolute; right: 1px; top: 50%;
+  translate: 0 -50%; border-left: 3px solid transparent; border-right: 3px solid transparent; }
+table.results th[aria-sort="ascending"] button.sort::after { border-bottom: 5px solid var(--accent); }
+table.results th[aria-sort="descending"] button.sort::after { border-top: 5px solid var(--accent); }
+table.results th.sortable button.sort { text-decoration: underline dotted color-mix(in srgb, currentColor 35%, transparent);
+  text-underline-offset: .22em; }
+table.results th.sortable button.sort:hover, table.results th.sortable button.sort:focus-visible { color: var(--accent); }
+table.results td.label { text-align: left; }
+/* A search box at the right, just above a table (sort.js's data-table-search). */
+.table-search-row { display: flex; justify-content: flex-end; align-items: center; gap: .5rem; margin: 0 0 .4rem; }
+.table-search { font: inherit; font-size: .85rem; padding: .25rem .5rem; width: 14rem; max-width: 60vw; }
+/* Icon links (the Ancestors column: view, download): the words are their tooltips. */
+table.results a.icon-link { display: inline-flex; vertical-align: middle; padding: .1rem; border-radius: 4px; }
+table.results a.icon-link + a.icon-link { margin-left: .2rem; }
+table.results a.icon-link:hover { background: var(--accent-soft, rgba(0, 0, 0, .06)); }
+/* Tables fit their box rather than scroll sideways: headings and the text columns (tree
+   source, model) wrap, each column about as wide as its heading; numbers and the short
+   link cells (view · download) stay on one line, or every row grows tall. */
+table.results td:not(.label), table.results td.links { white-space: nowrap; }
+.legend .swatch { display: inline-block; width: .9em; height: .9em; vertical-align: middle; border: 1px solid var(--line); }
+.swatch.better { background: rgb(161, 201, 225); } .swatch.middle { background: rgb(251, 251, 251); }
+.swatch.worse { background: rgb(234, 176, 166); }
+.toolbar { margin: .5rem 0; }
+th.select, td.select { width: 2rem; }
+button.danger-outline { border: 1px solid #c0392b; color: #c0392b; background: #fff; border-radius: 4px; padding: .25rem .75rem; cursor: pointer; }
+button.danger-outline:disabled { border-color: var(--line); color: var(--muted); cursor: default; }
+button.link.danger { color: #c0392b; }
+dialog { border: 0; border-radius: 8px; padding: 1.25rem 1.5rem; max-width: 28rem; box-shadow: 0 10px 40px rgba(20, 30, 50, .25); }
+dialog::backdrop { background: rgba(20, 30, 50, .35); }
+dialog h2 { margin-top: 0; }
+dialog .actions { display: flex; justify-content: flex-end; gap: .5rem; margin-bottom: 0; }
+dialog .actions button { padding: .35rem .9rem; border-radius: 4px; border: 1px solid var(--line); background: #fff; cursor: pointer; }
+dialog .actions button.danger { background: #c0392b; border-color: #c0392b; color: #fff; }
+dialog .actions button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+/* New Job: codons with ambiguous bases (_sequence_check.html). */
+.ambiguity-line button { margin-left: .4rem; }
+dialog.ambiguity-dialog { max-width: 44rem; width: calc(100vw - 2rem); }
+.ambiguity-treatment { padding-left: 1.2rem; }
+.ambiguity-treatment li { margin: .3rem 0; }
+.ambiguity-table { max-height: 16rem; overflow: auto; border: 1px solid var(--line); border-radius: 4px; margin: .75rem 0; }
+.ambiguity-table table { width: 100%; border-collapse: collapse; font-size: .9rem; }
+.ambiguity-table th, .ambiguity-table td { text-align: left; padding: .2rem .6rem; border-bottom: 1px solid var(--line); }
+.ambiguity-table th { position: sticky; top: 0; background: var(--bg, #fff); }
+.ambiguity-table td.number { text-align: right; font-variant-numeric: tabular-nums; }
+.ambiguity-table > p { margin: .4rem .6rem; }
+.warning { color: #8a4b00; }
+/* Reconciliation notes in the ancestor viewer (_ancestor_paralogy.html). */
+.paralogy { margin: .4rem 0; }
+.paralogy-flag { display: inline-block; font-size: .72rem; padding: .05rem .4rem; border-radius: 999px;
+  background: #fff6e5; color: #8a4b00; border: 1px solid #d68a00; white-space: nowrap; }
+.paralogy.mixes { border-left: 4px solid #d68a00; background: #fff6e5; padding: .3rem .75rem; }
+.paralogy.mixes p { margin: .3rem 0; }
+.paralogy.mixes ul { margin: .2rem 0 .4rem; }
+.message { background: #e2f4e6; padding: .5rem .75rem; border-radius: 4px; }
+.message.error { background: #fbe4e1; color: #8a2a1f; }
+.toolbar { display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap; }
+.selection-tools { display: flex; gap: .4rem; align-items: center; }
+.selection-tools input { width: 10rem; }
+.chip { display: inline-flex; align-items: center; gap: .15rem; margin: 0 .25rem .15rem 0; padding: 0 .5rem;
+        border-radius: 10px; background: #eef3fb; color: var(--accent); font-size: .85em; text-decoration: none; white-space: nowrap; }
+a.chip:hover { background: #dde8f8; }
+.chip.muted { background: #f1f1f1; color: var(--muted); }
+.chip-remove { border: 0; background: none; color: var(--muted); cursor: pointer; padding: 0 0 0 .15rem; font-size: 1em; line-height: 1; }
+.chip-remove:hover { color: #c0392b; }
+form.inline { display: inline; }
+.tags .add-tag input { width: 8rem; font-size: .85em; }
+.tags .add-tag button { font-size: .85em; }
+.inline-error { display: inline-block; padding: .1rem .5rem; margin-left: .5rem; }
+.page-head { display: flex; justify-content: space-between; align-items: center; gap: 1rem; }
+.filter { margin: .25rem 0 .75rem; }
+section.deleted { margin-top: 2.5rem; }
+/* About 30 rows, then the table scrolls; the header row stays visible. */
+.deleted .scroll { max-height: 66rem; overflow-y: auto; border: 1px solid var(--line); border-radius: 4px; }
+.deleted thead th { position: sticky; top: 0; background: #f4f6f9; }
+.deleted td { color: var(--muted); }
+.deleted .job-types .job-type { opacity: .75; }
+.deleted td.cpu { white-space: nowrap; }
+.eta { color: var(--muted); }
+details.inputs { margin: .75rem 0 1rem; }
+details.inputs summary { cursor: pointer; }
+details.inputs pre { max-height: 24rem; overflow-y: auto; }
+details.ancestor { margin: .25rem 0; border-left: 3px solid var(--line); padding-left: .75rem; }
+details.ancestor summary { cursor: pointer; }
+details.ancestor pre { max-height: 22rem; overflow-y: auto; }
+.downloads { margin: .25rem 0; font-size: .9em; }
+/* AltAll threshold: slider + number field + the live count of ambiguous sites. */
+.altall { display: flex; align-items: center; flex-wrap: wrap; gap: .5rem .75rem; margin: .5rem 0 .25rem; font-size: .9em; }
+.altall label { display: flex; align-items: center; gap: .5rem; color: var(--muted); }
+.altall input[type="range"] { width: 12rem; }
+.altall input[type="number"] { width: 5rem; }
+.altall-count { color: var(--muted); }
+.altall-count strong { color: var(--fg); }
+.alignment-result { margin: 1.25rem 0 1.75rem; }
+.alignment-result h3 { margin-bottom: .1rem; }
+details.candidates { margin: .5rem 0 0; }
+details.candidates summary, details.files summary, details.libraries summary { cursor: pointer; color: var(--accent); }
+details.files summary h2, details.libraries summary h2 { display: inline; font-size: 1.1rem; color: var(--fg); }
+table.results td .chip { margin-left: .35rem; }
+.alignment-stats { margin: .1rem 0 .15rem; }
+/* Columns as wide as the longest name (--name-width, from the view), not stretched to
+   fill the box: spare width collects at the right, not between columns. */
+.outgroup-list { max-height: 14rem; overflow-y: auto; border: 1px solid var(--line); border-radius: 4px; padding: .35rem .6rem;
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(0, calc(var(--name-width, 20ch) * .9 + 1.8rem))); column-gap: 1rem; }
+.outgroup-list label { display: block; font-size: .9em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.outgroup-list label[hidden] { display: none; }
+.outgroup-tools { display: flex; flex-wrap: wrap; align-items: baseline; gap: .3rem .5rem; margin-bottom: .35rem; }
+.outgroup-tools .outgroup-filter { margin-bottom: 0; }
+/* New Job: reconciliation's species table (_species.html). */
+.reconcile h3 { margin-bottom: .2rem; }
+.reconcile .advanced { margin: .5rem 0; }
+.reconcile .advanced legend { font-weight: 600; font-size: .92em; }
+.species-busy { display: none; }
+.species-busy.htmx-request { display: block; }
+.species-summary { margin: .6rem 0 .4rem; padding: .3rem .75rem; border-left: 4px solid var(--line); }
+.species-summary.ok { border-left-color: #2e7d4f; }
+.species-summary.warn, .species-summary.pending { border-left-color: #d68a00; background: #fff6e5; }
+.species-scroll { max-height: 20rem; overflow: auto; border: 1px solid var(--line); border-radius: 4px; }
+table.species { border-collapse: collapse; width: 100%; font-size: .88em; }
+table.species th, table.species td { padding: .2rem .45rem; text-align: left; vertical-align: middle;
+  border-bottom: 1px solid var(--line); }
+table.species thead th { position: sticky; top: 0; background: var(--bg); font-weight: 600; }
+table.species th.seq { font-weight: normal; font-family: ui-monospace, monospace; font-size: .95em;
+  white-space: nowrap; }
+table.species input { padding: .12rem .35rem; font-size: 1em; margin: 0; }
+table.species input[name="species_query"] { width: 14rem; max-width: 100%; }
+table.species input.taxid { width: 6rem; }
+table.species tr.pending { background: #fff6e5; }
+table.species .status { color: #a35f00; font-weight: 600; }
+table.species td.note { color: var(--muted); max-width: 22rem; }
+table.species td.from { color: var(--muted); white-space: nowrap; font-size: .92em; }
+.species-bulk { margin: .4rem 0 .6rem; }
+.species-bulk p > label:first-child { display: block; margin-bottom: .2rem; }
+.species-bulk textarea { width: 100%; max-width: 40rem; font-family: ui-monospace, monospace; }
+.species-consents { margin: .5rem 0; }
+.consent-line { display: block; margin: .25rem 0; }
+.consent-result { display: block; margin: -.15rem 0 .3rem 1.6rem; }
+.what-is-sent { margin: .2rem 0 .4rem 1.6rem; }
+.what-is-sent summary { font-size: .88em; color: var(--muted); cursor: pointer; }
+.species-offer-line { margin: .35rem 0; padding: .3rem .6rem; background: #eef4fb; border-radius: 4px; }
+.species-offer-line button { margin-right: .4rem; }
+.species-rows > summary { cursor: pointer; font-weight: 600; margin: .4rem 0; }
+table.species tr.guess td:first-of-type input { border-style: dashed; }
+table.species .hint { display: block; }
+.warn-text { color: #a35f00; }
+.reconcile .advanced h4 { margin: .8rem 0 .2rem; font-size: .95em; }
+.species-tree svg { width: 100%; height: auto; display: block; margin: .4rem 0; }
+.outgroup-filter { margin-bottom: .35rem; width: 16rem; }
+label.unavailable { color: var(--muted); }
+.rooting-warning { color: #8a4b00; }
+
+/* Job page Results: the three viewers as one row of tiles (greyed when the job skipped the stage). */
+/* One row whatever the number of viewers (three or four), so none wraps alone. */
+.viewer-grid { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: .75rem; margin: .75rem 0 1.25rem; }
+.viewer-card { display: flex; flex-direction: column; align-items: center; gap: .2rem; text-align: center;
+  padding: .6rem .75rem .75rem; border: 1px solid var(--line); border-radius: 8px; background: var(--bg);
+  color: inherit; text-decoration: none; }
+a.viewer-card:hover, a.viewer-card:focus-visible { border-color: var(--accent); }
+.viewer-icon { width: 56px; height: 56px; object-fit: contain; }
+.viewer-title { font-weight: 600; color: var(--accent); }
+a.viewer-card:hover .viewer-title { text-decoration: underline; }
+.viewer-hint { font-size: .85rem; line-height: 1.3; color: var(--muted); }
+/* The card to begin with: an accent edge and a small tag, nothing louder. */
+.viewer-card { position: relative; }
+.viewer-card.start { border-color: color-mix(in srgb, var(--accent) 55%, var(--line)); }
+.viewer-start { position: absolute; top: .45rem; left: .55rem; padding: .05rem .45rem; border-radius: 999px;
+  font-size: .7rem; font-weight: 600; letter-spacing: .02em; color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 12%, var(--bg)); }
+.viewer-card.disabled { opacity: .5; }
+.viewer-card.disabled .viewer-title { color: var(--muted); }
+@media (max-width: 40rem) { .viewer-grid { grid-auto-flow: row; } }
+
+/* Ancestor viewer: one row per alignment column; tiles coloured by posterior probability. */
+/* The ancestor viewer as discrete sections with an "On this page" sidebar, laid out
+   like the About page: the nav is its own grid column, so it never covers the content,
+   and sits above it when the window is too narrow for both. The nav lives inside the
+   viewer's form, so HTMX swaps the two together and it can never list a section that is
+   not there. */
+.viewer.sectioned { display: grid; grid-template-columns: 12rem minmax(0, 1fr); gap: 0 2rem; align-items: start; }
+.viewer.sectioned .viewer-sections { min-width: 0; }
+/* The job page has the same sidebar: a long job's results run to many screens. */
+.job-layout { display: grid; grid-template-columns: 9.5rem minmax(0, 1fr); gap: 0 1.25rem; align-items: start; }
+/* The sidebar takes room the results tables need, so the page may use more of a wide window. */
+/* (beating the skins' own main widths) */
+:root main:has(.job-layout), :root[data-skin] main:has(.job-layout) { max-width: 1440px; }
+.job-sections { min-width: 0; }
+.job-layout [id] { scroll-margin-top: 4.5rem; }
+.job-toc { font-size: .85rem; }
+.job-toc ol ol { padding-left: .5rem; font-size: inherit; }
+.job-toc a { padding: .15rem .4rem; }
+/* Folding sections (fold.js): the heading is the button, so it keeps the heading's look. */
+button.fold-toggle { background: none; border: 0; padding: 0; margin: 0; font: inherit; color: inherit;
+  text-align: left; cursor: pointer; }
+button.fold-toggle::before { content: "\25BE"; display: inline-block; width: 1.1em; color: var(--muted); }
+button.fold-toggle[aria-expanded="false"]::before { content: "\25B8"; }
+/* A compact fold heading for a single table (library members tables). */
+.fold-head { font-size: 1rem; font-weight: 600; margin: .7rem 0 .3rem; }
+/* Collapsible control sections in the tree viewer (Select tree / Display options /
+   Mutational path): a compact heading button; the body folds via fold.js. */
+.viewer-fold { margin: .2rem 0; }
+.viewer-fold > h2 { font-size: 1.02rem; font-weight: 600; margin: .55rem 0 .15rem; }
+.viewer-fold > .fold-body { margin: 0; }
+.viewer-fold > .fold-body > .viewer-controls { margin: .35rem 0 .6rem; }
+.viewer .path-section.viewer-fold { margin-top: .6rem; }
+/* Above a results table: its note on the left, its downloads (CSV, Excel) on the right. */
+.table-head { display: flex; align-items: flex-end; justify-content: space-between; gap: .5rem 1.5rem; }
+.table-head .hint { margin: .4rem 0; }
+.table-downloads { flex: none; margin: .4rem 0; font-size: .85rem; display: inline-flex; align-items: center;
+  gap: .3rem; color: var(--muted); }
+/* A long results table scrolls in its own box, its header staying in view. */
+.results-scroll { max-height: 32rem; overflow: auto; width: fit-content; max-width: 100%; margin-bottom: .25rem;
+  scrollbar-width: thin; scrollbar-color: var(--muted) transparent; }
+.results-scroll table.results { margin-bottom: 0; }
+.results-scroll table.results thead th { position: sticky; top: 0; z-index: 1; }
+.results-scroll-note { margin-top: 0; font-size: .8rem; }
+.viewer-section { margin: 0 0 1.5rem; }
+/* Collapsible sections: the heading lives in the summary, so clicking anywhere on it
+   opens and closes. The marker stays, so it is obvious the section collapses. */
+.viewer-section > summary { cursor: pointer; }
+/* Inline only inside a <summary>, so the disclosure marker sits beside the heading. A
+   standalone section heading stays a block, or its underline in the card skins runs
+   only as far as the text. */
+.viewer-section > summary > h2 { margin: 0; font-size: 1.15rem; display: inline; }
+.viewer-section > h2 { margin: 0 0 .4rem; font-size: 1.15rem; }
+.viewer-section > summary::marker { color: var(--muted); }
+.viewer-section > summary > .icon-button { vertical-align: middle; margin-left: .3rem; }
+.ancestor-name { display: flex; flex-direction: column; align-items: flex-start; gap: .55rem; max-width: 46rem; }
+.ancestor-name label { display: flex; flex-direction: column; gap: .2rem; width: 100%; }
+.ancestor-name label input { max-width: 20rem; }
+.ancestor-name textarea { width: 100%; font: inherit; resize: vertical; }
+.ancestor-name-actions { display: flex; flex-wrap: wrap; align-items: center; gap: .4rem .7rem; margin: 0; }
+.ancestor-description { white-space: normal; }
+/* The ancestor's sequence, first on the page: each residue in its Sites tile's colour and a
+   link to its row. Monospace in blocks of ten would need the server to chunk it; letter
+   spacing alone keeps the tiles even and the copy plain. */
+.ancestor-sequence { margin: .5rem 0 .6rem; max-width: 62rem; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: .86rem; line-height: 1.5; overflow-wrap: anywhere; user-select: all; }
+.ancestor-sequence a { display: inline-block; width: 1.5ch; text-align: center; color: inherit; text-decoration: none;
+  border-radius: 2px; margin: 0 0 2px; }
+.ancestor-sequence a:hover, .ancestor-sequence a:focus-visible { outline: 2px solid var(--fg); outline-offset: 0; position: relative; }
+.ancestor-sequence-actions { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem .7rem; margin: 0; }
+.ancestor-sequence-actions a.button { margin: 0; }
+.ancestor-sequence-actions .legend-tiles { margin-left: auto; }
+/* Downloads: the files as one flow of links; what each one is sits behind the "?". */
+.download-links { list-style: none; margin: .25rem 0 .9rem; padding: 0; display: flex; flex-wrap: wrap; gap: .4rem .5rem; font-size: .9rem; }
+.download-links li a { display: inline-block; padding: .25rem .65rem; border: 1px solid var(--line); border-radius: 999px;
+  text-decoration: none; }
+.download-links li a:hover { border-color: var(--accent); }
+.download-links .download-help { display: flex; align-items: center; }
+.help-popover.downloads-help:popover-open { max-width: 38rem; max-height: 80vh; overflow: auto; }
+.altall label.altall-label { flex-wrap: wrap; gap: .2rem .5rem; }
+.altall-label > span:first-child { display: flex; align-items: center; gap: .4rem; white-space: nowrap; flex: 1 0 100%; }
+.downloads-table { border-collapse: collapse; width: 100%; margin: .25rem 0 .75rem; font-size: .9rem; }
+.downloads-table th, .downloads-table td { text-align: left; vertical-align: top; padding: .35rem .6rem .35rem 0;
+  border-bottom: 1px solid var(--line); font-weight: 400; }
+.downloads-table th { white-space: nowrap; width: 1%; padding-right: 1.2rem; }
+.downloads-table td { color: var(--muted); }
+/* The element still carries .altall (ancestors.js finds the slider by it), so the
+   old flex row has to be turned off explicitly for the stacked layout. */
+.altall.altall-controls { display: block; margin: 0; font-size: 1em; }
+.altall-label { display: block; font-size: .9rem; color: var(--muted); }
+.altall-row { display: flex; align-items: center; gap: .6rem; margin-top: .2rem; }
+.altall-row .altall-slider { flex: 1 1 auto; min-width: 0; }
+.altall-row input[type="number"] { width: 5rem; flex: 0 0 auto; }
+/* The count sits directly under the slider and large: it is the number the slider is
+   for, so it should be what visibly moves as the slider travels. */
+.altall-count { margin: .5rem 0 .4rem; font-size: .95rem; color: var(--muted); }
+.altall-count strong { font-size: 1.9rem; font-weight: 700; color: var(--fg); margin-right: .2rem; }
+.viewer.sectioned [id] { scroll-margin-top: 4.5rem; }
+@media (max-width: 980px) {
+  .viewer.sectioned, .job-layout, .submit-layout, .settings-layout { grid-template-columns: minmax(0, 1fr); gap: 0; }
+}
+.viewer-controls { display: flex; flex-wrap: wrap; gap: .75rem 1.25rem; margin: .5rem 0 1rem; }
+/* The tree viewer's branch-display row carries many dropdowns: tighten it so they fit one
+   row (the longest option labels are kept short, e.g. "Agreement across combos"). */
+.viewer-controls.branch-display { gap: .6rem .85rem; }
+.viewer-controls label, .viewer .palette { display: flex; flex-direction: column; gap: .2rem; font-size: .9rem; color: var(--muted); }
+.viewer-controls select { max-width: 32rem; }
+/* The alignment viewer's zoom: a slider as on the library page, titled as the menus beside it. */
+.viewer-controls .aln-zoom { display: flex; flex-direction: column; gap: .2rem; font-size: .9rem;
+  color: var(--muted); width: 14rem; }
+.viewer-table-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: .5rem 1rem; }
+.viewer-table-head > p { flex: 1 1 26rem; }
+.viewer-table-head .palette { align-items: flex-end; }
+.table-tools { display: flex; align-items: flex-end; gap: 1rem; font-size: .9rem; white-space: nowrap; flex: none; }
+.legend-tiles { white-space: nowrap; }
+.legend-tiles span { display: inline-block; min-width: 2.2rem; text-align: center; font-size: .8rem; padding: 0 .2rem; }
+.sites-scroll { max-height: 75vh; overflow: auto; border: 1px solid var(--line); border-radius: 4px; }
+table.ancestor-sites { border-collapse: separate; border-spacing: 2px; font-variant-numeric: tabular-nums; }
+table.ancestor-sites thead th { position: sticky; top: 0; background: #f4f6f9; text-align: left; padding: .3rem .5rem; z-index: 1; }
+table.ancestor-sites td { padding: .15rem .5rem; text-align: right; color: var(--muted); }
+table.ancestor-sites td.tile { width: 3.2rem; min-width: 3.2rem; text-align: center; line-height: 1.15; font-size: .8rem; border-radius: 3px; }
+table.ancestor-sites td.tile:first-letter { font-size: 1rem; font-weight: 600; }
+td.tile.gap { background: #eceff3; color: var(--muted); }
+table.ancestor-sites .column { text-align: center; }
+table.ancestor-sites .temperature { text-align: center; font-size: .8rem; }
+.calibration-note { border-left: 3px solid var(--accent, #4575b4); padding-left: .6rem; margin: .5rem 0; }
+.calibration-resets { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; }
+.my-calibration .settings-table th:nth-child(1) { width: 46%; }
+.my-calibration .settings-table th:nth-child(2), .my-calibration .settings-table th:nth-child(3) { width: 11%; }
+.my-calibration .settings-table th:nth-child(4) { width: 20%; }
+.my-calibration .settings-table input[type=number] { width: 100%; max-width: 8rem; box-sizing: border-box; }
+.calibration-note .calibration-formula summary { cursor: pointer; font-size: .85rem; }
+/* The extant residue is set like a tile (letter over number) so the two read together. */
+table.ancestor-sites td.extant { text-align: center; line-height: 1.15; font-size: .8rem; color: var(--fg);
+  background: #f4f6f9; border-radius: 3px; width: 3.2rem; }
+/* Long sequence names would widen the column: the closed menu is capped and cut with an
+   ellipsis (full name on hover); the open list still shows names in full. */
+table.ancestor-sites th.extant { text-align: center; white-space: nowrap; }
+button.mini { font: inherit; font-size: .8rem; line-height: 1; padding: .05rem .3rem; margin-left: .1rem;
+  border: 1px solid var(--line); border-radius: 3px; background: var(--bg); color: var(--muted); cursor: pointer; }
+button.mini:hover { color: var(--fg); border-color: var(--muted); }
+table.ancestor-sites th.extant select { width: 4.5rem; text-overflow: ellipsis; }
+table.ancestor-sites td.extant:first-letter { font-size: 1rem; font-weight: 600; }
+td.tile.external { background: var(--bg); border: 1px solid var(--line); color: var(--fg); font-size: 1rem; font-weight: 600; }
+/* Ancestor viewer: support plots (histogram; top-three probabilities along the ancestor).
+   Plot colours, lines and fonts are SVG attributes (so downloads match); only layout here. */
+.node-plots { margin: .5rem 0 1rem; }
+/* The Support section: row 1 the ML histogram and the trace, row 2 the AltAll control
+   and its histogram. Both histograms are the SAME rendered width, which is the point --
+   their type is SVG at a fixed viewBox, so a narrower box means smaller text, and the
+   two sat at different scales when one shared a flex row with the wide trace. */
+/* Two equal columns, so the two histograms render at the same width and so at the same
+   type scale -- which is the whole point of putting them in one grid. The trace spans
+   both: it is 1000 viewBox units wide, and in half the column its axis labels shrink to
+   the point of being unreadable. Rows are placed explicitly because the items arrive
+   from two partials and auto-placement would interleave them. */
+.support-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.25rem 2.25rem; align-items: start; margin: .5rem 0 1rem; }
+.support-summary { grid-row: 1; grid-column: 1 / -1; margin: 0; }
+.support-grid .plot.trace { grid-row: 2; grid-column: 1 / -1; }
+.support-grid .plot.histogram:not(.altall-histogram) { grid-row: 3; grid-column: 1; }
+.support-grid .plot.altall-histogram { grid-row: 3 / span 2; grid-column: 2; }
+.support-grid .altall-controls { grid-row: 4; grid-column: 1; }
+.plots-row { display: flex; flex-wrap: wrap; gap: 1.25rem 2.25rem; align-items: flex-start; }
+.plot { margin: 0; position: relative; }
+.plot.histogram { width: 100%; max-width: 30rem; }
+.plot.trace { flex: 3 1 30rem; min-width: 0; }
+/* The trace fills its row; the histograms fill their column but stop at 30rem, or in
+   one-column mode they blow up to the page width and their SVG type with them. They
+   keep the same cap, so they stay equal to each other in either layout. */
+.support-grid .plot.trace { width: 100%; max-width: none; }
+.support-grid .plot.histogram { width: 100%; max-width: 30rem; }
+@media (max-width: 1100px) {
+  /* One column: every item takes its own row, in document order. */
+  .support-grid { grid-template-columns: minmax(0, 1fr); }
+  .support-grid > * { grid-row: auto !important; grid-column: 1 !important; }
+}
+.plot > svg { width: 100%; height: auto; display: block; }
+.plot .hover { cursor: crosshair; }
+.indel-row { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: .75rem 1rem; margin: .4rem 0 .5rem; }
+.plot.indel-thumb figcaption { display: block; margin-bottom: .15rem; }  /* never wraps a row of plots out of line */
+.plot.indel-thumb figcaption a, .plot.indel-thumb figcaption span { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.indel-chart { margin-top: 1.25rem; }
+.plot-tools { text-align: right; font-size: .8rem; color: var(--muted); margin-bottom: .15rem; }
+.plot-tools button.link { font-size: inherit; }
+.plot figcaption { font-size: .85rem; color: var(--muted); display: flex; flex-wrap: wrap; gap: .25rem .9rem; align-items: center; }
+.plot .key { display: inline-flex; align-items: center; gap: .35rem; }
+.plot .line-style { display: inline-flex; align-items: center; gap: .35rem; }
+/* Ancestor viewer: property posteriors (phylobot.property_views). One histogram per
+   property; the plot's own colours are SVG attributes, as the plots above, so only
+   layout here. */
+.property-panel { margin: .5rem 0 1rem; }
+.property-panel > summary { font-weight: 600; cursor: pointer; }
+.property-note, .property-caveat { font-size: .85rem; color: var(--muted); max-width: 58rem; }
+.property-caveat { margin-top: .25rem; }
+.property-legend { display: flex; flex-wrap: wrap; gap: .25rem 1.1rem; align-items: center; font-size: .8rem; color: var(--muted); margin: .4rem 0 0; }
+.property-legend .key { display: inline-flex; align-items: center; gap: .35rem; }
+.property-list { list-style: none; padding: 0; margin: .6rem 0 0; display: flex; flex-wrap: wrap; gap: .9rem 2rem; }
+.property-list > li { flex: 1 1 20rem; max-width: 30rem; display: flex; flex-direction: column; position: relative; }
+.property-list h4 { margin: 0; font-size: .95rem; }
+.property-list h4 .units { font-weight: 400; color: var(--muted); }
+.property-numbers { margin: .1rem 0 0; font-size: .85rem; }
+.property-numbers + .property-numbers { margin-bottom: .25rem; }
+.property-shift { color: var(--muted); }
+.property-shift.notable { color: var(--fg); font-weight: 600; }
+.property-help { font: inherit; font-size: .75rem; line-height: 1; width: 1.25rem; height: 1.25rem;
+  border: 1px solid var(--line); border-radius: 999px; background: var(--bg); color: var(--muted);
+  cursor: pointer; padding: 0; vertical-align: middle;
+  /* inline-flex, not line-height: a button's text box does not centre on its own, and
+     the glyph sat on the circle's bottom edge. */
+  display: inline-flex; align-items: center; justify-content: center; }
+.property-help:hover, .property-help[aria-expanded="true"] { color: var(--fg); border-color: var(--muted); }
+/* A pop-up over the plot, not a block in the flow: opening one otherwise pushed its
+   column's histogram down and left a void beside the others. */
+.property-method { position: absolute; z-index: 6; top: 1.6rem; left: 0; right: 0;
+  /* It is rendered inside the property's <h4>, so it inherits the heading's weight and
+     every word came out bold until this said otherwise. */
+  font-weight: 400; font-size: .82rem; color: var(--muted); background: var(--bg);
+  border: 1px solid var(--line); border-radius: 6px; padding: .55rem .7rem;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, .14); max-height: 20rem; overflow-y: auto; }
+.property-method p { margin: .2rem 0; }
+.property-refs { list-style: none; padding: 0; margin: .3rem 0 0; }
+.property-refs li { margin-bottom: .25rem; }
+/* margin-top:auto lines the plots up across the row when the numbers wrap unevenly. */
+.property-plot { width: 100%; height: auto; display: block; }
+/* The histogram sits in a <figure> so plots.js can save it; margin-top:auto on the
+   figure keeps the plots aligned across the row when the numbers wrap unevenly. */
+.property-figure { margin: 0; margin-top: auto; }
+.property-tools { font-size: .85rem; margin: .2rem 0 .4rem; }
+/* "Measure more properties": the checklist of what the registry has and this ancestor
+   has not (phylobot.properties_run). */
+.property-offer { margin-top: 1rem; padding-top: .8rem; border-top: 1px solid var(--line); max-width: 58rem; }
+.property-offer h3 { margin: 0 0 .2rem; font-size: .95rem; }
+.property-checklist { list-style: none; padding: 0; margin: .6rem 0; display: grid;
+  gap: .45rem 1.6rem; grid-template-columns: repeat(auto-fit, minmax(17rem, 1fr)); }
+.property-checklist > li.done { color: var(--muted); }
+.property-checklist label { display: flex; align-items: baseline; gap: .4rem; font-size: .9rem; }
+.property-checklist .name { font-weight: 600; }
+.property-checklist > li.done .name { font-weight: 400; }
+.property-checklist .units { font-weight: 400; color: var(--muted); }
+.property-checklist .cost { margin-left: auto; font-size: .8rem; color: var(--muted); white-space: nowrap; }
+.property-checklist .note { margin: 0 0 0 1.4rem; font-size: .8rem; color: var(--muted); }
+.offer-scope { display: block; font-size: .9rem; }
+.offer-total { margin: .4rem 0 .2rem; font-size: .9rem; }
+.draws-field { display: block; margin: .35rem 0 0 1.7rem; }
+.draws-field input { width: 6rem; }
+.extra-properties { border: 0; padding: 0; margin: .35rem 0 0 1.7rem; min-width: 0; }
+.extra-properties legend { padding: 0; }
+.extra-properties label { display: block; }
+.extra-properties .hint { margin-top: .25rem; }
+.draws-note { margin: .15rem 0 0 1.7rem; max-width: 52rem; }
+.offer-draws { display: block; font-size: .9rem; margin-bottom: .3rem; }
+.offer-draws input { width: 6rem; }
+.offer-draws .hint { display: block; }
+.offer-actions { display: flex; align-items: center; gap: .6rem; flex-wrap: wrap; margin: .5rem 0 0; }
+/* A property that can still be measured is a button opening the measure dialog, laid out
+   like the checklist rows beside it so the list reads as one list (owner, 2026-10-21). */
+.offer-open { display: flex; width: 100%; align-items: baseline; gap: .4rem; font: inherit;
+  font-size: .9rem; text-align: left; background: none; border: 1px solid transparent;
+  border-radius: 5px; padding: .15rem .3rem; margin: 0 0 0 -.3rem; cursor: pointer; color: inherit; }
+.offer-open:hover, .offer-open:focus-visible { border-color: var(--line); background: var(--bg); }
+.offer-open .name { font-weight: 600; }
+.offer-open .units { font-weight: 400; color: var(--muted); }
+.offer-open .cost { margin-left: auto; font-size: .8rem; color: var(--muted); white-space: nowrap; }
+/* The action reads as the link it is: the rows were not obviously clickable without it. */
+.offer-open .offer-action { font-size: .8rem; color: var(--accent); white-space: nowrap; }
+.offer-open:hover .offer-action, .offer-open:focus-visible .offer-action { text-decoration: underline; }
+.property-checklist > li.done .offer-open .name { font-weight: 400; }
+dialog.measure-dialog { max-width: 32rem; }
+.measure-dialog .hint { margin-top: 0; }
+.measure-draws, .measure-scope { display: block; margin: .6rem 0; font-size: .9rem; }
+.measure-draws input { width: 6rem; }
+.measure-draws .hint { display: block; }
+.measure-total { margin: .8rem 0 0; font-size: .9rem; }
+.offer-pending { margin: .3rem 0; font-size: .85rem; }
+/* Where a number came from, when it was not this job's own run. */
+.property-source { margin: .1rem 0 .2rem; font-size: .78rem; color: var(--muted); }
+.pp-tip { position: absolute; z-index: 5; pointer-events: none; white-space: pre; font-size: .8rem; line-height: 1.3;
+  background: var(--fg); color: var(--bg); padding: .3rem .5rem; border-radius: 4px; }
+@keyframes flash { from { background: #fff3b0; } to { background: transparent; } }
+table.ancestor-sites tr.flash td.column { animation: flash 2s ease-out; }
+/* Tree viewer: the tree is SVG (phylobot.treeview); ancestral nodes are links. */
+.tree-figure { max-width: 1100px; }
+.tree-figure a.tree-node { cursor: pointer; }
+.tree-figure a.tree-node:hover .dot, .tree-figure a.tree-node:focus .dot { r: 6.5; fill: #e08214; }
+.tree-figure a.tree-node:hover text { text-decoration: underline; }
+.tree-figure { position: relative; }
+/* The same ancestor in the other combinations (tree.js places it beside its node). */
+.node-popover { position: absolute; z-index: 5; width: max-content; max-width: 26rem;
+  max-height: 22rem; overflow-y: auto; padding: .55rem .75rem; font-size: .85rem;
+  background: var(--bg); color: var(--fg); border: 1px solid var(--line); border-radius: 6px;
+  box-shadow: 0 4px 16px rgba(29, 35, 48, .16); }
+.node-popover p { margin: .2rem 0; }
+.node-popover .pop-head { display: flex; align-items: baseline; gap: .5rem; }
+.node-popover .pop-close { margin-left: auto; padding: 0 .4rem; border: 0; background: none; font-size: 1.1rem; line-height: 1; cursor: pointer; color: var(--muted); }
+.node-popover .pop-actions { margin: .35rem 0; }
+.node-popover .pop-name { display: flex; flex-wrap: wrap; align-items: center; gap: .35rem; margin-top: .4rem; }
+.node-popover .pop-name input { font: inherit; }
+.node-popover table { border-collapse: collapse; margin: .25rem 0 .35rem; }
+.node-popover td { padding: .1rem .8rem .1rem 0; white-space: nowrap; }
+.node-popover th { padding: .1rem .8rem .1rem 0; font-weight: 600; font-size: .85em; color: var(--muted); }
+.node-popover .num { text-align: right; }
+.node-popover .pop-support { color: var(--muted); }
+.node-popover .pop-sub, .node-popover .pop-missing { color: var(--muted); }
+.node-popover .pop-flag { color: var(--muted); cursor: help; }
+.node-popover button { font: inherit; }
+/* Collapsed-clade controls (clade-popover): collapse/expand buttons and style pickers. */
+.node-popover .pop-actions { display: flex; flex-wrap: wrap; align-items: center; gap: .4rem; }
+.node-popover .pop-actions button.button { padding: .32rem .7rem; border-radius: 4px; cursor: pointer;
+  border: 1px solid var(--line); background: var(--bg); color: var(--fg); display: inline-flex; align-items: center; gap: .35rem; }
+.node-popover .pop-actions button.button.primary { background: var(--accent); color: #fff; border-color: var(--accent); font-weight: 600; }
+.node-popover .pop-collapse .tri { flex: none; }
+.clade-popover .pop-field { display: flex; align-items: center; gap: .5rem; margin: .4rem 0; }
+.clade-popover .pop-field > .pop-field-name { min-width: 3.2rem; color: var(--muted); }
+.clade-popover .pop-field input[type="text"], .clade-popover .pop-field select { font: inherit; }
+.clade-popover .swatches { display: flex; flex-wrap: wrap; align-items: center; gap: .25rem; }
+.clade-popover .swatch { width: 18px; height: 18px; padding: 0; border: 1px solid var(--line); border-radius: 3px; cursor: pointer; }
+.clade-popover .swatch-none { background: linear-gradient(135deg, var(--bg) 46%, #c0392b 46%, #c0392b 54%, var(--bg) 54%); }
+.clade-popover .swatches input[type="color"] { width: 26px; height: 22px; padding: 0; border: 1px solid var(--line); border-radius: 3px; background: none; cursor: pointer; }
+.tree-figure .tree-clade { cursor: pointer; }
+/* Mutational path (tree viewer): sequences down the tree, changed cells outlined. */
+.path-section { margin-top: 2rem; }
+.path-section button.trace { align-self: flex-end; }
+.path-section button.trace.secondary { background: var(--bg); color: var(--muted); border: 1px solid var(--line); }
+.path-section a.button { align-self: flex-end; margin-right: 0; }
+ol.branch-changes { padding-left: 1.25rem; }
+ol.branch-changes li { margin: .35rem 0; }
+.change { display: inline-block; font: .8rem ui-monospace, SFMono-Regular, Menlo, monospace; padding: 0 .3rem; margin: .1rem .15rem;
+  border-radius: 3px; background: #eef2f8; }
+.change.gain { background: #e3f1e0; }
+.change.loss { background: #f6e3e0; }
+.branch-rate { display: inline-block; margin: 0 .4rem; padding: 0 .4rem; border-radius: 3px; font-size: .85rem;
+  background: #fbf3e4; color: #6b4a12; }
+.change.synonymous { background: transparent; color: var(--muted); border: 1px dashed #b9c0cc; }
+.change.uncertain { background: transparent; color: var(--muted); border: 1px dotted #b9c0cc; }
+details.more { display: inline; }
+details.more summary { display: inline; cursor: pointer; color: var(--accent); font-size: .85rem; }
+.path-scroll { overflow: auto; max-height: 75vh; border: 1px solid var(--line); border-radius: 4px; margin-bottom: .75rem; }
+table.path-table { border-collapse: separate; border-spacing: 1px; font-variant-numeric: tabular-nums; }
+table.path-table th.name { position: sticky; left: 0; z-index: 2; background: var(--bg); text-align: left; padding: .15rem .6rem;
+  white-space: nowrap; font-weight: 600; max-width: 16rem; overflow: hidden; text-overflow: ellipsis; }
+table.path-table thead th { position: sticky; top: 0; background: #f4f6f9; z-index: 1; }
+table.path-table thead tr:nth-child(2) th { top: 3.1rem; }
+table.path-table thead th.name { z-index: 3; background: #f4f6f9; color: var(--muted); font-weight: 500; font-size: .8rem; }
+table.path-table th.col { font-size: .7rem; color: var(--muted); font-weight: 500; padding: .2rem 0; height: 3rem; vertical-align: bottom; }
+table.path-table th.col span { writing-mode: vertical-rl; transform: rotate(180deg); display: inline-block; }
+table.path-table thead tr:nth-child(2) th.col { height: 2.4rem; }
+table.path-table td { width: 2rem; min-width: 2rem; height: 1.6rem; text-align: center; font-weight: 600; font-size: .9rem;
+  border-radius: 2px; line-height: 1.05; padding: .1rem 0; }
+table.path-table td small { display: block; font-size: .58rem; font-weight: 400; }
+table.path-table td.gap { background: #eceff3; color: var(--muted); font-weight: 400; }
+table.path-table td.changed { outline: 2.5px solid #111; outline-offset: -2.5px; }
+table.path-table td.silent { outline: 2px dashed #111; outline-offset: -2px; }
+table.path-table.codons td { width: 2.7rem; min-width: 2.7rem; font-size: .78rem; }
+table.path-table tr.compare td { background: #fafbfc; font-weight: 400; }
+table.path-table tr.separator th, table.path-table tr.separator td { font-size: .75rem; color: var(--muted); font-weight: 500; padding-top: .6rem; }
+details.compare summary { cursor: pointer; }
+/* New Job page: four steps, each with PhyloBot's tools and/or your own files. */
+section.step { border-top: 1px solid var(--line); padding-top: .25rem; }
+section.step h2 { display: flex; align-items: center; gap: .6rem; }
+.step-number { display: inline-grid; place-items: center; width: 1.6rem; height: 1.6rem; border-radius: 50%;
+  background: var(--accent); color: #fff; font-size: .9rem; font-weight: 700; flex: none; }
+section.step label.stage { display: inline-flex; align-items: center; gap: .45rem; cursor: pointer; }
+section.step label.stage input { width: 1.1rem; height: 1.1rem; }
+section.step p.own { margin-top: .75rem; }
+section.step p.own .hint { display: block; }
+p.supports label { margin-right: .35rem; }
+p.supports label.replicates { margin-right: 1.25rem; }
+p.supports input[type=number] { width: 6rem; }
+p.supports .hint { display: block; }
+details.models summary { cursor: pointer; margin: .25rem 0 .5rem; }
+/* New Job: a left "On this page" sidebar beside the steps (like the job page's). */
+.submit-layout { display: grid; grid-template-columns: 9.5rem minmax(0, 1fr); gap: 0 1.25rem;
+  align-items: start; }
+:root main:has(.submit-layout), :root[data-skin] main:has(.submit-layout) { max-width: 1200px; }
+.submit-sections { min-width: 0; }
+.submit-layout [id] { scroll-margin-top: 4.5rem; }
+.submit-toc { font-size: .85rem; }
+.submit-toc ol { list-style: none; margin: 0; padding: 0; }
+.submit-toc a { padding: .15rem .4rem; }
+/* Each step folds (fold.js); the triangle sits before the number, inside the flex heading. */
+section.step h2 > .fold-toggle { flex: none; }
+/* Step 2: the Sequences box with a permanent, compact "Load examples" sidebar to its
+   right, kept to the box's height (it scrolls if it ever overflows). */
+.sequences-area { display: flex; align-items: stretch; gap: .6rem; margin: .4rem 0; }
+.sequences-main { flex: 1 1 auto; min-width: 0; }
+.sequences-main #sequences-field { margin: 0; }
+.examples-sidebar { flex: 0 0 13.5rem; box-sizing: border-box; overflow: auto; align-self: stretch;
+  border: 1px solid var(--line); border-radius: 6px; padding: .35rem .55rem;
+  background: color-mix(in srgb, var(--accent) 3%, var(--bg)); font-size: .8rem; }
+.examples-panel-head { display: flex; align-items: center; justify-content: space-between;
+  font-size: .72rem; font-weight: 600; text-transform: uppercase; letter-spacing: .04em;
+  color: var(--muted); margin: .1rem 0 .3rem; }
+.examples-help { width: 1.25rem; height: 1.25rem; border-radius: 50%; border: 1px solid var(--line);
+  background: var(--bg); color: var(--muted); cursor: pointer; font-size: .8rem; line-height: 1;
+  padding: 0; }
+.examples-help:hover { border-color: var(--accent); color: var(--accent); }
+.examples-list { list-style: none; margin: 0; padding: 0; }
+.examples-list li { display: flex; flex-wrap: wrap; align-items: baseline; gap: .1rem .4rem; padding: .15rem 0; line-height: 1.3; }
+.examples-list .example-name { font-weight: 600; font-size: .82rem; }
+.examples-list .example-dna { font-weight: 400; font-size: .68rem; color: var(--muted); }
+/* Both links the same size, after the name (wrapping below it when the name is long). */
+.examples-list .example-links { margin-left: auto; white-space: nowrap; font-size: .74rem;
+  font-variant-numeric: tabular-nums; }
+.examples-list .example-load { font-size: inherit; }
+.examples-list .example-sep { color: var(--muted); margin: 0 .25rem; }
+/* "About these datasets" popover (native top-layer, so the drawer's clip can't hide it). */
+.examples-about { max-width: min(34rem, 92vw); padding: 1rem 1.2rem; border: 1px solid var(--line);
+  border-radius: 10px; background: var(--bg); color: var(--fg); box-shadow: 0 10px 40px rgba(0,0,0,.25); }
+.examples-about h3 { margin: 0 0 .4rem; }
+.examples-about ul { margin: .5rem 0 0; padding-left: 1.1rem; }
+.examples-about li { margin: .35rem 0; line-height: 1.4; }
+.examples-about li .hint { display: inline; }
+/* The three source buttons under the Sequences box, in one row. */
+.sequence-actions { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; margin: .5rem 0 .25rem; }
+.sequence-actions a.button { margin: 0; }
+/* Settings: a left "On this page" sidebar; its Save button is sticky, always in reach. */
+.settings-layout { display: grid; grid-template-columns: 11rem minmax(0, 1fr); gap: 0 1.5rem;
+  align-items: start; }
+:root main:has(.settings-layout), :root[data-skin] main:has(.settings-layout) { max-width: 1200px; }
+.settings-main { min-width: 0; }
+.settings-layout [id] { scroll-margin-top: 4.5rem; }
+.settings-toc { font-size: .85rem; }
+.settings-toc ol { list-style: none; margin: 0 0 .75rem; padding: 0; }
+.settings-toc a { padding: .15rem .4rem; }
+.settings-save { width: 100%; margin-bottom: .85rem; }
+.usage-download { margin: .15rem 0 0; font-size: .8rem; }
+/* Unsaved changes (the Settings page's Save, a title's Save beside its name): amber in every skin (a skin may redefine the
+   --attention tokens). The :root[data-skin] prefix outranks each skin's button.primary. */
+:root { --attention: #f5b82e; --attention-edge: #c98a00; --attention-fg: #1d2330; }
+:root[data-skin] button.settings-save.dirty, button.settings-save.dirty,
+:root[data-skin] .title-edit button.confirm.dirty, .title-edit button.confirm.dirty,
+:root[data-skin] .ancestor-name button.dirty, .ancestor-name button.dirty {
+  background: var(--attention); border-color: var(--attention-edge); color: var(--attention-fg);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--attention) 35%, transparent); }
+:root[data-skin] button.settings-save.dirty:hover, :root[data-skin] .title-edit button.confirm.dirty:hover { background: color-mix(in srgb, var(--attention) 85%, #000); }
+.job-plan { font-size: 1.05rem; }
+.stages .job-plan { font-size: .95rem; margin: .9rem 0 .2rem; color: var(--fg-2, inherit); }
+/* Homolog search: filters with their histograms. */
+.homolog-filters .filter-controls { display: flex; flex-direction: column; gap: .1rem; }
+.homolog-filters .filter-field { margin: .2rem 0; }
+.homolog-filters .filter-field input { width: 5rem; }
+.homolog-filters .filter-field .hint { display: block; max-width: 44rem; }
+/* Homolog review: hits left after each filter, a chain of big numbers in a tinted panel; the
+   last (what is selected) in the accent colour. Each stage is its number over its label. */
+.filter-stages { list-style: none; margin: 1rem 0; padding: .75rem 1.25rem; display: flex; flex-wrap: wrap;
+  align-items: flex-start; gap: .5rem 0; border: 1px solid var(--line); border-left: 4px solid var(--accent);
+  border-radius: 8px; background: color-mix(in srgb, var(--accent) 6%, var(--bg)); }
+.filter-stages li { display: flex; flex-direction: column; max-width: 13rem; }
+.filter-stages li + li { position: relative; margin-left: 2.75rem; }
+.filter-stages li + li::before { content: "→"; position: absolute; left: -2.1rem; top: 0; font-size: 1.6rem;
+  line-height: 2.4rem; color: var(--muted); }
+.filter-stages .count { font-size: 2em; line-height: 1.2; font-weight: 700; font-variant-numeric: tabular-nums;
+  color: var(--fg); }
+.filter-stages .what { color: var(--muted); font-size: .9em; }
+.filter-stages .final .count { color: var(--accent); }
+.plot.homolog-histogram { max-width: 30rem; flex: 1 1 22rem; }
+/* Homolog review: each filter's controls stacked above its histogram, the two side by side. */
+.homolog-filters .filter-column { flex: 1 1 22rem; max-width: 30rem; display: flex; flex-direction: column; }
+.homolog-filters .filter-column .plot.homolog-histogram { flex: none; max-width: none; }
+.homolog-filters .plots-row { align-items: stretch; }
+.homolog-filters .filter-column > .filter-field { flex: 1 0 auto; margin: 0 0 .5rem; }  /* histograms level */
+.homolog-filters .filter-column label, .homolog-filters .filter-column .field-label { display: block; font-weight: 600; margin-bottom: .3rem; }
+.homolog-filters .filter-column .slider-pair { display: flex; margin: 0 0 .3rem; }
+.homolog-filters .filter-column .slider-pair label { display: inline; font-weight: 400; margin: 0; min-width: 2.5rem; }
+.homolog-filters .filter-column .slider-pair input[type=range] { flex: 1; width: auto; min-width: 8rem; }
+.search-summary { color: var(--muted); font-size: .9em; }
+/* Find a sequence by name (upstream of homolog search): two fields side by side. */
+.sequence-lookup-form .lookup-fields { display: flex; flex-wrap: wrap; gap: .4rem 1.5rem; }
+.sequence-lookup-form .lookup-fields > p { flex: 1 1 18rem; margin: .4rem 0; }
+.sequence-lookup-form .lookup-fields input { width: 100%; box-sizing: border-box; }
+.sequence-lookup-form .check { margin: .5rem 0 .3rem; }
+#lookup-results { margin-top: .6rem; }
+#lookup-results table.sequence-lookup { margin-top: .4rem; }
+.htmx-indicator { opacity: 0; transition: opacity .15s; }
+.htmx-request .htmx-indicator, .htmx-request.htmx-indicator { opacity: 1; }
+.search-databases { border: 0; padding: 0; margin: .5rem 0; }
+.search-databases legend { font-weight: 600; padding: 0; }
+.search-databases ul, .search-databases div > div { list-style: none; padding: 0; margin: .25rem 0; }
+.consent .hint { display: block; max-width: 44rem; }
+.kept-hits { margin-top: 1rem; }
+.kept-hits summary { cursor: pointer; font-weight: 600; }
+table.hits { border-collapse: collapse; font-size: .85em; margin-top: .5rem; }
+table.hits th, table.hits td { padding: .2rem .6rem; border-bottom: 1px solid var(--line); text-align: left; }
+table.hits .num { text-align: right; font-variant-numeric: tabular-nums; }
+/* The one hit table: headings are sort buttons; unselected rows muted. */
+table.hits th button.sort { all: unset; cursor: pointer; display: inline-flex; align-items: center; gap: .2rem;
+  white-space: nowrap; }
+table.hits th button.sort:hover, table.hits th button.sort:focus-visible { color: var(--accent); }
+table.hits th button.sort:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+table.hits th .sort-mark { font-size: .7em; color: var(--accent); min-width: .7em; }
+table.hits tr.unselected:not(.choice-excluded) td { color: var(--muted); }
+table.hits td:last-child { min-width: 12rem; }  /* the note: keep "fails E-value ≤ 1e-05" whole */
+details.hits-table > summary { cursor: pointer; font-weight: 600; font-size: 1.05rem; margin: .5rem 0; }
+.hits-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem 1rem; margin: .5rem 0; }
+.hits-toolbar .own-choices { color: var(--muted); font-size: .9em; }
+/* Settings page. */
+.settings-table { border-collapse: collapse; width: 100%; max-width: 1000px; }
+.settings-table th, .settings-table td { text-align: left; vertical-align: top; padding: .45rem .6rem; border-bottom: 1px solid var(--line); }
+.settings-table { table-layout: fixed; }
+.settings-table th:nth-child(1) { width: 50%; } .settings-table th:nth-child(2) { width: 18%; }
+.settings-table .hint { display: block; }
+.settings-table input[type=number] { width: 7rem; }
+.settings-table input[type=email] { width: 16rem; }
+.settings-table .source { display: block; font-size: .8em; color: var(--muted); }
+.settings-table .source.here { color: var(--accent); font-weight: 600; }
+/* Find homologs: database choices with speed, timing and notes. */
+.database-options { display: flex; flex-direction: column; gap: .35rem; margin: .4rem 0; max-width: 52rem; }
+.database-option { display: flex; gap: .6rem; align-items: flex-start; padding: .45rem .6rem; border: 1px solid var(--line); border-radius: 6px; cursor: pointer; }
+.database-option:has(input:checked) { border-color: var(--accent); background: #f3f7fd; }
+.database-option input { margin-top: .25rem; }
+.option-text { display: flex; flex-direction: column; gap: .1rem; }
+.option-title { font-weight: 600; }
+.option-timing, .option-note { font-size: .88em; color: var(--muted); }
+.speed { display: inline-block; font-size: .75em; font-weight: 700; text-transform: uppercase; letter-spacing: .03em; padding: .05rem .45rem; border-radius: 999px; margin-left: .35rem; vertical-align: 1px; }
+.speed.fast { background: #e2f4e6; color: #1e6b34; }
+.speed.slow { background: #fdf0e1; color: #8a4b00; }
+.required-tag { color: #a4161a; font-size: .8em; font-weight: 700; text-transform: uppercase; letter-spacing: .03em; margin-left: .3rem; }
+/* Find homologs, review: sliders, actions, hand-picked choices. */
+.homolog-filters .field-label { font-weight: 600; margin-right: .4rem; }
+.slider-pair { display: inline-flex; align-items: center; gap: .45rem; margin-right: 1.2rem; }
+.slider-pair input[type=range] { width: 14rem; accent-color: var(--accent); }
+.homolog-filters .filter-field { margin: .45rem 0; }
+.review-actions { margin: 1rem 0 .5rem; padding: .75rem 1rem; border: 1px solid var(--line); border-radius: 6px; background: #f8fafc; }
+.review-actions .downloads { margin-left: 1rem; font-size: .92em; }
+.review-actions .hint { margin: .5rem 0 0; }
+a.button { display: inline-block; padding: .4rem .9rem; border-radius: 4px; text-decoration: none; border: 1px solid var(--accent); }
+a.button.primary { background: var(--accent); color: #fff; font-weight: 600; }
+/* A button with an icon before its words (_icon.html), centred together. */
+a.button.with-icon, button.with-icon { display: inline-flex; align-items: center; gap: .35rem; }
+/* A link styled as an ordinary (not primary) button, beside buttons of equal weight. */
+:root[data-skin] a.button.plain, a.button.plain { background: var(--bg); color: var(--fg);
+  border-color: var(--edge, var(--line)); font-weight: 500; }
+:root[data-skin] a.button.plain:hover { background: var(--hover, var(--bg)); border-color: var(--hover-edge, var(--accent)); }
+.own-choices p { margin: .4rem 0; }
+.homolog-filters details { margin: .6rem 0; }
+.homolog-filters details summary { cursor: pointer; font-weight: 600; }
+tr.choice-included td { background: #eef6ee; }
+tr.choice-excluded td { background: #fbeeee; }
+.tag { font-size: .8em; font-weight: 600; padding: .05rem .4rem; border-radius: 999px; white-space: nowrap; }
+.tag.included { background: #d7eedb; color: #1e6b34; }
+.tag.excluded { background: #f6d9d9; color: #8f1d1d; }
+.tag.query { background: #dbe6f6; color: #234a86; cursor: help; }
+.visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.from-homologs { border-left: 4px solid var(--accent); background: #f3f7fd; padding: .5rem .9rem; margin: .5rem 0 1rem; }
+.from-homologs p { margin: .3rem 0; }
+/* A search's title (rename in place) and the saved examples' lock. */
+.title-view { display: flex; align-items: center; gap: .5rem; }
+.title-view h1 { margin: 0; }
+.icon-button { background: none; border: 1px solid transparent; border-radius: 4px; padding: .2rem; color: var(--muted); cursor: pointer; line-height: 0; }
+.icon-button:hover, .icon-button:focus-visible { color: var(--accent); border-color: var(--line); }
+.title-edit { display: flex; align-items: center; gap: .5rem; }
+.title-edit input { font-size: 1.6rem; font-weight: 700; padding: .1rem .4rem; width: min(36rem, 70vw); }
+.title-edit button.confirm { display: inline-flex; align-items: center; gap: .3rem; }
+.library-description { display: flex; flex-direction: column; align-items: flex-start; gap: .6rem; }
+.library-description .library-notes { display: flex; flex-direction: column; gap: .25rem; width: 100%; }
+.library-description textarea { width: 100%; max-width: 48rem; font: inherit; resize: vertical; }
+.library-description p { margin: 0; }
+.locked { display: inline-flex; align-items: center; gap: .25rem; font-size: .8rem; color: var(--muted); border: 1px solid var(--line); border-radius: 999px; padding: .05rem .5rem; }
+.page-head .actions { display: flex; gap: .5rem; align-items: center; }
+.page-head .actions form { margin: 0; }
+.row-actions { white-space: nowrap; }
+.head-action { display: inline-flex; align-items: center; gap: .35rem; font: inherit; font-size: .95em; line-height: 1.2;
+  padding: .25rem .75rem; border: 1px solid var(--line); border-radius: 4px; background: #fff; color: var(--accent);
+  text-decoration: none; cursor: pointer; }
+.head-action:hover, .head-action:focus-visible { border-color: var(--accent); }
+td.row-actions { text-align: right; }
+td.row-actions .icon-button { vertical-align: middle; display: inline-block; text-decoration: none; }
+td.row-actions .link.danger { margin-left: .35rem; vertical-align: middle; }
+.row-actions form { display: inline; margin: 0; }
+/* Job page: the status line opens onto the pipeline's steps (phylobot.stages). */
+details.stages { margin: .75rem 0 1rem; }
+details.stages summary { cursor: pointer; }
+details.stages summary .sep { color: var(--muted); margin: 0 .15rem; }
+details.stages summary progress { width: 9rem; height: .55rem; margin: 0 .2rem; }
+.stage-graph { margin: .6rem 0 0; padding: .9rem 1rem .6rem; border: 1px solid var(--line); border-radius: 8px;
+  background: #fbfcfd; overflow-x: auto; }
+.stage-graph svg { display: block; max-width: 100%; height: auto; font-family: system-ui, sans-serif; }
+.stage-graph-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline;
+  gap: .25rem 1rem; margin-bottom: .6rem; }
+.stage-graph figcaption { font-size: .8rem; flex: 1 1 24rem; }
+.stage-scheme { margin: 0; font-size: .8rem; color: var(--muted); white-space: nowrap; }
+.stage-scheme select { font-size: .8rem; margin-left: .25rem; }
+.stage-graph .links path { fill: none; stroke: #cdd4de; stroke-width: 1.25; }
+.stage-graph .links path.done { stroke: #9fb0c6; }
+.stage-graph .links path.flowing { stroke: #2457a6; stroke-dasharray: 4 3; animation: stage-flow 1s linear infinite; }
+.stage .box { fill: #fff; stroke: #d3d9e2; stroke-width: 1; }
+.stage .name { font-size: 11.5px; font-weight: 600; fill: var(--fg); }
+.stage .state { font-size: 10.5px; fill: var(--muted); }
+.stage .time { font-size: 10px; fill: #7a8391; font-variant-numeric: tabular-nums; }
+.stage .dot { fill: #b7bfca; }
+.stage.succeeded .dot { fill: #3f9a60; }
+.stage.running .box { fill: #edf3fc; stroke: #2457a6; stroke-width: 1.5; }
+.stage.running .state { fill: #2457a6; font-weight: 600; }
+.stage.running .dot { fill: #2457a6; animation: stage-pulse 1.4s ease-in-out infinite; }
+.stage.failed .box { fill: #fdf1ef; stroke: #c0392b; stroke-width: 1.5; }
+.stage.failed .state { fill: #a4161a; font-weight: 600; }
+.stage.failed .dot { fill: #c0392b; }
+.stage.waiting .box, .stage.stopped .box, .stage.not-run .box { fill: #fbfcfd; stroke-dasharray: 3 3; }
+.stage.waiting .dot, .stage.stopped .dot, .stage.not-run .dot { fill: none; stroke: #aab3bf; stroke-width: 1.2; }
+.stage.waiting .name, .stage.not-run .name { fill: #7a8391; font-weight: 500; }
+.stage.stopped .dot { fill: #e0a33a; stroke: none; }
+/* Extend (phylobot.extend): below the steps graph, and at the end of the plan line. */
+.stages-extend { margin: .75rem 0 .25rem; display: flex; flex-wrap: wrap; align-items: center; gap: .4rem .75rem; }
+.stages-extend .button { display: inline-flex; align-items: center; gap: .35rem; }
+@keyframes stage-pulse { 50% { opacity: .3; } }
+@keyframes stage-flow { to { stroke-dashoffset: -7; } }
+
+/* Colour schemes for the steps graph (the menu above it). "simple" is the rules above. */
+/* Vivid: a fill per status; the running step shifts between purple and orange and glows. */
+.stage-graph[data-scheme="vivid"] { background: #fff; }
+[data-scheme="vivid"] .links path.done { stroke: #8cc7a0; }
+[data-scheme="vivid"] .links path.flowing { stroke: #6a4fd0; }
+[data-scheme="vivid"] .stage.succeeded .box { fill: #dcf2e3; stroke: #86c79c; }
+[data-scheme="vivid"] .stage.succeeded .dot { fill: #2f8f4e; }
+[data-scheme="vivid"] .stage.succeeded .state { fill: #22703c; }
+[data-scheme="vivid"] .stage.failed .box { fill: #fbd6d1; stroke: #d64541; stroke-width: 2; }
+[data-scheme="vivid"] .stage.waiting .box, [data-scheme="vivid"] .stage.not-run .box {
+  fill: #eceef2; stroke: #d7dbe2; stroke-dasharray: none; }
+[data-scheme="vivid"] .stage.stopped .box { fill: #f1ece3; stroke: #b9a27a; }
+[data-scheme="vivid"] .stage.stopped .dot { fill: #b9a27a; }
+[data-scheme="vivid"] .stage.running .box { stroke-width: 2; animation: stage-shimmer 3s ease-in-out infinite; }
+[data-scheme="vivid"] .stage.running { animation: stage-glow 3s ease-in-out infinite; }
+[data-scheme="vivid"] .stage.running .state { fill: #3b2a8f; }
+[data-scheme="vivid"] .stage.running .dot { fill: #6a4fd0; }
+/* Purple <-> yellow-orange only: green is kept for succeeded steps. */
+@keyframes stage-shimmer {
+  0%, 100% { fill: #e6d9ff; stroke: #7b4fd6; } 50% { fill: #ffe3ad; stroke: #e08a00; } }
+@keyframes stage-glow {
+  0%, 100% { filter: drop-shadow(0 0 4px rgba(123, 79, 214, .6)); }
+  50% { filter: drop-shadow(0 0 5px rgba(224, 138, 0, .6)); } }
+
+/* Greyscale, bold: status by weight and fill; the running step is inverted. */
+.stage-graph[data-scheme="mono"] { background: #fff; border-color: #222; }
+[data-scheme="mono"] .links path { stroke: #9a9a9a; stroke-width: 1.6; }
+[data-scheme="mono"] .links path.done, [data-scheme="mono"] .links path.flowing { stroke: #111; }
+[data-scheme="mono"] .stage .box { fill: #fff; stroke: #111; stroke-width: 1.75; }
+[data-scheme="mono"] .stage .name { font-weight: 800; fill: #111; }
+[data-scheme="mono"] .stage .state { fill: #222; font-weight: 600; }
+[data-scheme="mono"] .stage .time { fill: #444; }
+[data-scheme="mono"] .stage .dot { fill: #111; stroke: none; }
+[data-scheme="mono"] .stage.succeeded .box { fill: #e2e2e2; }
+[data-scheme="mono"] .stage.running .box { fill: #111; }
+[data-scheme="mono"] .stage.running text { fill: #fff; }
+[data-scheme="mono"] .stage.running .dot { fill: #fff; }
+[data-scheme="mono"] .stage.failed .box { stroke-width: 3.5; }
+[data-scheme="mono"] .stage.failed .state { font-weight: 800; fill: #000; text-transform: uppercase; }
+[data-scheme="mono"] .stage.stopped .box { fill: #bdbdbd; stroke-dasharray: none; }
+[data-scheme="mono"] .stage.waiting .box, [data-scheme="mono"] .stage.not-run .box { stroke: #9a9a9a; stroke-width: 1.25; }
+[data-scheme="mono"] .stage.waiting text, [data-scheme="mono"] .stage.not-run text { fill: #8a8a8a; font-weight: 500; }
+[data-scheme="mono"] .stage.waiting .dot, [data-scheme="mono"] .stage.not-run .dot { fill: none; stroke: #8a8a8a; }
+
+/* Colour-blind safe (Okabe-Ito): bluish green, blue, vermillion, orange; each status
+   also differs in lightness and stroke, and is written out. */
+.stage-graph[data-scheme="safe"] { background: #fff; }
+[data-scheme="safe"] .links path.done { stroke: #6fa8cc; }
+[data-scheme="safe"] .links path.flowing { stroke: #0072b2; }
+[data-scheme="safe"] .stage.succeeded .box { fill: #d7eee6; stroke: #009e73; }
+[data-scheme="safe"] .stage.succeeded .dot { fill: #009e73; }
+[data-scheme="safe"] .stage.running .box { fill: #d5e7f5; stroke: #0072b2; stroke-width: 2; }
+[data-scheme="safe"] .stage.running .state { fill: #0072b2; }
+[data-scheme="safe"] .stage.running .dot { fill: #0072b2; }
+[data-scheme="safe"] .stage.failed .box { fill: #f6dccb; stroke: #d55e00; stroke-width: 2.5; }
+[data-scheme="safe"] .stage.failed .state { fill: #8f3f00; }
+[data-scheme="safe"] .stage.failed .dot { fill: #d55e00; }
+[data-scheme="safe"] .stage.stopped .box { fill: #fcefcc; stroke: #e69f00; stroke-dasharray: none; }
+[data-scheme="safe"] .stage.stopped .dot { fill: #e69f00; }
+[data-scheme="safe"] .stage.waiting .box, [data-scheme="safe"] .stage.not-run .box { fill: #f2f2f2; stroke: #9a9a9a; }
+
+@media (prefers-reduced-motion: reduce) {
+  .stage, .stage .box, .stage .dot, .stage-graph .links path { animation: none !important; } }
+
+/* Title page (/) */
+.title-page { max-width: 900px; margin: 0 auto; }
+.title-page .title { display: flex; flex-direction: column; gap: 1rem; align-items: center; text-align: center;
+                     margin: 1.5rem 0 2rem; }
+.title-page .logo { flex: none; max-width: 60vw; height: auto; }
+.title-page h1 { font-size: 5.2rem; font-weight: 800; line-height: 1.05; margin: 0; }
+/* The "2": heavier, with a solid drop shadow (each skin restyles the shadow). */
+.title-page h1 .two { font-weight: 900; margin-left: .05em; text-shadow: .05em .05em 0 rgba(0, 0, 0, .28); }
+.title-page .tagline { font-size: 1.05rem; color: var(--muted); margin: 0; max-width: 40rem; }
+/* The slogan is half the title's size (each skin that resizes the h1 resizes it too). */
+.title-page .slogan { font-size: 2.6rem; font-weight: 700; line-height: 1.15; margin: 0; text-align: center; }
+.title-page .intro { font-size: 1.1rem; line-height: 1.55; margin: 0; max-width: 40rem; text-align: left; }
+.title-page .actions { margin: 0; display: flex; flex-wrap: wrap; gap: .6rem .75rem; align-items: center; justify-content: center; }
+.title-page .actions a.button { margin: 0; }
+a.button { display: inline-block; padding: .4rem 1rem; margin-right: .75rem; border-radius: 4px;
+           background: var(--accent); color: #fff; text-decoration: none; }
+.get-it { display: grid; grid-template-columns: 1fr; gap: 1rem; }
+.snippet { border: 1px solid var(--line); border-radius: 6px; padding: .75rem 1rem; min-width: 0; }
+.snippet h2, .reference h2 { font-size: 1.05rem; margin: 0 0 .25rem; }
+.snippet .hint { margin: 0 0 .5rem; }
+.command { display: flex; gap: .4rem; align-items: flex-start; }
+.command pre { flex: 1; min-width: 0; margin: 0; padding: .6rem .75rem; background: #f4f6f9; border-radius: 4px;
+               overflow-x: auto; font-size: .85rem; }
+.command button.copy { flex: none; margin: .4rem 0 0; }
+.reference { margin-top: 2rem; }
+.reference p { margin: 0; }
+@media (max-width: 600px) { .title-page h1 { font-size: 3.2rem; } .title-page .slogan { font-size: 1.6rem; } }
+
+/* The home page of a running PhyloBot (home.html, phylobot.home_views): a smaller title,
+   then panels. The panels are .snippet too, so every skin already dresses them. */
+.title-page.home .title { gap: .75rem; margin: 1rem 0 1.75rem; }
+.title-page.home .logo { width: 250px; }
+.home-panels { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr)); gap: 1rem;
+               align-items: start; margin-bottom: 1rem; }
+.home-panel > .hint { margin: 0 0 .35rem; }
+.home-panel ol { list-style: none; margin: 0; padding: 0; }
+.home-panel li { display: flex; gap: .6rem; align-items: baseline; padding: .42rem 0; border-top: 1px solid var(--line); }
+.home-panel li:first-child { border-top: 0; }
+.home-panel li .when { margin-left: auto; flex: none; color: var(--muted); font-size: .82rem; white-space: nowrap; }
+.home-panel .panel-foot { margin: .5rem 0 0; font-size: .9rem; }
+.work-list .status { flex: none; }
+.work-list .what { min-width: 0; display: flex; flex-wrap: wrap; gap: .2rem .5rem; align-items: baseline; }
+.work-list .what > a { overflow-wrap: break-word; min-width: 0; font-weight: 600; }
+.recent-pages .kind { flex: none; width: 7.4rem; font-size: .74rem; font-weight: 600; color: var(--muted);
+                      text-transform: uppercase; letter-spacing: .04em; }
+.recent-pages a { min-width: 0; overflow-wrap: break-word; }
+.recent-pages button.forget { flex: none; color: var(--muted); font-size: 1.1rem; line-height: 1; padding: 0 .25rem;
+                              text-decoration: none; opacity: 0; }
+.recent-pages li:hover button.forget, .recent-pages button.forget:focus-visible { opacity: 1; }
+.recent-pages button.forget:hover { color: var(--fg); }
+@media (hover: none) { .recent-pages button.forget { opacity: 1; } }
+.home-starts ul { list-style: none; margin: .6rem 0 0; padding: 0; display: grid; gap: .75rem;
+                  grid-template-columns: repeat(auto-fit, minmax(11.5rem, 1fr)); }
+.home-starts a { display: block; height: 100%; padding: .65rem .85rem .75rem; border: 1px solid var(--line); border-radius: 6px;
+                 color: var(--fg); text-decoration: none; }
+.home-starts a:hover, .home-starts a:focus-visible { border-color: var(--accent); }
+.home-starts a b { display: block; margin-bottom: .2rem; color: var(--accent); font-weight: 600; }
+.home-starts a span { display: block; font-size: .88rem; line-height: 1.4; color: var(--muted); }
+/* A phone: each remembered page's kind sits above its name rather than squeezing it. */
+@media (max-width: 600px) {
+  .recent-pages li { flex-wrap: wrap; gap: 0 .6rem; }
+  .recent-pages .kind { width: 100%; }
+  .recent-pages a { flex: 1 1 0; }
+  .work-list li { flex-wrap: wrap; gap: .15rem .6rem; }
+  .work-list .what { flex: 1 1 0; }
+  .work-list li .when { flex-basis: 100%; margin-left: 0; }
+}
+.home-foot { margin: 1.5rem 0 0; text-align: center; font-size: .9rem; color: var(--muted); }
+
+/* About page (/about/) */
+.about { max-width: 54rem; margin: 0 auto; }
+.about .lead { font-size: 1.05rem; }
+/* The contents sidebar: its own grid column, so it never covers the text; above the text
+   when the window is too narrow for both. */
+.about-layout { display: grid; grid-template-columns: 12rem minmax(0, 54rem); gap: 2rem; justify-content: center; align-items: start; }
+.about-layout .about { margin: 0; }
+.about [id] { scroll-margin-top: 4.5rem; }
+.about-toc, .viewer-toc { position: sticky; top: 4.5rem; max-height: calc(100vh - 6rem); overflow-y: auto; font-size: .9rem; }
+.about-toc { margin-top: 3.4rem; }  /* clears the page heading; the viewer's sits level with its first card */
+.about-toc-title, .viewer-toc-title { margin: 0 0 .4rem; font-size: .75rem; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); }
+.about-toc ol, .viewer-toc ol { list-style: none; margin: 0; padding: 0; }
+.about-toc ol ol, .viewer-toc ol ol { padding-left: .8rem; font-size: .85rem; }
+.about-toc a, .viewer-toc a { display: block; padding: .2rem .5rem; border-left: 2px solid var(--line); color: var(--fg); text-decoration: none; line-height: 1.3; }
+.about-toc a:hover, .viewer-toc a:hover { color: var(--accent); }
+.about-toc a[aria-current="true"], .viewer-toc a[aria-current="true"] { border-left-color: var(--accent); color: var(--accent); font-weight: 600; }
+/* An "On this page" nav beside the content (reusing .about-toc styling): Find homologs,
+   the library page, Simulations, ESR. */
+.homologs-layout, .toc-layout { display: grid; grid-template-columns: 12rem minmax(0, 1fr); gap: 2rem; align-items: start; }
+.homologs-main, .toc-main { min-width: 0; }
+.homologs-main [id], .toc-main [id] { scroll-margin-top: 4.5rem; }
+/* Narrow windows: one column, so a sticky nav would float over the content as it
+   scrolls. These come after the sticky rule above, or it wins (same specificity). The
+   viewers' and About's nav sits above the content; the job page's is left out: its
+   sections are a click away on the page itself. */
+@media (max-width: 980px) {
+  .about-layout { grid-template-columns: minmax(0, 54rem); gap: 0; }
+  .homologs-layout, .toc-layout { grid-template-columns: minmax(0, 1fr); gap: 0; }
+  .about-toc, .viewer-toc { position: static; max-height: none; margin: 0 0 1.25rem; }
+  .job-toc { display: none; }
+}
+.about > section { margin: 0 0 2rem; }
+.about blockquote { margin: .5rem 0; padding: .6rem 1rem; border-left: 4px solid var(--accent); background: rgba(36, 87, 166, .06); }
+.about ol.distinctive li { margin-bottom: .6rem; }
+.about ul.methods { padding-left: 1.2rem; }
+.about ul.methods li { margin-bottom: .5rem; }
+.about .table-scroll { overflow-x: auto; }
+.about table.models { border-collapse: collapse; width: 100%; margin: .5rem 0 1.25rem; font-size: .9rem; }
+.about table.models th, .about table.models td { text-align: left; vertical-align: top; padding: .3rem .5rem; border-bottom: 1px solid var(--line); }
+.about table.models td:first-child { width: 22%; }
+.about table.models td:nth-child(2) { width: 22%; }
+/* Feature comparison: fits the column without scrolling; notes are hover titles. */
+:root { --cmp-yes: #1e7b45; --cmp-yes-bg: #e3f4e8; --cmp-partial: #a86a00; --cmp-planned: var(--accent); }
+.about table.comparison { border-collapse: collapse; table-layout: fixed; width: 100%; font-size: .85rem; margin: .5rem 0 1rem; }
+.about table.comparison col.feature { width: 30%; }
+.about table.comparison th, .about table.comparison td { padding: .3rem .2rem; border-bottom: 1px solid var(--line); vertical-align: middle; text-align: center; }
+.about table.comparison thead th { font-weight: 600; font-size: .78rem; line-height: 1.2; vertical-align: bottom; overflow-wrap: anywhere; hyphens: auto; }
+.about table.comparison th[scope="row"], .about table.comparison thead th:first-child { text-align: left; padding-left: .4rem; font-weight: normal; }
+.about table.comparison thead th:first-child { font-weight: 600; }
+.about table.comparison td.yes { background: var(--cmp-yes-bg); }
+.about table.comparison .ours { border-left: 2px solid var(--accent); border-right: 2px solid var(--accent); }
+.about table.comparison thead th.ours { border-top: 2px solid var(--accent); }
+.about table.comparison tr.cmp-section th { text-align: left; padding: .8rem .4rem .3rem; font-weight: 600; color: var(--muted); text-transform: uppercase; font-size: .75rem; letter-spacing: .04em; }
+.about .cmp { font-weight: 700; color: var(--muted); }
+.about .cmp.yes { color: var(--cmp-yes); }
+.about .cmp.partial { color: var(--cmp-partial); }
+.about .cmp.planned { color: var(--cmp-planned); font-size: 1.15em; line-height: 1; -webkit-text-stroke: .6px currentColor; }
+.about .cmp-note { display: block; color: var(--muted); font-size: .72rem; line-height: 1.2; }
+.about .cmp-legend .cmp { margin-left: .1rem; }
+
+/* Landing and About pages only: the protein-fragment backdrop (backdrop.js). The tokens
+   that switch it on, and its palette, live in each skin's stylesheet, so a skin with none
+   has no backdrop. The content sits above it (the top bar is sticky, already above). */
+.backdrop { position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; }
+/* Two menus in the bar now, so they may wrap on a narrow window rather than squeeze. */
+.skin-picker { white-space: nowrap; }
+/* Settings -> Display: the same backdrop in a box, so the dials can be seen while set. */
+.display-dials { display: flex; flex-wrap: wrap; gap: .75rem 1.5rem; margin: .5rem 0 .75rem; }
+.display-dials label { display: flex; gap: .4rem; align-items: center; }
+.backdrop.preview { position: relative; inset: auto; height: 10rem; width: 100%;
+  border: 1px solid var(--line); border-radius: 6px; background: var(--page, #f2f3f5);
+  --backdrop-scale: .7; }
+body:has(.backdrop) :is(main, .site-footer) { position: relative; z-index: 1; }
+
+/* Furniture only the PhyloBot '95 skin shows (skins/retro95.css). */
+.retro-only { display: none; }
+
+/* Footer on every page */
+.site-footer { display: flex; flex-wrap: wrap; gap: .25rem 1.5rem; padding: .75rem 1.5rem;
+               border-top: 1px solid var(--line); color: var(--muted); font-size: .8rem; }
+.hint.indent { display: inline-block; margin-left: 1.6rem; }
+.grid .raxml-missing { font-weight: normal; font-size: .8em; white-space: nowrap; }
+/* New Job page: the job panel (summary, work estimate, Submit), fixed to the right edge
+   and slid in once the form holds sequences; a bottom sheet on narrow screens. */
+:root { --panel-width: 22rem; --work-align: #7aa6d6; --work-modelfinder: #e0a458; --work-trees: #2457a6;
+        --work-ancestors: #5a9e6f; --work-codeml: #8e6bbf; --work-setup: #b8bfca; }
+.job-panel { position: fixed; top: 3.2rem; right: 0; bottom: 0; width: var(--panel-width); z-index: 9;
+  display: flex; flex-direction: column; background: var(--bg); border-left: 1px solid var(--line);
+  box-shadow: -8px 0 24px rgba(20, 30, 50, .08); transform: translateX(100%); visibility: hidden;
+  transition: transform .25s ease, visibility 0s linear .25s; }
+.job-panel.open { transform: none; visibility: visible; transition: transform .25s ease; }
+/* :root, so it outranks the skins' own `main { margin: 0 auto }`: without it the open
+   panel lay over the right of the form in every skin but Skinless. */
+:root body.job-panel-open main { margin-right: var(--panel-width); }
+.job-panel-head { display: flex; align-items: center; justify-content: space-between; padding: .5rem 1rem; border-bottom: 1px solid var(--line); }
+.job-panel-head h2 { margin: 0; }
+/* The collapse handle: a tab on the panel's LEFT edge, vertically centred and always
+   visible while the panel is open (the right-edge .job-panel-tab reopens it when closed).
+   Positioned against the fixed panel itself, so a wrapped top toolbar can never cover it. */
+.job-panel-close { position: absolute; left: 0; top: 50%; transform: translate(-100%, -50%);
+  background: var(--accent); color: #fff; border: 0; border-radius: 6px 0 0 6px;
+  padding: .85rem .35rem; font-size: 1.05rem; line-height: 1; cursor: pointer;
+  box-shadow: -4px 0 12px rgba(20, 30, 50, .12); }
+.job-panel-body { flex: 1; overflow-y: auto; padding: 0 1rem; }
+.job-panel-body .preview { background: none; padding: 0; margin: 0; }
+.job-panel-foot { padding: .75rem 1rem; border-top: 1px solid var(--line); }
+.job-panel-foot button.primary { width: 100%; padding: .55rem; font: inherit; font-weight: 600; color: #fff;
+  background: var(--accent); border: 0; border-radius: 4px; cursor: pointer; }
+.job-panel-tab { position: fixed; right: 0; top: 50%; z-index: 9; writing-mode: vertical-rl; transform: rotate(180deg);
+  padding: .8rem .4rem; font: inherit; font-size: .9rem; font-weight: 600; color: #fff; background: var(--accent);
+  border: 0; border-radius: 0 6px 6px 0; cursor: pointer; }
+.job-panel .job-plan { padding-left: 1.2rem; margin: .25rem 0 .75rem; font-size: .95rem; }
+.job-panel .job-plan li { margin: .2rem 0; }
+.work-total { margin: .25rem 0; }
+.work-total strong { font-size: 1.8rem; font-variant-numeric: tabular-nums; }
+.work-delta { font-size: .85rem; font-weight: 600; padding: 0 .4rem; border-radius: 8px; }
+.work-delta.up { background: #fbe9d7; color: #8a4b08; } .work-delta.down { background: #dff1e4; color: #1f6b35; }
+.work-delta:empty { display: none; }
+.work-bar { display: flex; height: .8rem; border-radius: 3px; overflow: hidden; background: #eef1f5; }
+.work-bar .seg { flex-basis: 0; min-width: 2px; }
+.work-legend { display: grid; grid-template-columns: 1fr; gap: .1rem; margin: .4rem 0; font-size: .9rem; }
+.work-legend li { display: flex; align-items: center; gap: .4rem; }
+.work-legend .units { margin-left: auto; font-variant-numeric: tabular-nums; }
+.work-legend .swatch { width: .8rem; height: .8rem; border-radius: 2px; }
+.seg.align, .swatch.align { background: var(--work-align); }
+.seg.modelfinder, .swatch.modelfinder { background: var(--work-modelfinder); }
+.seg.trees, .swatch.trees { background: var(--work-trees); }
+.seg.ancestors, .swatch.ancestors { background: var(--work-ancestors); }
+.seg.codeml, .swatch.codeml { background: var(--work-codeml); }
+.seg.setup, .swatch.setup { background: var(--work-setup); }
+@media (max-width: 900px) {
+  .job-panel { top: auto; left: 0; width: auto; max-height: 70vh; border-left: 0; border-top: 1px solid var(--line);
+    transform: translateY(100%); box-shadow: 0 -8px 24px rgba(20, 30, 50, .12); }
+  :root body.job-panel-open main { margin-right: 0; padding-bottom: 72vh; }
+  .job-panel-tab { top: auto; bottom: 0; right: 1rem; writing-mode: horizontal-tb; transform: none; border-radius: 6px 6px 0 0; }
+  /* The sheet rises from the bottom and is full-width, so the handle cannot sit on its left
+     edge; it moves to the sheet's top-right corner, clear of the top toolbar. */
+  .job-panel-close { left: auto; right: .6rem; top: .5rem; transform: none; border-radius: 6px; padding: .4rem .65rem; }
+}
+@media (prefers-reduced-motion: reduce) { .job-panel, .job-panel.open { transition: none; } }
+.model-options label { display: block; margin-top: .4rem; }
+/* An option with its "?" on one line: the label keeps its own width, the help sits beside it. */
+.option-line { display: flex; align-items: center; gap: .45rem; margin-top: .4rem; }
+.option-line > label, .model-options .option-line > label { display: inline-block; margin: 0; }
+.option-line.draws-line { margin: .35rem 0 0 1.7rem; }
+.option-line.draws-line > .draws-field { margin: 0; }
+.limits-line { margin: .35rem 0 .6rem; }
+/* A "?" in a heading or legend is help for it, not part of it: the body text's size. */
+section.step h3 .help-dot, section.step legend .help-dot { margin-left: .15rem; }
+/* With the job panel open on a mid-width window, the steps need the room more than the
+   "On this page" list does (the species table was cut off beside it). */
+@media (min-width: 981px) and (max-width: 1500px) {
+  body.job-panel-open .submit-layout { grid-template-columns: minmax(0, 1fr); }
+  body.job-panel-open .submit-toc { display: none; }
+}
+.model-options .hint.indent { display: block; max-width: 48rem; }
+.job-panel-name { margin: 0; color: var(--muted); font-size: .9rem; overflow-wrap: anywhere; }
+.model-options details.models.indent { margin-left: 1.6rem; }
+.grid-actions { margin: .25rem 0; }
+table.results tr.outlier td { background: #fdf3e1; }
+table.results th.label { text-align: left; }
+/* Skin menu in the top bar (phylobot.skins). */
+.skin-picker { display: inline-flex; align-items: center; gap: .4rem; color: var(--muted); font-size: .85rem; margin: 0; }
+.skin-picker select { font: inherit; }
+
+/* New Job: sequence type and other inline radio groups. */
+/* A wrapper with no box of its own (New Job's steps 4-5, disabled in an extension). */
+fieldset.plain { border: 0; padding: 0; margin: 0; min-width: 0; }
+fieldset.inline-choices { border: 0; padding: 0; margin: .5rem 0; }
+fieldset.inline-choices legend { padding: 0; margin-bottom: .25rem; }
+fieldset.inline-choices label { display: inline-block; margin-right: 1.2rem; }
+.sequence-check p { margin: .4rem 0; }
+select[name="genetic_code"] { max-width: 28rem; }
+h4.model-kind { margin: 1rem 0 .4rem; }
+label.codeml-model { display: block; margin: .15rem 0; }
+.aligners label.aligner { display: block; margin: .15rem 0; }
+.aligners .how { font-size: .85em; }
+[data-codeml-options].unavailable { opacity: .55; }
+[data-codon-amino-trees].unavailable { opacity: .55; }
+.model-options h4.codon-trees { margin: 1rem 0 .3rem; }
+
+/* Ancestor viewer, codon tiles: the amino acid the codon encodes. */
+table.ancestor-sites td.tile.codon { width: 4.4rem; min-width: 4.4rem; white-space: nowrap; }
+table.ancestor-sites td.tile.codon:first-letter { font-size: inherit; font-weight: inherit; }
+td.tile.codon { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-weight: 600; }
+.tile small.codon-aa { font-size: .8em; font-weight: 400; opacity: .85; }
+
+/* Job page, All files: one compact table per group (file, then what it is). */
+table.files { border-collapse: collapse; margin: .2rem 0 .8rem; font-size: .92em; width: 100%; }
+table.files td { padding: .12rem .8rem .12rem 0; vertical-align: top; border-bottom: 1px solid var(--line); }
+table.files td.file { white-space: nowrap; width: 1%; }
+
+/* Alignment viewer (alignment.js): a canvas the size of the view, a transparent
+   scroller on top giving native scrolling; the --aln-* tokens are read by the script. */
+.aln-wrap { --aln-bg: var(--bg); --aln-fg: var(--fg); --aln-muted: #8a929e; --aln-line: var(--line);
+            --aln-band: #f3f5f8; --aln-quiet: #e4e7ec;
+            position: relative; border: 1px solid var(--line); border-radius: 4px; overflow: hidden;
+            min-height: 200px; }
+.aln-canvas { position: absolute; inset: 0; display: block; }
+.aln-scroller { position: absolute; inset: 0; overflow: auto; }
+.aln-sizer { pointer-events: none; }
+.aln-tip { position: absolute; z-index: 2; pointer-events: none; white-space: pre; font-size: .8rem;
+           background: var(--bg); color: var(--fg); border: 1px solid var(--line); border-radius: 4px;
+           padding: .25rem .5rem; box-shadow: 0 2px 8px rgba(0, 0, 0, .12); }
+.aln-tracks-editor { display: flex; flex-wrap: wrap; align-items: center; gap: .35rem .25rem; margin: 0 0 .5rem; }
+/* The alignment viewer's display row: colours, zoom, height and the tracks in one line
+   over the alignment, labels beside their controls. The shared partials keep their
+   .viewer-controls (the editor still boxes them); here its children join this row. */
+.aln-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: .45rem 1.1rem; margin: .35rem 0 .6rem; }
+:root .viewer .aln-toolbar .viewer-controls { display: contents; }
+:root .viewer .aln-toolbar .viewer-controls label, :root .viewer .aln-toolbar .aln-zoom {
+  flex-direction: row; align-items: center; gap: .45rem; white-space: nowrap; }
+:root .viewer .aln-toolbar .aln-zoom { width: auto; }
+.aln-toolbar .zoom-slider { flex: none; width: 8rem; }
+.aln-toolbar select[name="scheme"] { max-width: 13rem; }
+.aln-toolbar .add-track select { max-width: 11rem; }
+/* "Add a track" keeps its place after Height whether or not tracks are shown; the chosen
+   tracks take a row of their own beneath, which is absent when there are none. */
+.aln-toolbar .aln-tracks-editor { display: contents; }
+.aln-toolbar .add-track { order: 1; }
+.aln-toolbar .track-chips { order: 2; flex: 1 0 100%; }
+.aln-toolbar .track-chips.empty { display: none; }
+.track-chips { display: inline-flex; flex-wrap: wrap; align-items: center; gap: .35rem .25rem; }
+.aln-summary .help-dot { margin-left: .2rem; }
+/* The tree's overview (tree_overview.js): a thumbnail at the figure's upper right, under
+   its downloads, that stays in the window as the page scrolls. The anchor has no height,
+   so the tree is where it was; only the thumbnail itself takes the pointer. */
+.tree-overview-anchor { position: sticky; top: .5rem; height: 0; z-index: 3; max-width: 1100px;
+  display: flex; justify-content: flex-end; pointer-events: none; }
+.tree-overview { position: relative; flex: none; align-self: flex-start; margin-top: 2.9rem; pointer-events: auto;
+  border: 1px solid var(--line); border-radius: 6px; overflow: hidden; cursor: pointer; touch-action: none;
+  user-select: none; background: color-mix(in srgb, var(--bg) 90%, transparent);
+  box-shadow: 0 2px 10px rgba(20, 30, 50, .14); }
+.tree-overview canvas { display: block; }
+.tree-overview-window { position: absolute; box-sizing: border-box; min-height: 6px; pointer-events: none;
+  border: 2px solid var(--accent); border-radius: 3px; background: color-mix(in srgb, var(--accent) 12%, transparent); }
+/* The overview strip (alignment.js): the whole alignment, and a box over the part in view. */
+.aln-overview { position: relative; height: 44px; margin: 0 0 .35rem; border: 1px solid var(--line);
+  border-radius: 6px; overflow: hidden; cursor: pointer; touch-action: none; user-select: none; }
+.aln-overview canvas { display: block; }
+.aln-overview-window { position: absolute; box-sizing: border-box; min-width: 6px; min-height: 6px;
+  border: 2px solid var(--fg); border-radius: 3px; pointer-events: none;
+  box-shadow: 0 0 0 1.5px var(--bg), inset 0 0 0 1px var(--bg);
+  background: color-mix(in srgb, var(--bg) 25%, transparent); }
+.aln-tracks-editor .chip { cursor: help; }
+.aln-tracks-editor .add-track select { font-size: .85rem; }
+.aln-legend span { border: 1px solid var(--line); border-radius: 3px; margin: 0 .25rem .2rem 0; padding: 0 .35rem; color: #111; }
+.aln-legend { white-space: normal; }
+.viewer-controls label.check span { display: flex; align-items: center; gap: .3rem; }
+/* The alignment viewer's "Show ancestors": a checkbox in line with the menus' boxes. */
+.viewer-controls label.aln-show-ancestors { flex-direction: row; align-items: center; align-self: flex-end;
+  gap: .35rem; color: var(--fg); font-weight: 600; min-height: 2.3rem; }
+.aln-legend span:not([style]) { color: var(--fg); }
+/* Ancestral libraries (library.html, _job_libraries.html, _library_add.html). Tokens
+   only, so every skin's palette applies without a skin rule. */
+.library-chip { border: 1px solid var(--accent); color: var(--accent); border-radius: 999px;
+  padding: .1rem .7rem; font-size: .85rem; text-decoration: none; white-space: nowrap; }
+.library-chip:hover { background: var(--accent); color: var(--bg); }
+.library-actions { margin: .25rem 0 .5rem; display: flex; flex-wrap: wrap; gap: .5rem; }
+.library-actions button { white-space: nowrap; }
+.inline-form { display: inline-flex; flex-wrap: wrap; align-items: end; gap: .5rem; margin: 0 .5rem .25rem 0; }
+.inline-form label { display: inline-flex; flex-direction: column; gap: .1rem; font-size: .9em; }
+/* Room for all six capitals: 9ch cut the sixth once the field's padding was taken out. */
+.library-code { width: 13ch; text-transform: uppercase; }
+table.library-table td form { margin: 0; }
+table.library-table tr.missing td { color: var(--muted); }
+.library-list { margin: .25rem 0 .75rem; padding-left: 1.2rem; }
+
+/* The libraries landing page (phylobot.library_index): one card per
+   library, each listing the job(s) it draws on. Everything it shows is stored. */
+.library-filters { display: flex; flex-wrap: wrap; align-items: end; gap: .5rem .75rem; margin: .5rem 0 1rem; }
+.library-filters .clear { font-size: .9em; }
+.library-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(26rem, 1fr)); gap: .75rem; margin: .5rem 0; }
+.library-card { border: 1px solid var(--line); border-radius: 6px; padding: .6rem .85rem; }
+.library-card .card-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: .4rem; }
+.library-card h2 { margin: 0; font-size: 1.05rem; }
+.library-card .code { font-size: .85em; color: var(--muted); }
+/* The jobs a library draws on: a sub-item, deliberately quieter than the library. */
+.library-card .card-jobs { margin: .4rem 0 0; padding: .3rem 0 0; border-top: 1px solid var(--line);
+  font-size: .9em; }
+.library-card .card-jobs > li { margin: .15rem 0; }
+.library-card .card-jobs .inventory { color: var(--muted); margin-left: .35rem; }
+.library-card .badge { margin-left: auto; font-size: .75rem; padding: .05rem .45rem; border-radius: 999px;
+  border: 1px solid var(--line); color: var(--muted); white-space: nowrap; }
+.library-card .badge.designed { border-color: #9fb6d8; color: var(--accent); }
+.library-card .badge.exported { border-color: #8fbf8f; color: #2c6e2c; }
+.library-card .counts { margin: .3rem 0 .2rem; font-size: .9em; color: var(--muted); }
+.library-card .nodes { margin: .2rem 0; }
+.library-card .card-actions { margin: .4rem 0 0; display: flex; gap: .75rem; font-size: .9em; }
+.deleted-libraries { margin-top: 2rem; }
+.deleted-libraries summary h2 { display: inline; }
+.empty ul { list-style: disc; padding-left: 1.5rem; }
+/* The library page's glyphs (phylobot.library_glyphs). The tiles' colours are data
+   (the viewers' palettes, inline); everything else uses tokens. */
+.library-controls { display: flex; flex-wrap: wrap; align-items: end; gap: .75rem; margin: .25rem 0 .5rem; }
+/* The panel's number fields, except the threshold's, which sets its own width below. */
+.library-controls input[type="number"]:not(.threshold-number) { width: 6ch; }
+.library-legend { display: inline-flex; align-items: center; gap: 2px; font-size: .85em; color: var(--muted); }
+.library-legend .sm-tile { width: auto; padding: 0 .3rem; }
+.library-expand { margin: .25rem 0; font-size: .9em; }
+/* "Compare ancestors" layout menu above the viewer, and the members' own menu below. */
+.members-layout { font-weight: 600; margin: .25rem 0; font-size: .9em; }
+/* The ancestors' length histogram sits beside a compact cross-combination metric; they
+   stack under a narrow viewport. */
+.library-overview { display: flex; flex-wrap: wrap; align-items: stretch; gap: 1rem 1.5rem; margin: 1rem 0; }
+.library-overview figure.length-chart { margin: 0; flex: 1 1 24rem; }
+.disagreement-metric { flex: 1 1 11rem; max-width: 18rem; align-self: center;
+  border-left: 3px solid var(--line); padding: .3rem 0 .3rem .9rem; }
+.disagreement-metric.has-dispute { border-left-color: var(--bad-fg, #b42318); }
+.disagreement-metric .metric-label { margin: 0; font-weight: 600; font-size: .9rem; }
+.disagreement-metric .metric-number { margin: .1rem 0; font-size: 2.2rem; line-height: 1;
+  font-variant-numeric: tabular-nums; }
+.disagreement-metric.has-dispute .metric-number { color: var(--bad-fg, #b42318); }
+.disagreement-metric .metric-sub { margin: 0; font-size: .82rem; color: var(--muted); line-height: 1.3; }
+/* A small badge naming the aligner a member came from, in the Members table. */
+.aligner-tag { display: inline-block; font-size: .72rem; font-weight: 600; letter-spacing: .02em;
+  color: var(--muted); background: var(--surface, rgba(128,128,128,.12)); border-radius: 3px; padding: 0 .3rem; }
+/* The locked "Include ML Sequence" row: a checked, disabled box with a padlock — a label,
+   not a control. */
+.check.locked { color: var(--muted); }
+.lock-icon { vertical-align: -1px; color: var(--muted); }
+table.library-table td.num, table.library-table th.num { text-align: right; font-variant-numeric: tabular-nums; }
+/* The combination reads "MAFFT x IQ-TREE x ModelFinder" and the gap version "Parsimony
+   (shared presence)": wrapping either turns one row into three and makes the whole table
+   taller than it needs to be. */
+/* Combination and gap names wrap (they can be long, e.g. "mafft/iqtree/Q.PFAM+F+I+R7"),
+   so the table fits its section without a horizontal scroll. */
+table.library-table td.combination, table.library-table th.combination {
+  white-space: normal; overflow-wrap: anywhere; max-width: 13rem; }
+/* A length outside the extant range (_length_cell.html): red when longer, blue when
+   shorter, the reason in a tooltip on hover or keyboard focus. */
+.length-flag { position: relative; font-weight: 600; cursor: help; white-space: nowrap; }
+.length-flag.long { color: var(--bad-fg, #b42318); }
+.length-flag.short { color: var(--accent); }
+/* Fixed (placed by plots.js), so the tables' scroll boxes cannot clip it. */
+.length-flag .flag-tip { display: none; position: fixed; z-index: 6;
+  width: 22rem; white-space: normal; text-align: left; font-weight: normal; font-size: .8rem;
+  line-height: 1.35; background: var(--fg); color: var(--bg); padding: .4rem .6rem; border-radius: 4px; }
+.length-flag:is(:hover, :focus) .flag-tip { display: block; }
+figure.length-chart { margin: 1rem 0; max-width: 640px; }
+figure.length-chart svg { display: block; max-width: 100%; height: auto; }
+figure.length-chart g.length-mark:hover line:not(.hit) { stroke-width: 4; }
+/* `.library-page` is an empty marker div, not an ancestor: this needs its own class. */
+.library-table-scroll { overflow-x: auto; }
+/* The Design section (L5a): the axes, budget and strategy, beside the members they make. */
+.design-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(17rem, 1fr));
+  gap: .75rem 1.25rem; align-items: start; margin: .5rem 0; }
+.design-field { border: 1px solid var(--line); border-radius: 6px; padding: .5rem .75rem; margin: 0; }
+.design-field legend { font-size: .9rem; color: var(--muted); padding: 0 .3rem; }
+/* One strategy per line: run together they read as one sentence. */
+.design-field .check { display: flex; align-items: baseline; gap: .4rem; margin: .25rem 0; }
+.design-field .check .hint { display: block; }
+/* The two strategies with no clear accuracy case, a disclosure away but still there. */
+details.advanced-strategies > summary { cursor: pointer; color: var(--accent);
+  font-size: .85rem; margin-top: .25rem; }
+.budget-field { display: flex; align-items: baseline; gap: .4rem; }
+.budget-field { flex-wrap: wrap; }
+/* Wide enough to read the number beside its spinner, as the threshold field is. */
+.budget-field input[type="number"] { width: 5.5rem; }
+/* The slider and its end labels take a full line under the number field. */
+.budget-slider-row { flex: 1 1 100%; display: flex; align-items: center; gap: .45rem; margin-top: .35rem; }
+.budget-slider-row .budget-slider { flex: 1 1 auto; margin: 0; min-width: 0; }
+.slider-end { font-size: .72rem; color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+/* "Updating library…": shown over the page while a design is being worked out. Some
+   designs come back in a blink and some take seconds, so library.js waits a moment before
+   showing this and then keeps it up long enough to be read, rather than flashing.
+   The motif is a row of tiles filling left to right, the same shape as the sequences on
+   the page, so the animation says what is being worked on rather than merely spinning. */
+.busy-overlay { position: fixed; inset: 0; z-index: 30; display: flex;
+  align-items: center; justify-content: center; background: rgba(20, 30, 50, .22);
+  backdrop-filter: blur(1.5px); animation: busy-in .18s ease both; }
+.busy-overlay[hidden] { display: none; }
+@keyframes busy-in { from { opacity: 0 } to { opacity: 1 } }
+.busy-card { background: var(--bg); color: var(--fg); border: 1px solid var(--line);
+  border-radius: 10px; padding: 1.1rem 1.5rem; text-align: center; min-width: 16rem;
+  box-shadow: 0 12px 40px rgba(20, 30, 50, .3); }
+.busy-label { margin: .6rem 0 .15rem; font-weight: 600; }
+.busy-note { margin: 0; }
+.busy-tiles { display: flex; gap: 3px; justify-content: center; }
+.busy-tiles span { width: 13px; height: 18px; border-radius: 3px; background: var(--line);
+  animation: busy-tile 1.1s ease-in-out infinite; }
+.busy-tiles span:nth-child(1) { animation-delay: 0s }
+.busy-tiles span:nth-child(2) { animation-delay: .12s }
+.busy-tiles span:nth-child(3) { animation-delay: .24s }
+.busy-tiles span:nth-child(4) { animation-delay: .36s }
+.busy-tiles span:nth-child(5) { animation-delay: .48s }
+.busy-tiles span:nth-child(6) { animation-delay: .60s }
+@keyframes busy-tile {
+  0%, 70%, 100% { background: var(--line); transform: translateY(0) }
+  35% { background: var(--accent); transform: translateY(-4px) }
+}
+/* A reader who asked for less motion gets the words and a steady row of tiles. */
+@media (prefers-reduced-motion: reduce) {
+  .busy-overlay { animation: none; }
+  .busy-tiles span { animation: none; background: var(--accent); opacity: .55; }
+}
+/* The variants (Include ML Sequence, AltAll, draws, alternates) span the grid as a plain
+   group — no rounded card around them. */
+.axes-field { grid-column: 1 / -1; border: 0; border-radius: 0; padding-left: 0; padding-right: 0; }
+.axis-row { display: flex; flex-wrap: wrap; align-items: baseline; gap: .4rem .6rem; margin: .35rem 0; }
+/* Room for three digits and the spinner: at 6ch "100" showed as "10(". */
+.axis-row input[type="number"] { width: 5.5rem; }
+.axis-row .hint { flex: 1 1 16rem; }
+.axis-row .presets { display: inline-flex; gap: .2rem; }
+.axis-row .presets .on { border-color: var(--accent); color: var(--accent); }
+.design-actions { display: flex; flex-wrap: wrap; align-items: center; gap: .6rem; margin: .5rem 0 0; }
+.design-count { margin: .75rem 0 .15rem; }
+/* "?" beside a column name, opening a short explanation. The popover API shows it; where
+   that is unsupported the panel stays hidden rather than spilling into the page. */
+/* One size wherever it sits (a heading, a table head, a hint): sized in rem, not em, so it
+   is never too small to hit beside small text nor outsized in a heading. */
+.help-dot { display: inline-flex; align-items: center; justify-content: center; flex: none;
+  width: 1.15rem; height: 1.15rem; padding: 0; border: 1px solid var(--line); border-radius: 50%;
+  background: none; color: var(--muted); font: inherit; font-size: .72rem; font-weight: 500;
+  line-height: 1; letter-spacing: 0; cursor: help; vertical-align: .1em; }
+.help-dot:hover, .help-dot:focus-visible { border-color: var(--accent); color: var(--accent); }
+.help-popover { display: none; }
+.help-popover:popover-open { display: block; max-width: 30rem; padding: .75rem 1rem;
+  border: 1px solid var(--line); border-radius: 8px; background: var(--bg); color: var(--fg);
+  font-size: .92rem; line-height: 1.45; box-shadow: 0 8px 28px rgba(20, 30, 50, .18);
+  /* A popover anchored in a table head would otherwise inherit its small uppercase
+     lettering, which turns an explanation into a shout. */
+  text-transform: none; letter-spacing: normal; font-weight: 400; text-align: left; }
+.help-popover strong { display: block; margin-bottom: .25rem; font-weight: 600; }
+/* A help body of several paragraphs: they are spans (a <p> cannot sit inside the
+   popover's span), so they need to be made blocks or they run into one another. */
+.help-popover > span > span { display: block; }
+.help-popover > span > span + span { margin-top: .5rem; }
+/* Coverage against budget, one line per strategy (library_glyphs.coverage_chart). */
+.coverage-chart { margin: .75rem 0 1rem; padding: 0; display: flex; flex-wrap: wrap;
+  align-items: center; gap: .5rem 1.5rem; }
+.coverage-chart svg { overflow: visible; }
+.coverage-chart .grid { stroke: var(--line); stroke-width: 1; }
+.coverage-chart .axis { font-size: 10px; fill: var(--muted); }
+.coverage-chart .axis-name { font-size: 11px; }
+.coverage-chart .at-budget { stroke: var(--fg); stroke-width: 1; stroke-dasharray: 3 3; }
+.coverage-chart .curve { stroke-width: 2; }
+.coverage-chart .curve.supported { stroke: #2457a6; }
+.coverage-chart .curve.spanning { stroke: #c2621a; }
+.coverage-chart .curve.per_node { stroke: #5a9e6f; }
+.coverage-chart figcaption { flex: 1 1 15rem; }
+.chart-key { margin: .25rem 0 0; font-size: .92rem; }
+.chart-key li { margin: .15rem 0; color: var(--muted); }
+.chart-key li.on { color: var(--fg); font-weight: 600; }
+.chart-key .swatch { display: inline-block; width: 1.1rem; height: 0; margin-right: .4rem;
+  border-top: 3px solid currentColor; vertical-align: .25em; }
+.chart-key li.supported .swatch { color: #2457a6; }
+.chart-key li.spanning .swatch { color: #c2621a; }
+.chart-key li.per_node .swatch { color: #5a9e6f; }
+.design-coverage { margin: 0 0 .5rem; }
+/* The budget's cut: the chosen set, then a rule, then what it left out. */
+table.members-table tr.cut { color: var(--muted); }
+table.members-table tr.picked + tr.cut td { border-top: 2px solid var(--line); }
+table.members-table td.member-name code { font-size: .9em; }
+table.members-table button.member-find { padding: 0; text-align: left; white-space: nowrap; }
+table.members-table tr.found td { background: rgba(213, 94, 0, .14); }  /* the viewer's ring colour, on any skin */
+/* The members' viewer (L5c): its choice of rows beside the explanation. */
+.members-viewer-head { display: flex; flex-wrap: wrap; gap: .25rem 1.5rem; align-items: start; }
+.members-viewer-head > p { flex: 1 1 28rem; margin: .25rem 0; }
+fieldset.members-shown { border: 0; padding: 0; margin: .25rem 0; display: flex; gap: .75rem; align-items: baseline; }
+.members-viewer-tools { display: flex; flex-direction: column; align-items: flex-end; }
+.members-viewer-head .table-tools { margin: .1rem 0 .3rem; }
+fieldset.members-shown legend { float: left; padding: 0; margin-right: .25rem; font-weight: 600; }
+.export-bar { display: flex; flex-wrap: wrap; align-items: center; gap: .6rem; margin: 1rem 0 .5rem; }
+.export-bar form { margin: 0; }
+.export-bar .hint { flex: 1 1 18rem; }
+table.exports-table td.export-files a { white-space: nowrap; }
+table.exports-table form { margin: 0; }
+/* Nine columns, several of them nowrapped: the default cell padding is what tips this
+   table into needing a scrollbar beside the open View panel. */
+table.library-table th, table.library-table td { padding-left: .4rem; padding-right: .4rem; }
+table.library-table tbody + tbody { border-top: 0; }
+/* A target's row and its sequence are one group: a line between them made the sequence
+   look like it belonged to the ancestor below. The group is ruled off instead. */
+table.library-table tbody td { border-bottom: 0; }
+table.library-table tbody { border-bottom: 1px solid var(--line); }
+table.library-table tr.target-detail td { padding-top: 0; }
+.site-map-details > summary { cursor: pointer; color: var(--accent); font-size: .9em; }
+.site-map-actions { margin: .35rem 0; font-size: .9em; }
+.site-map { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; line-height: 1;
+  overflow-x: auto; padding-bottom: .25rem; }
+.sm-line { display: flex; align-items: flex-start; gap: 1px; margin-bottom: 4px; white-space: nowrap; }
+.sm-num { width: 4ch; text-align: right; color: var(--muted); padding-right: .5ch; flex: none; line-height: 15px; }
+.sm-site { display: inline-flex; flex-direction: column; gap: 1px; flex: none; }
+.sm-tile { display: inline-block; width: 13px; height: 15px; line-height: 15px; text-align: center; border-radius: 2px; }
+.sm-alt { height: 11px; line-height: 11px; font-size: 9px; opacity: .95; }
+.sm-site.uncertain > .sm-tile:first-child { outline: 1px solid var(--fg); outline-offset: -1px; }
+table.library-table td.node { white-space: nowrap; }
+.threshold-control { display: flex; flex-direction: column; gap: .2rem; }
+.threshold-label { font-size: .9em; line-height: 1.15; color: var(--muted); white-space: nowrap; }
+.threshold-inputs { display: flex; align-items: center; gap: .5rem; }
+.threshold-slider { width: 12rem; }
+.overview-band { margin: .4rem 0 .6rem; }
+.overview-title { margin: 0; font-weight: 600; font-size: .9rem; }
+.overview-note { margin: .1rem 0 .2rem; font-size: .82em; }
+.target-actions { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; margin: .25rem 0 .5rem; font-size: .9em; }
+table.library-table th.pick, table.library-table td.pick { width: 1.5rem; padding-right: 0; }
+.library-add select { margin-left: .25rem; }
+/* The library page's View panel (the New Job page's .job-panel), its viewers, the
+   copy/move dialog and the bottom toast. */
+.library-panel { top: 3.2rem; }
+/* The View panel holds short controls, so it is narrower than the New Job panel's
+   estimate. The width is set on the body because `main`'s margin reads the same token. */
+body[data-section="libraries"] { --panel-width: 19rem; }
+/* `.library-controls` is also the panel's body: its `align-items: end` (from the days
+   when these controls sat in a row on the page) pushed every field to the right edge and
+   left the gap on the left. In the panel they fill the width and read from the left. */
+/* `.library-controls` is also the panel's body. Two of its rules come from the days when
+   these controls sat in a row on the page: `align-items: end` pushed every field to the
+   right edge, and `flex-wrap: wrap` — in a column flex container of limited height — wrapped
+   the overflow into a *second column*, beside the panel and clipped by the window. The
+   body scrolls instead. */
+.library-panel .library-controls { align-items: stretch; flex-wrap: nowrap; }
+/* Nothing in the panel may be wider than the panel. A flex item's automatic minimum size
+   is its min-content, which for a select is its longest option ("Secondary-structure
+   propensity (Chou-Fasman)") and for the sequence list its longest name — so without
+   these the controls ran off the right edge and were clipped by the window. A fieldset
+   needs `min-inline-size`, not `min-width`, to give up that minimum. */
+.library-panel .library-controls, .library-panel .panel-field { min-width: 0; }
+.library-panel fieldset.panel-field { min-inline-size: 0; }
+.library-panel :is(select, input[type="search"], input[type="text"]) { max-width: 100%; }
+.library-panel .panel-field > select { width: 100%; }
+.library-panel .extant-list { min-width: 0; }
+.library-panel .extant-list label { min-width: 0; }
+/* The extant chooser grows to fill the panel down to the Save/Duplicate foot, so the empty
+   space below a short list becomes more visible checkboxes before the user has to scroll. */
+.library-panel .job-panel-body { min-height: 0; }
+.library-panel .extant-choice { flex: 1 1 auto; min-height: 7rem; display: flex; flex-direction: column; }
+.library-panel .extant-choice legend, .library-panel .extant-search { flex: 0 0 auto; }
+.library-panel .extant-list { flex: 1 1 auto; min-height: 0; max-height: none; }
+/* The page gives way to the panel rather than being covered: the viewers are as wide as
+   the page, and a covered alignment is the thing the panel is there to look at. (The New
+   Job panel overlays its form instead, where nothing is hidden that matters.) The `:root`
+   is needed to outrank the skins' own `main` rule. */
+:root body.library-panel-open main { margin-right: var(--panel-width); }
+@media (max-width: 900px) { :root body.library-panel-open main { margin-right: 0; padding-bottom: 60vh; } }
+.library-panel .job-panel-body { display: flex; flex-direction: column; gap: .9rem; padding-top: .8rem; }
+.panel-field { display: flex; flex-direction: column; gap: .25rem; font-size: .9rem; color: var(--muted); }
+.panel-field > span:first-child, .panel-field legend { font-size: .9rem; color: var(--muted); }
+/* The field's label and its "?" stay on one line (the "?" must not wrap below the text). */
+.panel-field-label { white-space: nowrap; }
+.threshold-inputs, .zoom-inputs { display: flex; align-items: center; gap: .5rem; }
+/* A number input will not shrink below the width its spinner needs, so in a narrow panel
+   the slider and the field are allowed to take a line each rather than spill out. */
+.threshold-inputs { flex-wrap: wrap; }
+.threshold-inputs .threshold-slider { flex: 1 1 8rem; }
+.threshold-slider, .zoom-slider { flex: 1; min-width: 0; }
+/* Wide enough for "0.27" *beside* the number input's spinner, which eats about a third
+   of the box: at 7ch the last digits were hidden (owner, 2026-10-08). */
+.threshold-number { width: 5.5rem; }
+.extant-choice { border: 1px solid var(--line); border-radius: 4px; padding: .4rem .6rem; margin: 0; }
+.extant-search, .library-choice-search { width: 100%; margin-bottom: .35rem; }
+.extant-list { max-height: 11rem; overflow-y: auto; display: flex; flex-direction: column; gap: .1rem; }
+.extant-list label, .library-choices label { display: flex; align-items: center; gap: .4rem; color: var(--fg); }
+.extant-list label span { overflow-wrap: anywhere; }
+.library-legend { display: flex; gap: 2px; margin: 0; }
+/* The palette only means anything under the posterior scheme; under the others it is
+   shown disabled, so the reader can see it exists and why it is not in play. */
+.panel-field.inactive, .library-legend.inactive { opacity: .4; }
+/* Save and Duplicate act on the library, under the controls that shape it. */
+.library-actions { display: flex; flex-direction: column; gap: .4rem; }
+.library-actions form { margin: 0; display: flex; flex-direction: column; gap: .2rem; }
+.library-actions .saved-note { margin: 0; }
+/* The foot buttons carry an icon before their label, centred together. */
+.library-actions button { display: inline-flex; align-items: center; justify-content: center; gap: .4rem; }
+.btn-icon { flex: none; vertical-align: -2px; }
+.scheme-legend { margin: 0; font-size: .85rem; color: var(--muted); }
+.scheme-legend li { display: flex; align-items: center; gap: .4rem; margin: .1rem 0; }
+.scheme-legend .swatch { width: .9rem; height: .9rem; border: 1px solid var(--line);
+  border-radius: 3px; flex: 0 0 auto; }
+.library-legend .legend-tile { flex: 1; text-align: center; font-size: .75rem; }
+.library-frame { margin: .5rem 0 1.25rem; }
+/* Zoom belongs to the viewer (it moves nothing else on the page), so it sits at the top
+   right of the first frame, beside its title. */
+.frame-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between;
+  gap: .5rem 1rem; }
+.frame-head .overview-title { margin: 0; }
+.frame-head .zoom-inputs { flex: 0 1 15rem; }
+.frame-head .zoom-label { font-size: .9rem; color: var(--muted); }
+/* A library frame is as tall as its ancestors need, not the viewer page's minimum. */
+.library-frame .aln-wrap { min-height: 0; }
+.toast { position: fixed; left: 50%; bottom: 1.2rem; transform: translateX(-50%); z-index: 20;
+  max-width: min(44rem, 92vw); padding: .6rem 1rem; border-radius: 6px; font-size: .95rem;
+  box-shadow: 0 6px 20px rgba(20, 30, 50, .25); }
+.toast.error { background: #c0392b; color: #fff; }
+.toast.success { background: var(--fg); color: var(--bg); }
+.toast[hidden] { display: none; }
+#library-move { min-width: min(26rem, 92vw); }
+.library-choices { max-height: 14rem; overflow-y: auto; display: flex; flex-direction: column; gap: .15rem;
+  border: 1px solid var(--line); border-radius: 4px; padding: .4rem .6rem; }
+.library-move-error:empty { display: none; }
+.library-messages:empty { display: none; }
+h2.with-defaults { display: flex; align-items: baseline; gap: .5rem; }
+h2.with-defaults .use-defaults { margin-left: auto; font-size: .8rem; font-weight: normal; }
+
+/* The ancestor viewer's comparison with the other combinations (_ancestor_analogs.html). */
+.analogs { margin: 1.5rem 0; }
+.analogs h2 { margin-bottom: .3rem; }
+.analog-table { border-collapse: collapse; font-size: .9rem; margin: .5rem 0; }
+.analog-table th, .analog-table td { padding: .25rem .7rem .25rem 0; border-bottom: 1px solid var(--line);
+  text-align: left; white-space: nowrap; }
+.analog-table .num { text-align: right; }
+.analog-table tr.this td { font-weight: 600; }
+.analog-table .pop-flag { color: var(--muted); cursor: help; }
+.analog-controls { margin: .75rem 0 .25rem; }
+.analog-frame .frame-head .zoom-inputs { flex-direction: row; }
+
+/* My alignments and the alignment editor (alignment_editor_views). */
+.alignment-upload { margin: 1rem 0 1.5rem; }
+/* Beside the "On this page" sidebar the tables can be wider than their card: scroll them. */
+.alignment-list > .fold-body { overflow-x: auto; }
+.alignment-upload summary h2 { display: inline; }
+.alignment-upload form p { margin: .5rem 0; }
+.alignment-upload .upload-text label { display: block; }
+.alignment-upload .seqtype-choice { border: 0; padding: 0; margin: .5rem 0; display: flex; gap: .25rem 1rem; flex-wrap: wrap; }
+.alignment-upload .seqtype-choice legend { padding: 0; margin-bottom: .2rem; }
+table.alignments td.num, table.alignments th.num { text-align: center; font-variant-numeric: tabular-nums; }
+table.alignments tr.group th { background: #f4f6f9; font-weight: 600; }
+table.alignments .lock { color: var(--muted); margin-left: .2rem; }
+table.alignments td.job, table.alignments td.date { vertical-align: top; }
+table.from-jobs tbody + tbody { border-top: 2px solid var(--line); }
+table.alignments .row-actions, table.alignments td.date { white-space: nowrap; }
+table.alignments td.editable-title { min-width: 10rem; }
+table.alignments td.from { min-width: 14rem; }
+table.alignments .editable-title .title-view { display: inline-flex; gap: .35rem; align-items: center; }
+table.alignments .icon-button { opacity: .55; }
+table.alignments tr:hover .icon-button, table.alignments .icon-button:focus-visible { opacity: 1; }
+table.alignments .row-actions > * { vertical-align: middle; }
+table.alignments .row-actions .icon-button { opacity: .8; padding: .3rem; }
+table.alignments .row-actions .icon-button.danger:hover, table.alignments .row-actions .icon-button.danger:focus-visible { color: #c0392b; }
+/* A download's caption (nt / aa) hangs below its icon, so the icons stay on one line. */
+table.alignments .row-actions .icon-button.captioned { position: relative; }
+table.alignments .icon-caption { position: absolute; top: 100%; left: 50%; transform: translateX(-50%);
+  font-size: .62rem; font-weight: 600; line-height: 1; letter-spacing: .04em; margin-top: -1px; }
+.aln-editor-title .subtitle { font-weight: 400; color: var(--muted); margin-left: .35rem; }
+.title-edit .aln-editor-title { font-size: 1.6rem; font-weight: 700; white-space: nowrap; }
+.title-edit .aln-editor-title + input { font-weight: 400; }
+.aln-edit-bar { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem .75rem; margin: 0 0 .75rem;
+                padding: .5rem .75rem; border: 1px solid var(--line); border-radius: 6px; background: #f7f9fc; }
+.aln-edit-bar .aln-selection { color: var(--muted); font-size: .9rem; }
+.aln-edit-bar .aln-selection-actions, .aln-edit-bar .aln-edit-more { display: inline-flex; flex-wrap: wrap; gap: .5rem; align-items: center; }
+.aln-edit-bar .aln-edit-more { margin-left: auto; }
+.aln-save { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem .75rem; margin: 1rem 0; }
+.aln-save input[name="name"] { min-width: 18rem; }
+/* New Job: alignments from My alignments, and the picker dialog. */
+.loaded-alignments { border: 1px solid var(--line); border-left: 4px solid var(--accent); border-radius: 6px;
+                     padding: .5rem .9rem; margin: .5rem 0 1rem; }
+.loaded-alignments p { margin: .25rem 0; }
+.loaded-alignments li, .chosen-alignments li { margin: .15rem 0; }
+.chosen-alignments ul:empty { display: none; }
+/* New Job: uploaded files (_file_list.html), listed with a tick box and a remove button. */
+.upload-row { display: flex; flex-wrap: wrap; align-items: center; gap: .4rem .6rem; }
+.file-list { list-style: none; padding: 0; margin: .4rem 0; }
+.file-list li { display: flex; flex-wrap: wrap; align-items: center; gap: .1rem .6rem; margin: .15rem 0; }
+.file-list li.unused .file-name, .file-list li.unused .hint { opacity: .55; }
+.file-list .file-problem { color: #b03a2e; font-size: .9rem; }
+.file-list .hint { font-size: .85em; }
+#submit-form button.remove-file { display: inline-flex; align-items: center; padding: .15rem .3rem; border: 1px solid transparent;
+  border-radius: 4px; background: transparent; color: var(--muted); cursor: pointer; }
+#submit-form button.remove-file:hover { color: #b03a2e; border-color: var(--line); }
+.aligners + .chosen-alignments ul, #alignment-files .aligner-files { margin: 0; }
+.name-clashes, .name-mismatch { border: 1px solid var(--line); border-left: 4px solid #d39b2a; border-radius: 6px;
+  padding: .5rem .9rem; margin: .5rem 0 1rem; }
+.name-clashes legend { font-weight: 600; padding: 0 .3rem; }
+.name-clashes label { display: block; margin: .2rem 0; }
+.name-clashes .clash-list, .name-mismatch ul { margin: .25rem 0 .5rem; padding-left: 1.2rem; font-size: .9rem; }
+.name-mismatch p { margin: .25rem 0; }
+.alignment-picker { width: min(42rem, 92vw); padding: 1rem 1.25rem; border: 1px solid var(--line); border-radius: 10px; }
+.top-warning { width: min(32rem, 92vw); padding: 1rem 1.25rem; border: 1px solid var(--line); border-radius: 10px; background: var(--bg); color: var(--fg); }
+.top-warning h2 { margin-top: 0; font-size: 1.1rem; }
+.alignment-picker::backdrop { background: rgba(20, 25, 35, .35); }
+.alignment-picker .picker-head { display: flex; justify-content: space-between; align-items: center; }
+.alignment-picker .picker-head h2 { margin: 0; }
+.alignment-picker input[type="search"] { width: 100%; margin: .75rem 0 .5rem; padding: .45rem .6rem; font: inherit; }
+/* About ten rows in view; older ones load as the list scrolls (alignment_editor_views.picker). */
+.picker-list { max-height: calc(10 * 3.05rem); overflow-y: auto; border: 1px solid var(--line); border-radius: 6px; margin: 0; }
+.picker-list li { border-bottom: 1px solid var(--line); }
+.picker-list li:last-child { border-bottom: 0; }
+.picker-list li.hint { padding: .6rem .75rem; }
+.picker-row { display: flex; flex-direction: column; align-items: flex-start; width: 100%; min-height: 3rem;
+              padding: .35rem .75rem; border: 0; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer; }
+.picker-row:hover, .picker-row:focus-visible { background: rgba(36, 87, 166, .08); }
+.picker-row.chosen { background: rgba(36, 87, 166, .14); }
+.picker-row.chosen .picker-name::after { content: " ✓"; color: var(--accent); }
+.picker-row .hint { font-size: .82rem; }
+.picker-job { color: var(--muted); }
+
+/* Simulations (phylobot.simulation_views) */
+.badge.simulated { display: inline-block; font-size: .72rem; font-weight: 600; letter-spacing: .02em;
+  padding: .05rem .5rem; border-radius: 999px; border: 1px solid var(--sim); color: var(--sim);
+  background: var(--sim-soft); vertical-align: middle; white-space: nowrap; }
+h2 .badge.simulated { margin-left: .4rem; }
+.simulated-banner { border-left: 4px solid var(--sim); background: var(--sim-soft); padding: .45rem .9rem; }
+
+/* Imported jobs (phylobot.job_import): computed elsewhere. */
+.badge.imported { display: inline-block; font-size: .72rem; font-weight: 600; letter-spacing: .02em;
+  padding: .05rem .5rem; border-radius: 999px; border: 1px solid var(--imported); color: var(--imported);
+  background: var(--imported-soft); vertical-align: middle; white-space: nowrap; }
+.imported-banner { border-left: 4px solid var(--imported); background: var(--imported-soft); padding: .45rem .9rem; }
+#import-job { max-width: 34rem; }
+.import-name input[name="name"] { max-width: 100%; }
+.from-homologs.simulated { border-left-color: var(--sim); background: var(--sim-soft); }
+.simulation-form .choices { display: flex; flex-wrap: wrap; gap: .3rem 1.2rem; margin: .3rem 0 .6rem; }
+.simulation-form .choices label { display: inline-flex; gap: .35rem; align-items: center; }
+.simulation-form input[type="number"] { width: 6rem; }
+.simulation-form textarea { width: 100%; max-width: 46rem; font-family: ui-monospace, monospace; }
+.simulation-result table.replicates td.files a { white-space: nowrap; }
+.simulation-result table.replicates .files { text-align: left; }
+.simulation-result table.replicates td.actions { white-space: nowrap; }
+
+/* My Jobs: job types (phylobot.job_types) and the filters. Each type takes its work-
+   estimate colour (--work-*), so a stage looks the same here, in the steps graph and in
+   the job panel; the analysis stages a job reached are drawn as one joined chain. */
+.job-type { --c: var(--work-setup); }
+.job-type.align { --c: var(--work-align); } .job-type.trees { --c: var(--work-trees); }
+.job-type.ancestors { --c: var(--work-ancestors); } .job-type.codeml { --c: var(--work-codeml); }
+.job-type.sim { --c: var(--sim); } .job-type.recon { --c: var(--recon); }
+.job-type.homolog { --c: var(--muted); }  /* homolog searches on My Jobs (phylobot.worklist) */
+/* My Jobs: what a job was made of, a muted second line under its name (job_types.composition). */
+.jobs .job-made { display: block; font-size: .8rem; color: var(--muted); white-space: nowrap; }
+.job-types { display: inline-flex; flex-wrap: wrap; gap: .25rem; align-items: center; }
+.job-chain { display: inline-flex; white-space: nowrap; }
+.job-types .job-type, .filter-pill { display: inline-flex; align-items: center; gap: .3rem; font-size: .78rem; font-weight: 600;
+  padding: .05rem .55rem; border-radius: 999px; white-space: nowrap; text-decoration: none;
+  border: 1px solid color-mix(in srgb, var(--c) 55%, var(--bg));
+  background: color-mix(in srgb, var(--c) 14%, var(--bg)); color: color-mix(in srgb, var(--c) 50%, var(--fg)); }
+a.job-type:hover { background: color-mix(in srgb, var(--c) 26%, var(--bg)); }
+.job-chain .stage + .stage { margin-left: -1px; border-top-left-radius: 0; border-bottom-left-radius: 0; }
+.job-chain .stage:has(+ .stage) { border-top-right-radius: 0; border-bottom-right-radius: 0; }
+
+.job-filters { margin: .5rem 0 1rem; }
+.filter-bar { display: flex; align-items: center; gap: .6rem; flex-wrap: wrap; }
+.filter-bar input[type=search] { width: 16rem; max-width: 100%; }
+.filter-toggle { display: inline-flex; align-items: center; gap: .35rem; cursor: pointer; }
+.filter-count { display: inline-block; min-width: 1.2em; padding: 0 .3rem; border-radius: 999px; font-size: .75rem;
+  background: var(--accent); color: #fff; text-align: center; }
+.filter-summary { color: var(--muted); font-size: .9em; }
+/* A link that reads as a switch (My Jobs "Group follow-up jobs"): the page reloads with
+   the other state, so it is a link, but it is a setting, so it looks like one. */
+.switch-link { display: inline-flex; align-items: center; gap: .45rem; margin-left: auto; font-size: .9rem;
+  color: var(--fg); text-decoration: none; white-space: nowrap; }
+.switch-link .switch { position: relative; flex: none; width: 1.9rem; height: 1.1rem; border-radius: 999px;
+  background: var(--line); transition: background .15s; }
+.switch-link .switch::after { content: ""; position: absolute; top: 2px; left: 2px; width: calc(1.1rem - 4px);
+  height: calc(1.1rem - 4px); border-radius: 50%; background: var(--bg); box-shadow: 0 1px 2px rgba(20, 30, 50, .3);
+  transition: transform .15s; }
+.switch-link[aria-checked="true"] .switch { background: var(--accent); }
+.switch-link[aria-checked="true"] .switch::after { transform: translateX(.8rem); }
+.switch-link:hover .switch { outline: 2px solid color-mix(in srgb, var(--accent) 35%, transparent); }
+/* Grouped view: a job's follow-ups sit under it, indented, behind its "n follow-up jobs". */
+table.jobs button.follow-ups { display: block; margin-top: .2rem; font-size: .85rem; text-align: left; }
+table.jobs button.follow-ups::before { content: "▸ "; }
+table.jobs button.follow-ups[aria-expanded="true"]::before { content: "▾ "; }
+table.jobs tr.follow-up-row td.job-name { padding-left: 1.6rem; position: relative; }
+table.jobs tr.follow-up-row td.job-name::before { content: "↳"; position: absolute; left: .45rem; color: var(--muted); }
+table.jobs tr.follow-up-row > td { background: color-mix(in srgb, var(--accent) 3%, transparent); }
+.filter-panel { display: flex; flex-wrap: wrap; gap: .75rem 1.5rem; margin-top: .6rem; padding: .75rem 1rem;
+  border: 1px solid var(--line); border-radius: 6px; }
+.filter-panel[hidden] { display: none; }
+.filter-panel fieldset { border: 0; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: .3rem; align-items: center; }
+.filter-panel fieldset.filter-types { flex-basis: 100%; }
+.filter-panel legend { font-size: .8rem; font-weight: 600; color: var(--muted); padding: 0; margin-bottom: .3rem; }
+.filter-pill { cursor: pointer; font-weight: 500; user-select: none; }
+.filter-pill input { margin: 0; accent-color: var(--c); }
+.filter-pill:has(input:checked) { font-weight: 700; background: color-mix(in srgb, var(--c) 30%, var(--bg));
+  border-color: var(--c); }
+.filter-pill[class*="status-"] { --c: var(--muted); }
+.filter-pill.status-running { --c: var(--work-trees); } .filter-pill.status-succeeded { --c: var(--work-ancestors); }
+.filter-pill.status-failed { --c: #c0392b; }
+.filter-dates span { color: var(--muted); font-size: .85em; }
+
+/* Simulations: the chosen job, and its picker's rows (the dialog reuses .alignment-picker). */
+.chosen-job-line { display: flex; align-items: center; flex-wrap: wrap; gap: .5rem; }
+.chosen-job { font-weight: 600; }
+.picker-meta { display: flex; align-items: center; flex-wrap: wrap; gap: .4rem; margin-top: .2rem; }
+.picker-meta .chip { margin: 0; }
+
+/* My usage (phylobot.usage). Chart colours are categorical slots validated for colour
+   blindness and contrast (dataviz six checks: light on #ffffff, dark on #1c2027; dark
+   steps in dark.css), one per kind of job, in this fixed order. Not the --work-* stage
+   colours: those fail the checks as a set (dN/dS and simulation purples too close). */
+/* The categorical slots, validated for colour blindness. Slot 6 (added 2026-10-21 for
+   "Ancestral properties" on My usage) was chosen by measurement, not eye: of the violets
+   tried, its closest approach to any existing slot is ΔE 10.7 (deuteranopia, against
+   slot 1), which clears the set's own weakest pair -- slots 5 and 3, ΔE 6.1 -- so it is
+   not the palette's new weak link. The six pass the adjacent-pair check in both skins;
+   under the stricter all-pairs reading the pre-existing 5↔3 and 5↔2 pairs still fail,
+   which is why these charts always ship a legend and a table.
+   Slot 7 (teal, 2026-10-22, "Ancestral uncertainty") by the same test: closest approach
+   to any slot ΔE 7.1 light (deutan, slot 5) and 10.0 dark (#3aa7c4), both above 6.1; the
+   adjacent-pair checks pass in both skins in My usage's order.
+   Slot 8 (crimson, 2026-10-30, "ESR"): from a sweep of OKLCH hues, the only one clear in
+   both skins; closest approach to any slot ΔE 12.8 light (deutan, slot 7) and 11.7 dark
+   (#b71532, slot 3). In the dark skin it is 13.7 from slot 5 under normal vision, below
+   the adjacent-pair floor of 15, so My usage puts ESR beside Uncertainty (slot 7) and
+   dN/dS (slot 4), never beside Simulations; both skins then pass the adjacent-pair
+   checks (dark slot 7's lightness, 0.679, was already just outside the band). */
+:root { --viz-1: #2a78d6; --viz-2: #eb6834; --viz-3: #1baf7a; --viz-4: #eda100; --viz-5: #e87ba4;
+        --viz-6: #7d3c98; --viz-7: #00897b; --viz-8: #9a1c2e;
+        --viz-grid: #e6e9ee; --viz-ink: #10131a; }
+.usage-filters { display: flex; flex-wrap: wrap; align-items: center; gap: .6rem 1.25rem; margin: 1rem 0 1.25rem; }
+.usage-filters fieldset { border: 0; margin: 0; padding: 0; display: flex; flex-wrap: wrap; align-items: center; gap: .3rem; }
+.usage-range .preset { display: inline-flex; align-items: center; padding: .3rem .7rem; border: 1px solid var(--line);
+  border-radius: 999px; cursor: pointer; font-size: .9rem; background: var(--bg); }
+.usage-range .preset input { position: absolute; opacity: 0; pointer-events: none; }
+.usage-range .preset:has(input:checked) { border-color: var(--accent); color: var(--accent); font-weight: 600;
+  box-shadow: inset 0 0 0 1px var(--accent); }
+.usage-range .preset:has(input:focus-visible) { outline: 2px solid var(--accent); outline-offset: 2px; }
+.usage-custom { display: inline-flex; align-items: center; gap: .35rem; margin-left: .3rem; }
+.usage-custom[hidden] { display: none; }
+.usage-custom span { color: var(--muted); font-size: .85em; }
+.viz-pill.s1 { --c: var(--viz-1); } .viz-pill.s2 { --c: var(--viz-2); } .viz-pill.s3 { --c: var(--viz-3); }
+.viz-pill.s4 { --c: var(--viz-4); } .viz-pill.s5 { --c: var(--viz-5); }
+.viz-pill.s6 { --c: var(--viz-6); }
+.viz-pill.s7 { --c: var(--viz-7); }
+.viz-pill.s8 { --c: var(--viz-8); }
+.viz-pill { color: var(--fg); }  /* text wears text tokens, never the series colour */
+.usage-deleted { font-size: .9rem; color: var(--fg); }
+.usage-tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr)); gap: 1rem; margin-bottom: 1.25rem; }
+.usage-tile { background: var(--bg); border: 1px solid var(--line); border-radius: 10px; padding: .9rem 1.1rem; }
+.tile-label { font-size: .85rem; color: var(--muted); }
+.tile-value { font-size: 1.9rem; font-weight: 600; line-height: 1.2; margin: .15rem 0; color: var(--fg); }
+.tile-change { font-size: .85rem; color: var(--fg); }
+.tile-detail { font-size: .8rem; color: var(--muted); }
+.usage-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(30rem, 100%), 1fr)); gap: 1rem; }
+.usage-card { margin: 0; background: var(--bg); border: 1px solid var(--line); border-radius: 10px; padding: 1rem 1.1rem;
+  min-width: 0; }
+.usage-card h2 { font-size: 1.05rem; margin: 0 0 .2rem; }
+.usage-card figcaption .hint { margin: 0 0 .6rem; font-size: .82rem; }
+.usage-empty { color: var(--muted); padding: 2rem 0; text-align: center; }
+.usage-table { margin-top: .5rem; font-size: .85rem; }
+.usage-table summary { cursor: pointer; color: var(--accent); }
+.usage-table table { margin-top: .4rem; }
+.viz { position: relative; }
+.viz-svg { display: block; width: 100%; height: auto; overflow: visible; font: 12.5px system-ui, sans-serif; }
+.viz-grid { stroke: var(--viz-grid); stroke-width: 1; }
+.viz-tick { fill: var(--muted); font-variant-numeric: tabular-nums; }
+.viz-rowlabel { fill: var(--fg); font-size: 13.5px; font-weight: 600; }
+.viz-value, .viz-label { fill: var(--fg); font-size: 13.5px; font-weight: 600; }
+.viz-label { paint-order: stroke; stroke: var(--bg); stroke-width: 4px; stroke-linejoin: round; }
+.viz-line { fill: none; stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+/* Series 1-5. Only s1 existed while the usage charts were the one caller; an undefined
+   class leaves an SVG shape with its default *black* fill, which is how the comparison
+   page's overlay first rendered. */
+.viz-line.s1 { stroke: var(--viz-1); }
+.viz-line.s2 { stroke: var(--viz-2); }
+.viz-line.s3 { stroke: var(--viz-3); }
+.viz-line.s4 { stroke: var(--viz-4); }
+.viz-line.s5 { stroke: var(--viz-5); }
+.viz-line.s6 { stroke: var(--viz-6); }
+.viz-line.s7 { stroke: var(--viz-7); }
+.viz-line.s8 { stroke: var(--viz-8); }
+.viz-area.s1 { fill: var(--viz-1); opacity: .1; }
+.viz-area.s2 { fill: var(--viz-2); opacity: .1; }
+.viz-area.s3 { fill: var(--viz-3); opacity: .1; }
+.viz-area.s4 { fill: var(--viz-4); opacity: .1; }
+.viz-area.s5 { fill: var(--viz-5); opacity: .1; }
+.viz-area.s6 { fill: var(--viz-6); opacity: .1; }
+.viz-area.s7 { fill: var(--viz-7); opacity: .1; }
+.viz-area.s8 { fill: var(--viz-8); opacity: .1; }
+.viz-dot { stroke: var(--bg); stroke-width: 2; }
+.viz-dot.s1, .viz-fill.s1 { fill: var(--viz-1); } .viz-fill.s2 { fill: var(--viz-2); } .viz-fill.s3 { fill: var(--viz-3); }
+.viz-fill.s4 { fill: var(--viz-4); } .viz-fill.s5 { fill: var(--viz-5); }
+.viz-fill.s6 { fill: var(--viz-6); }
+.viz-fill.s7 { fill: var(--viz-7); }
+.viz-fill.s8 { fill: var(--viz-8); }
+.viz-fill { cursor: default; outline: none; }
+.viz-fill:hover, .viz-fill:focus-visible { filter: brightness(1.12); }
+.viz-fill:focus-visible { stroke: var(--fg); stroke-width: 1.5; }
+.viz-inside { font-size: 12.5px; font-weight: 600; fill: var(--viz-ink); pointer-events: none; }
+.viz-inside.s1, .viz-inside.s6, .viz-inside.s7, .viz-inside.s8 { fill: #fff; }  /* label inside a fill: white or ink by the fill's lightness */
+.viz-cross { stroke: var(--muted); stroke-width: 1; }
+.viz-hit { fill: transparent; outline: none; }
+.viz-hit:focus-visible { fill: var(--viz-grid); fill-opacity: .5; }
+.viz-legend { list-style: none; margin: 0 0 .5rem; padding: 0; display: flex; flex-wrap: wrap; gap: .3rem 1rem; font-size: .82rem; }
+.viz-legend li { display: inline-flex; align-items: center; gap: .35rem; }
+.viz-swatch { width: .8rem; height: .8rem; border-radius: 3px; display: inline-block; }
+.viz-swatch.s1 { background: var(--viz-1); } .viz-swatch.s2 { background: var(--viz-2); } .viz-swatch.s3 { background: var(--viz-3); }
+.viz-swatch.s4 { background: var(--viz-4); } .viz-swatch.s5 { background: var(--viz-5); }
+.viz-swatch.s6 { background: var(--viz-6); }
+.viz-swatch.s7 { background: var(--viz-7); }
+.viz-swatch.s8 { background: var(--viz-8); }
+.viz-tip { position: absolute; z-index: 20; pointer-events: none; background: var(--bg); color: var(--fg);
+  border: 1px solid var(--line); border-radius: 6px; padding: .35rem .6rem; box-shadow: 0 4px 16px rgba(20, 30, 50, .15);
+  font-size: .82rem; display: flex; flex-direction: column; white-space: nowrap; }
+.viz-tip[hidden] { display: none; }
+.viz-tip strong { font-size: .95rem; }
+.viz-tip span { color: var(--muted); }
+table.usage-largest { width: 100%; border-collapse: collapse; font-size: .9rem; }
+table.usage-largest td { padding: .4rem .2rem; border-bottom: 1px solid var(--line); }
+table.usage-largest tr:last-child td { border-bottom: 0; }
+table.usage-largest td.num { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+table.usage-largest .deleted-name { color: var(--muted); }
+/* The tree viewer's Caption, below the figure (tree.js remembers it open or closed). */
+.tree-caption { margin: .4rem 0 1rem; }
+.tree-caption > summary { cursor: pointer; }
+.tree-caption .hint { margin: .4rem 0; }
+
+/* Job page: "Why it failed" (_job_failure.html; phylobot.diagnosis). */
+.job-failure { border: 1px solid #f0c9c4; border-left: 4px solid #c0392b; border-radius: 6px; background: #fdf3f2;
+  padding: .75rem 1.1rem; margin: 1rem 0; }
+.job-failure.interrupted, .job-failure.runtime, .job-failure.image, .job-failure.disk { border-color: #ecd9b0; border-left-color: #d39b2a; background: #fdf8ec; }
+.job-failure h2 { margin: 0 0 .4rem; font-size: 1.1rem; }
+.job-failure p { margin: .35rem 0; }
+.job-failure .failure-step { color: var(--muted); }
+.job-failure pre { max-height: 16rem; overflow: auto; font-size: .8rem; background: var(--bg); border: 1px solid var(--line);
+  border-radius: 4px; padding: .5rem .7rem; white-space: pre-wrap; }
+.job-failure .hint { font-size: .85rem; }
+.job-resume, .job-stop { display: flex; flex-wrap: wrap; align-items: center; gap: .4rem .9rem; margin: .8rem 0 1rem; }
+.job-resume .hint, .job-stop .hint { flex: 1 1 20rem; font-size: .88rem; }
+details.attempts summary { cursor: pointer; color: var(--accent); }
+details.attempts summary h2 { display: inline; font-size: 1.1rem; color: var(--fg); }
+table.attempts { border-collapse: collapse; margin: .4rem 0 .5rem; font-size: .92em; }
+table.attempts th { text-align: left; font-weight: 600; padding: .15rem 1rem .15rem 0; border-bottom: 1px solid var(--line); }
+table.attempts td { padding: .15rem 1rem .15rem 0; border-bottom: 1px solid var(--line); white-space: nowrap; }
+
+/* My alignments: the upload form's live check (_alignment_upload_check.html). */
+.upload-check:empty { display: none; }
+.upload-check .check-ok { margin: .4rem 0; }
+.upload-check .name-clashes button { margin-top: .2rem; }
+
+/* Properties across combinations (phylobot.property_compare): a sidebar of the ancestors
+   that share this clade, and one panel per property. Series colours are the validated
+   --viz palette through .viz-line / .viz-area, so skins recolour them without this page
+   knowing. */
+.viewer.compare { display: grid; grid-template-columns: 17rem minmax(0, 1fr); gap: 0 2rem; align-items: start; }
+.compare-side { position: sticky; top: 4.5rem; max-height: calc(100vh - 6rem); overflow-y: auto; font-size: .9rem; }
+.compare-side label { display: block; margin-bottom: .6rem; color: var(--muted); }
+.compare-side select { width: 100%; }
+.compare-side-title { margin: 1rem 0 .2rem; font-size: .75rem; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); }
+.compare-list { list-style: none; padding: 0; margin: .4rem 0 0; }
+.compare-list li { margin-bottom: .3rem; }
+.compare-list label { display: flex; align-items: flex-start; gap: .4rem; margin: 0; color: var(--fg); cursor: pointer; }
+.compare-list .compare-name small { color: var(--muted); }
+.compare-missing { font-size: .85rem; color: var(--muted); border-left: 2px solid var(--line); padding-left: .6rem; }
+.compare-main { min-width: 0; }
+/* Each property is its own block. In the card skins `sectioned` makes it a card (see
+   clean.css); in the skins without cards a rule and the extra space do the separating,
+   so one property's overlay, small multiples and table never read as the next one's. */
+.compare-panel { margin: 0 0 2.25rem; padding-top: 1.5rem; border-top: 2px solid var(--line);
+  /* The (?) pop-up is positioned against this; without it the pop-up escapes to the
+     nearest positioned ancestor, which on this page is the page. */
+  position: relative; }
+.compare-panel .property-method { top: 3.4rem; left: 0; right: 0; max-width: 42rem; }
+.compare-panel:first-of-type { border-top: 0; padding-top: .25rem; }
+.compare-panel > h2 { margin-top: 0; }
+.compare-lead { font-size: 1rem; margin: .2rem 0 .6rem; }
+.compare-overlay > svg, .compare-small svg { width: 100%; height: auto; display: block; }
+.compare-small { display: grid; grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr)); gap: .6rem 1.2rem; margin: .8rem 0; }
+.compare-small-title { font-size: .8rem; display: flex; align-items: center; gap: .35rem; }
+.compare-table { border-collapse: collapse; width: 100%; font-size: .85rem; }
+.compare-table th, .compare-table td { text-align: left; padding: .3rem .6rem .3rem 0; border-bottom: 1px solid var(--line); font-weight: 400; }
+.compare-table thead th { font-weight: 600; }
+.compare-table tr.off { opacity: .45; }  /* unticked: still in the table, visibly off */
+.compare-table .swatch, .compare-list .swatch, .compare-small-title .swatch {
+  width: .7rem; height: .7rem; border-radius: 2px; background: var(--c, var(--viz-1)); flex: 0 0 auto; display: inline-block; }
+.viz-label { fill: var(--muted); }
+/* These fills are meant to be read through each other, unlike the usage charts' single
+   faint area, so they carry more alpha. */
+.compare .viz-area { opacity: 1; fill-opacity: .22; }
+/* The posterior means: a line to the label that names it, so a stacked label is still
+   unambiguous. Dashed, so they are never mistaken for a distribution's outline. */
+.viz-mean { stroke-width: 1.5; stroke-dasharray: 3 2; }
+.viz-mean.s1 { stroke: var(--viz-1); } .viz-mean.s2 { stroke: var(--viz-2); }
+.viz-mean.s3 { stroke: var(--viz-3); } .viz-mean.s4 { stroke: var(--viz-4); }
+.viz-mean.s5 { stroke: var(--viz-5); }
+.viz-mean-label.s1 { fill: var(--viz-1); } .viz-mean-label.s2 { fill: var(--viz-2); }
+.viz-mean-label.s3 { fill: var(--viz-3); } .viz-mean-label.s4 { fill: var(--viz-4); }
+.viz-mean-label.s5 { fill: var(--viz-5); }
+.compare-check { display: flex; align-items: flex-start; gap: .4rem; color: var(--fg) !important; margin-bottom: .5rem; }
+
+/* The three histogram palettes (property_compare.PALETTES). Scoped to the page, so they
+   override the skin's --viz tokens for these plots only. Okabe & Ito's set is the
+   published colour-blind-safe one; "ink" trades hue for lightness, which is what
+   survives greyscale printing. */
+.compare[data-palette="okabe"] {
+  --viz-1: #0072b2; --viz-2: #d55e00; --viz-3: #009e73; --viz-4: #cc79a7; --viz-5: #e69f00; }
+.compare[data-palette="ink"] {
+  --viz-1: #10243b; --viz-2: #2f5277; --viz-3: #5781a8; --viz-4: #8fb0cd; --viz-5: #c3d5e4; }
+@media (max-width: 980px) {
+  .viewer.compare { grid-template-columns: minmax(0, 1fr); }
+  .compare-side { position: static; max-height: none; margin-bottom: 1.25rem; }
+}
+
+/* Uncertainty (uncertainty_views). Figures carry their colours as SVG
+   attributes (downloads keep them); these rules only lay the page out. */
+.uncertainty-intro { max-width: 52rem; }
+.uncertainty-controls { display: flex; flex-wrap: wrap; gap: .6rem 1.25rem; align-items: flex-end; }
+.uncertainty-lead { font-size: 1.05rem; max-width: 52rem; }
+/* The page's controls: one slim row above the answer, not a card of their own. */
+.uncertainty-toolbar { margin: 0 0 .9rem; }
+.uncertainty-toolbar .uncertainty-controls { gap: .5rem .6rem; align-items: center; font-size: .9rem; }
+.uncertainty-toolbar label { display: inline-flex; align-items: center; gap: .45rem; color: var(--muted); margin-left: .6rem; }
+.uncertainty-toolbar label:first-of-type { margin-left: 0; }
+/* At a glance: the number, the bar it is made of, and the few figures behind it. */
+.glance-number { display: flex; flex-wrap: wrap; align-items: baseline; gap: .2rem .8rem; margin: 0 0 .9rem; }
+.glance-number strong { font-size: 3rem; font-weight: 600; line-height: 1; letter-spacing: -.02em;
+  font-variant-numeric: tabular-nums; }
+.glance-number > span { font-size: 1.05rem; max-width: 34rem; }
+.uncertainty-glance figure.plot { margin: .2rem 0 .4rem; }
+.glance-tiles { list-style: none; margin: .6rem 0 1rem; padding: 0; display: grid; gap: .6rem;
+  grid-template-columns: repeat(auto-fit, minmax(8.75rem, 1fr)); }
+.glance-tile { display: flex; flex-direction: column; gap: .15rem; padding: .6rem .8rem .65rem;
+  border: 1px solid var(--line); border-radius: 8px; min-width: 0; }
+.glance-label { font-size: .82rem; color: var(--muted); display: flex; align-items: center; gap: .35rem; }
+.glance-label svg { flex: none; }
+.glance-label .help-dot { margin-left: auto; }
+.glance-value { font-size: 1.6rem; font-weight: 600; line-height: 1.15; font-variant-numeric: tabular-nums; }
+.glance-value a { color: inherit; text-decoration-color: var(--line); }
+.glance-value a:hover { color: var(--accent); }
+.glance-unit { font-size: .8rem; color: var(--muted); }
+.uncertainty-glance .uncertainty-fold { margin-top: .2rem; }
+.uncertainty-order { display: flex; align-items: center; gap: .45rem; margin: .2rem 0 .6rem; font-size: .9rem; color: var(--muted); }
+.uncertainty-toolbar .help-dot { margin-left: -.1rem; }
+.uncertainty .plot { position: relative; }
+.uncertainty-bars svg a text { text-decoration: underline; text-decoration-color: var(--line); }
+.uncertainty-bars svg a:hover text { fill: var(--accent); }
+.track-scroll { overflow-x: auto; max-width: 100%; }
+.uncertainty-numbers td, .uncertainty-numbers th { font-variant-numeric: tabular-nums; }
+table.results.uncertainty-sites td, table.results.uncertainty-sites th { text-align: left; vertical-align: top; }
+.uncertainty-sites .says { font-size: .85rem; }
+.uncertainty-sites .says div + div { margin-top: .2rem; }
+.uncertainty-sites .viz-pill { white-space: nowrap; font-size: .85rem; }
+.uncertainty-legend svg { vertical-align: middle; }
+.uncertainty-settings fieldset { border: 1px solid var(--line); border-radius: 8px; margin: 0 0 .8rem; padding: .5rem .9rem .7rem; }
+.uncertainty-settings fieldset > label { display: block; margin: .25rem 0; }
+.uncertainty-multipliers { display: flex; flex-wrap: wrap; gap: .5rem 2rem; }
+.uncertainty-multipliers > div { display: flex; flex-direction: column; gap: .2rem; }
+.uncertainty-multipliers input { width: 5rem; }
+.uncertainty-icon { width: 56px; height: 56px; }
+.uncertainty-sites th .unit { font-weight: 400; font-size: .8em; color: var(--muted); }
+.table-downloads { font-size: .9rem; margin: .2rem 0 .5rem; }
+.heat-palette { display: inline-flex; flex-direction: column; gap: .2rem; font-size: .9rem; color: var(--muted); margin-bottom: .4rem; }
+
+/* Collapsible sections (collapse.js; the Settings page). The heading stays the section's
+   first child, so every skin's heading rule still applies; the script wraps its text in
+   a button. Selectors are long on purpose: they must beat skins' button and heading rules. */
+section.step.collapsible > h2 > button.section-toggle {
+  all: unset; box-sizing: border-box; display: flex; align-items: center; gap: .5rem;
+  width: 100%; cursor: pointer; font: inherit; color: inherit;
+}
+section.step.collapsible > h2 > button.section-toggle::before {
+  content: "▸"; display: inline-block; width: 1em; color: var(--muted);
+  transition: transform .15s ease;
+}
+section.step.collapsible > h2 > button.section-toggle[aria-expanded="true"]::before { transform: rotate(90deg); }
+section.step.collapsible > h2 > button.section-toggle:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+section.step.collapsible.collapsed > :not(h2) { display: none; }
+/* Closed: no underline, and as much room below the heading as above it. ":root" makes
+   these outrank the card skins' own section and heading rules, which load later. */
+:root section.step.collapsible.collapsed { padding-bottom: .35rem; }
+:root section.step.collapsible.collapsed > h2:first-child { border-bottom: 0; margin-bottom: .85rem; padding-bottom: 0; }
+@media (prefers-reduced-motion: reduce) {
+  section.step.collapsible > h2 > button.section-toggle::before { transition: none; }
+}
+
+/* ESR results (job page, _esr_result.html): a block of figures per level, the
+   reliability chart (its diagonal is perfect calibration) and the per-sequence table. */
+.esr-figures { display: flex; flex-wrap: wrap; gap: .8rem 2rem; margin: .6rem 0; }
+.esr-level h3 { display: flex; align-items: center; gap: .4rem; margin: 0 0 .3rem; font-size: 1rem; }
+.esr-level dl { display: flex; flex-wrap: wrap; gap: .3rem 1.4rem; margin: 0; }
+.esr-level dl div { display: flex; flex-direction: column; }
+.esr-level dt { color: var(--muted); font-size: .8rem; }
+.esr-level dd { margin: 0; font-size: 1.25rem; font-weight: 600; font-variant-numeric: tabular-nums; }
+.esr-level .hint { margin: .2rem 0 0; font-size: .82rem; }
+.esr-chart { max-width: 30rem; margin: 1rem 0; }
+.esr-chart > .hint { font-size: .82rem; margin: .2rem 0 .5rem; }
+/* A heading with its download links at the upper right (Reliability, Each sequence held
+   out, Downloads): one size, so the three read as one level. */
+.esr-head { display: flex; align-items: baseline; justify-content: space-between; gap: .5rem 1rem;
+  flex-wrap: wrap; margin: 1.2rem 0 .3rem; }
+.esr-head h3 { font-size: 1rem; margin: 0; }
+.esr-head .plot-tools { margin: 0; }
+.esr-block { width: fit-content; max-width: 100%; }
+.esr-downloads { margin: .2rem 0; }
+.esr-tips-scroll { max-height: 28rem; overflow-y: auto; }
+/* By branch length (_esr_lengths.html): the quarters table, then two scatters side by side. */
+.esr-lengths { margin: 1.2rem 0; }
+.esr-lengths > h3 { font-size: 1rem; margin: 0 0 .3rem; }
+.esr-lengths > .hint { font-size: .82rem; margin: .2rem 0 .5rem; max-width: 52rem; }
+.esr-quarters tr.total td { font-weight: 600; border-bottom: 2px solid var(--line); }
+.esr-scatters { display: flex; flex-wrap: wrap; gap: 0 2rem; }
+.esr-scatters .esr-chart { max-width: 27rem; }
+.esr-scatters h4 { font-size: .95rem; margin: 0; }
+.esr-scatters svg { max-width: 100%; height: auto; }
+
+/* The Uncertainty page's overview figures (uncertainty_overview). */
+.uncertainty-explainer svg { max-width: 100%; height: auto; }
+.uncertainty-map { display: flex; flex-wrap: wrap; gap: 1rem 1.5rem; align-items: flex-start; }
+.uncertainty-map figure { margin: 0; flex: 0 1 420px; }
+.uncertainty-map figure svg { max-width: 100%; height: auto; }
+.uncertainty-map-key { flex: 1 1 18rem; font-size: .92rem; }
+.uncertainty-map-key p { margin: 0 0 .6rem; }
+.uncertainty-map-key .map-disc { display: inline-block; width: .9em; height: .9em; border-radius: 50%;
+  margin-right: .35rem; vertical-align: -.1em; background: color-mix(in srgb, var(--viz-1, #2a78d6) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--viz-1, #2a78d6) 40%, transparent); }
+.uncertainty-fold > summary { cursor: pointer; color: var(--accent); margin: .4rem 0 .6rem; }
+/* The map's controls: "Colour by", then one row per choice: its name, then its levels. */
+.map-controls { display: flex; flex-direction: column; align-items: flex-start; gap: .4rem; margin: 0 0 .75rem; font-size: .9rem; }
+.map-controls > label { display: flex; align-items: center; gap: .5rem; }
+.map-levels { display: flex; flex-wrap: wrap; align-items: baseline; gap: .15rem .8rem; }
+.map-levels-name { font-weight: 600; min-width: 7.5rem; }
+.map-controls .map-hidden { margin: 0; }
+.map-legend { display: flex; flex-wrap: wrap; gap: .25rem .9rem; }
+.map-legend > span { display: inline-flex; align-items: center; gap: .3rem; }
+
+.uncertainty-tree .pie { cursor: pointer; } .uncertainty-tree .pie:hover path { stroke: #1d2330; stroke-width: .6; }
+
+/* The Simulations cartoon (_simulation_cartoon.html): one 8 s loop. The first branches
+   grow, then the second; substitutions pop up as their branch passes; the tips' sequences
+   fade in; everything holds, fades, and starts again. Still and complete for reduced motion. */
+.sim-intro { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem 2rem; margin-bottom: 1.5rem; }
+.sim-intro > p { flex: 1 1 22rem; margin: 0; }
+.sim-intro .sim-cartoon { flex: none; max-width: 100%; height: auto; }
+.sim-cartoon .sim-branch { stroke-dasharray: 1; }
+@media (prefers-reduced-motion: no-preference) {
+  .sim-cartoon .sim-b1 { animation: sim-grow-1 8s linear infinite; }
+  .sim-cartoon .sim-b2 { animation: sim-grow-2 8s linear infinite; }
+  .sim-cartoon .sim-m1 { animation: sim-pop-1 8s ease-out infinite; }
+  .sim-cartoon .sim-m2 { animation: sim-pop-2 8s ease-out infinite; }
+  .sim-cartoon .sim-tip { animation: sim-tip 8s ease-out infinite; }
+  .sim-cartoon .sim-t2 { animation-name: sim-tip-2; }
+  .sim-cartoon .sim-t3 { animation-name: sim-tip-3; }
+  .sim-cartoon .sim-t4 { animation-name: sim-tip-4; }
+}
+@keyframes sim-grow-1 { 0%, 6% { stroke-dashoffset: 1; opacity: 1; } 20%, 88% { stroke-dashoffset: 0; opacity: 1; } 97%, 100% { stroke-dashoffset: 0; opacity: 0; } }
+@keyframes sim-grow-2 { 0%, 20% { stroke-dashoffset: 1; opacity: 1; } 36%, 88% { stroke-dashoffset: 0; opacity: 1; } 97%, 100% { stroke-dashoffset: 0; opacity: 0; } }
+@keyframes sim-pop-1 { 0%, 13% { opacity: 0; transform: scale(0); } 17%, 88% { opacity: 1; transform: scale(1); } 97%, 100% { opacity: 0; } }
+@keyframes sim-pop-2 { 0%, 28% { opacity: 0; transform: scale(0); } 32%, 88% { opacity: 1; transform: scale(1); } 97%, 100% { opacity: 0; } }
+@keyframes sim-tip   { 0%, 37% { opacity: 0; } 42%, 88% { opacity: 1; } 97%, 100% { opacity: 0; } }
+@keyframes sim-tip-2 { 0%, 39% { opacity: 0; } 44%, 88% { opacity: 1; } 97%, 100% { opacity: 0; } }
+@keyframes sim-tip-3 { 0%, 41% { opacity: 0; } 46%, 88% { opacity: 1; } 97%, 100% { opacity: 0; } }
+@keyframes sim-tip-4 { 0%, 43% { opacity: 0; } 48%, 88% { opacity: 1; } 97%, 100% { opacity: 0; } }
+.sim-cartoon .sim-mut { transform-box: fill-box; transform-origin: center; }
+/* The ESR cartoon (_esr_cartoon.html): its still state is the final one. */
+.esr-cartoon .esr-gone, .esr-cartoon .esr-move, .esr-cartoon .esr-unknown { opacity: 0; }
+.esr-cartoon .esr-label { opacity: 1; }
+@media (prefers-reduced-motion: no-preference) {
+  .esr-cartoon .esr-move { animation: esr-move 9s ease-in-out infinite; }
+  .esr-cartoon .esr-label { animation: esr-label 9s ease-out infinite; }
+  .esr-cartoon .esr-gone { animation: esr-gone 9s linear infinite; }
+  .esr-cartoon .esr-regrow { animation: esr-regrow 9s linear infinite; }
+  .esr-cartoon .esr-unknown { animation: esr-unknown 9s ease-out infinite; }
+  .esr-cartoon .esr-node { animation: esr-node 9s ease-out infinite; }
+  .esr-cartoon .esr-r { animation: esr-r 9s ease-out infinite backwards; }
+  .esr-cartoon .esr-d2 { animation-delay: .25s; }
+  .esr-cartoon .esr-d3 { animation-delay: .5s; }
+  .esr-cartoon .esr-d4 { animation-delay: .75s; }
+  .esr-cartoon .esr-d5 { animation-delay: 1s; }
+  .esr-cartoon .esr-compare { animation: esr-compare 9s ease-out infinite; }
+  .esr-cartoon .esr-verdict { animation: esr-verdict 9s ease-out infinite; }
+}
+@keyframes esr-move { 0%, 10% { opacity: 1; transform: translateX(0); fill: #1d2330; }
+  20%, 62% { opacity: 1; transform: translateX(70px); } 66%, 100% { opacity: 0; transform: translateX(70px); } }
+@keyframes esr-label { 0%, 14% { opacity: 0; } 19%, 88% { opacity: 1; } 97%, 100% { opacity: 0; } }
+@keyframes esr-gone { 0%, 11% { opacity: 0; } 15%, 34% { opacity: 1; } 40%, 100% { opacity: 0; } }
+@keyframes esr-regrow { 0%, 10% { stroke-dashoffset: 0; } 13%, 24% { stroke-dashoffset: 1; }
+  38%, 88% { stroke-dashoffset: 0; opacity: 1; } 97%, 100% { stroke-dashoffset: 0; opacity: 0; } }
+@keyframes esr-unknown { 0%, 16% { opacity: 0; } 21%, 38% { opacity: 1; } 42%, 100% { opacity: 0; } }
+@keyframes esr-node { 0%, 37% { opacity: 0; transform: scale(0); } 41%, 88% { opacity: 1; transform: scale(1); } 97%, 100% { opacity: 0; } }
+@keyframes esr-r { 0%, 42% { opacity: 0; } 46%, 88% { opacity: 1; } 97%, 100% { opacity: 0; } }
+@keyframes esr-compare { 0%, 62% { opacity: 0; } 66%, 88% { opacity: 1; } 97%, 100% { opacity: 0; } }
+@keyframes esr-verdict { 0%, 68% { opacity: 0; } 73%, 88% { opacity: 1; } 97%, 100% { opacity: 0; } }
+.uncertainty-meaning p { margin: 0 0 .6rem; max-width: 52rem; }
+.uncertainty-meaning p:first-of-type { font-size: 1.02rem; }
+.slider-value { color: var(--muted); font-variant-numeric: tabular-nums; margin-left: .3rem; }
+.uncertainty-depth svg { max-width: 100%; height: auto; }
+.uncertainty-example { margin: .4rem 0 .8rem; }
+.uncertainty-example > summary { cursor: pointer; color: var(--accent); }
+.uncertainty-example p { max-width: 52rem; }
+.uncertainty-example-table { margin: .6rem 0; width: auto; }
+
+
+/* The tree's toolbar: the path tracer (the viewer's own feature, so a button, not a small
+   link), what a click on a node does, and the downloads at the right. */
+.plot-tools.tree-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: .4rem .9rem;
+  text-align: left; margin: .2rem 0 .5rem; }
+.tree-toolbar button.path-pick { font-size: .9rem; }
+.tree-toolbar button.path-pick[aria-pressed="true"] { border-color: #e08214;
+  background: color-mix(in srgb, #e08214 14%, var(--bg)); }
+.tree-toolbar-tip { font-size: .85rem; }
+.tree-toolbar-downloads { margin-left: auto; }
+/* The mutational path page (path_views, _path_viewer.html, path.js). Alignments want
+   width, so the page may use more of a wide window (as the job page does). */
+:root main:has(.path-viewer), :root[data-skin] main:has(.path-viewer) { max-width: 1440px; }
+.path-back { margin-bottom: .2rem; }
+.path-summary { font-size: 1.02rem; margin: .2rem 0 .3rem; overflow-wrap: anywhere; }
+.path-actions { display: flex; flex-wrap: wrap; align-items: center; gap: .6rem 1.5rem; margin: .7rem 0 .2rem; }
+.path-pin { display: inline-flex; flex-wrap: wrap; align-items: center; gap: .4rem; }
+.path-pin input[type="text"] { width: 14rem; }
+.path-line { margin: .4rem 0 .2rem; }
+.path-line svg { display: block; width: 100%; height: auto; max-width: 1000px; }
+.path-line .plot-tools { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between;
+  gap: .4rem 1rem; text-align: left; max-width: 1000px; }
+.segmented { display: inline-flex; flex-wrap: wrap; gap: .2rem 1rem; font-size: .85rem; color: var(--fg); }
+.segmented label { display: inline-flex; align-items: center; gap: .3rem; }
+.path-legend { display: flex; flex-wrap: wrap; align-items: center; gap: .3rem 1rem; margin: .3rem 0 .6rem; }
+.path-key { display: inline-flex; align-items: center; gap: .35rem; white-space: nowrap; }
+.path-key .swatch { width: .8rem; height: .8rem; border-radius: 2px; display: inline-block; }
+/* A change's support: a rule in its level's colour and "k/n" in small print. The colours
+   are path_line.LEVEL_COLOURS (the line, the bars and the viewers use the same). */
+.path-branches li { margin: .7rem 0; }
+.path-branches .chips { margin-top: .2rem; }
+.change sub { font-size: .62rem; margin-left: .25rem; color: var(--muted); vertical-align: baseline;
+  position: relative; top: .1em; }
+.change[class*="lvl-"] { border-left: 3px solid transparent; }
+.change.lvl-all { border-left-color: #1f66c1; }
+.change.lvl-most { border-left-color: #6aa6e8; }
+.change.lvl-few { border-left-color: #bcd7f3; }
+.change.lvl-none { border-left-color: #eb6834; }
+.change.lvl-na { border-left-color: #b3bac5; }
+.support-bar { display: inline-flex; width: 7rem; height: .6rem; vertical-align: middle; margin: 0 .4rem 0 .6rem;
+  border-radius: 2px; overflow: hidden; background: var(--line); }
+.support-bar i { display: block; height: 100%; }
+.support-words { font-size: .8rem; }
+/* The alignment viewers: stacked (each on its own columns, scrolling together), or side
+   by side with every ancestor beside itself. */
+.path-toolbar { align-items: flex-end; }
+.path-toolbar .inactive { opacity: .5; }
+.path-toolbar .path-zoom { flex: 0 1 13rem; }
+.path-extant { position: relative; align-self: flex-end; font-size: .9rem; }
+.path-extant > summary { cursor: pointer; padding: .3rem .6rem; border: 1px solid var(--line); border-radius: 4px;
+  color: var(--fg); white-space: nowrap; }
+.path-extant > fieldset { position: absolute; z-index: 5; left: 0; top: calc(100% + .2rem); width: 44rem;
+  max-width: min(80vw, 100vw - 4rem); background: var(--bg); box-shadow: 0 4px 16px rgba(0, 0, 0, .14);
+  text-align: left; }
+.path-extant legend { font-size: .8rem; color: var(--muted); text-align: left; padding: 0 .3rem; }
+.path-extant > fieldset { padding: .5rem .8rem .7rem; }
+/* Many sequences at once: two columns of names, scrolled together. */
+.path-extant .extant-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .15rem 1rem;
+  max-height: 22rem; align-content: start; }
+/* (beating .viewer-controls label, which stacks a label over its control) */
+.viewer-controls .path-extant .extant-list label { flex-direction: row; align-items: center; justify-content: flex-start;
+  gap: .45rem; text-align: left; color: var(--fg); font-size: .85rem; }
+.path-extant .extant-list input { flex: none; margin: 0; }
+/* The layout's two buttons: radios drawn as icons (no script; a change reloads the viewer). */
+.layout-toggle { display: flex; flex-direction: column; gap: .2rem; font-size: .9rem; color: var(--muted); }
+.icon-toggle { display: inline-flex; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
+.icon-toggle label { display: inline-flex; align-items: center; padding: .3rem .55rem; cursor: pointer; color: var(--muted);
+  background: var(--bg); }
+.viewer-controls .icon-toggle label { flex-direction: row; color: var(--muted); }
+.viewer-controls .icon-toggle label:has(input:checked) { color: #fff; }
+.icon-toggle label + label { border-left: 1px solid var(--line); }
+.icon-toggle input { position: absolute; opacity: 0; pointer-events: none; }
+.icon-toggle label:has(input:checked) { background: var(--accent); color: #fff; }
+.icon-toggle label:has(input:focus-visible) { outline: 2px solid var(--accent); outline-offset: -2px; }
+.path-changes-head { justify-content: flex-end; }
+.viewer-section > summary > .help-dot { vertical-align: middle; margin-left: .3rem; }
+.path-frames.side { display: grid; grid-template-columns: repeat(var(--frames), minmax(0, 1fr)); gap: .6rem; }
+.path-frame { margin: .3rem 0 .8rem; min-width: 0; }
+/* Side by side the headings start level and the viewers end level, whatever each says. */
+.path-frames.side { align-items: stretch; }
+.path-frames.side .path-frame { display: flex; flex-direction: column; }
+.path-frames.side .path-frame .aln-root { margin-top: auto; }
+.path-frames.side .frame-head { align-items: flex-start; }
+.path-frame .aln-wrap { min-height: 0; }
+.path-frame .overview-note { margin: .1rem 0 .3rem; }
+.frame-sub { font-weight: 400; color: var(--muted); font-size: .85rem; }
+.frame-tools { display: inline-flex; align-items: center; gap: .6rem; font-size: .85rem; }
+.path-add { display: flex; flex-wrap: wrap; align-items: flex-end; gap: .6rem 1rem; padding: .6rem .8rem;
+  border: 1px dashed var(--line); border-radius: 6px; margin-top: .2rem; }
+.path-add-plus { font-size: 1.5rem; line-height: 1.6rem; color: var(--muted); }
+.path-add label { display: flex; flex-direction: column; gap: .2rem; font-size: .9rem; color: var(--muted); }
+table.path-support th.combo { max-width: 9rem; white-space: normal; font-size: .8rem; font-weight: 500; }
+table.path-support td small { color: var(--muted); font-size: .7rem; }
+table.path-support tfoot th, table.path-support tfoot td { border-top: 2px solid var(--line); font-weight: 600; }
+.saved-paths { list-style: none; padding: 0; margin: .3rem 0; }
+.saved-paths li { display: flex; flex-wrap: wrap; align-items: baseline; gap: .2rem .8rem; padding: .2rem 0; }
+.saved-paths li.current a { font-weight: 600; }
+/* Picking a mutational path on the tree (path_pick.js). */
+.path-pick[aria-pressed="true"] { font-weight: 600; }
+.path-section button.path-pick { align-self: flex-end; }
+.path-section button.path-pick[aria-pressed="true"] { border-color: #e08214;
+  background: color-mix(in srgb, #e08214 14%, var(--bg)); }
+.viewer-controls .slider-label input[type=range] { width: 11rem; margin: auto 0; accent-color: var(--accent); }
+.path-pick-status { margin: .2rem 0 .4rem; padding: .35rem .7rem; border-left: 3px solid #e08214;
+  background: color-mix(in srgb, #e08214 10%, var(--bg)); font-size: .92rem; }
+.tree-figure.path-picking a.tree-node, .tree-figure.path-picking .tree-clade,
+.tree-figure.path-picking .tree-leaf { cursor: crosshair; }
+.tree-figure.path-picking .tree-leaf:hover, .tree-figure .tree-leaf.path-target { fill: #e08214; }
+.tree-figure.path-picking a.tree-node:hover .dot, .tree-figure .path-start .dot,
+.tree-figure .path-target .dot { fill: #e08214; r: 6.5px; }
+.tree-figure .path-preview-route { fill: none; stroke: #e08214; stroke-width: 4px; stroke-linecap: round;
+  stroke-linejoin: round; pointer-events: none; }
+/* The structure page (structure_views, structure.js): one to four panels, each a 3D stage
+   under its own choice of structure and sequence. */
+.structure-panels { display: grid; gap: .9rem; margin: .6rem 0; grid-template-columns: minmax(0, 1fr); }
+.structure-panels.count-2, .structure-panels.count-4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.structure-panels.count-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.structure-panel { min-width: 0; }
+.structure-panel-head { display: flex; flex-wrap: wrap; align-items: flex-end; gap: .4rem .8rem; margin-bottom: .4rem; }
+.structure-panel-head label { display: flex; flex-direction: column; gap: .15rem; margin: 0; min-width: 0;
+  font-size: .85rem; color: var(--muted); }
+.structure-panel-head select { max-width: 100%; }
+.structure-panels:not(.count-1) .structure-panel-head select { max-width: 8.5rem; }
+.structure-panels.count-2 .structure-panel-head { flex-wrap: nowrap; gap: .4rem .5rem; }
+.structure-panel-head button.mini { margin-left: auto; align-self: center; }
+.structure-stage { position: relative; height: 34rem; border: 1px solid var(--line); border-radius: 6px;
+  background: var(--bg); overflow: hidden; }
+.structure-panels.count-2 .structure-stage { height: 28rem; }
+.structure-panels.count-3 .structure-stage, .structure-panels.count-4 .structure-stage { height: 22rem; }
+.structure-canvas { position: absolute; inset: 0; }
+.structure-status { position: absolute; left: .7rem; bottom: .2rem; margin: 0; pointer-events: none; }
+.structure-tip { position: absolute; z-index: 5; max-width: 250px; padding: .3rem .5rem; border-radius: 4px;
+  background: rgba(20, 24, 32, .92); color: #fff; font-size: .8rem; line-height: 1.35; pointer-events: none; }
+.structure-mapping { margin: .35rem 0 0; }
+.structure-checks { display: flex; flex-wrap: wrap; gap: .3rem 1.2rem; margin: .2rem 0 .6rem; font-size: .9rem; }
+.structure-checks label { display: inline-flex; align-items: center; gap: .35rem; margin: 0; }
+.structure-presets { display: flex; flex-wrap: wrap; align-items: center; gap: .35rem .5rem; margin: .4rem 0; }
+.structure-presets button[type=submit] { font-size: .85rem; }
+.structure-legend { display: flex; flex-wrap: wrap; gap: .15rem 1.1rem; list-style: none; margin: .5rem 0; padding: 0;
+  font-size: .88rem; }
+.structure-legend li { display: flex; align-items: center; gap: .4rem; }
+.structure-legend-title { color: var(--muted); }
+.structure-swatch { display: inline-block; flex: none; width: .95em; height: .95em; border-radius: 3px;
+  border: 1px solid rgba(0, 0, 0, .25); vertical-align: -.1em; }
+.structure-buttons { display: flex; flex-wrap: wrap; align-items: center; gap: .35rem .6rem; margin: .5rem 0 .2rem; }
+.structure-picked { min-height: 1.4em; margin: .2rem 0; font-size: .88rem; white-space: pre-line; }
+.structure-fits { margin-top: .6rem; }
+.structure-fits > summary, .structure-suggested > summary { cursor: pointer; color: var(--accent); font-size: .92rem; }
+.structure-model { max-width: 62rem; }
+.structure-strip-title { margin: .7rem 0 .25rem; font-size: .9rem; font-weight: 600; }
+.viewer-controls label > span:first-child { display: inline-flex; align-items: center; gap: .3rem; }
+/* The sequence strip: one column per residue of the chain (its number, its own residue,
+   then the page's sequences), scrolling sideways under fixed row names. */
+.structure-strip { display: flex; align-items: stretch; border: 1px solid var(--line); border-radius: 6px; }
+.sx-names { flex: none; display: flex; flex-direction: column; max-width: 11rem; padding: .3rem .5rem;
+  border-right: 1px solid var(--line); font-size: .8rem; color: var(--muted); }
+.sx-names span { height: 1.35rem; line-height: 1.35rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sx-scroll { position: relative; flex: 1; min-width: 0; display: flex; overflow-x: auto; padding: .3rem .4rem .5rem; }
+.sx { flex: none; display: flex; flex-direction: column; width: 1.05rem; margin: 0; padding: 0; border: 0;
+  background: none; color: inherit; font: 12px/1.35rem ui-monospace, monospace; text-align: center; cursor: pointer; }
+.sx i, .sx b { display: block; height: 1.35rem; font-style: normal; font-weight: 400; }
+.sx i { overflow: visible; white-space: nowrap; text-align: left; font-size: 10px; color: var(--muted); }
+.sx:hover b { outline: 1px solid var(--fg); outline-offset: -1px; }
+.sx.picked { outline: 2px solid var(--accent); outline-offset: 0; border-radius: 2px; }
+.sx.sx-between { width: auto; padding: 0 .1rem; cursor: default; }
+.sx.sx-between b { padding: 0 .15rem; color: #111; font-size: 10px; }
+.structure-changes { max-height: 26rem; overflow-y: auto; border: 1px solid var(--line); border-radius: 6px; }
+.structure-changes table { margin: 0; width: 100%; }
+.structure-changes thead th { position: sticky; top: 0; background: var(--bg); }
+.structure-changes tr.off-structure td { color: var(--muted); }
+/* Attaching structures. The section sits in a second two-column container under the
+   viewer's, its first column empty, so it lines up with the viewer's sections. */
+.structure-manage { margin-top: 0; }
+.structure-manage > summary h2 { display: inline; }
+.structure-attach { display: grid; grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr)); gap: 0 2rem; }
+.structure-row-actions { white-space: nowrap; }
+.structure-row-actions form { display: inline; margin-left: .6rem; }
+.structure-protein { margin: .3rem 0; padding: .3rem .6rem; border: 1px solid var(--line); border-radius: 6px; }
+.structure-protein > summary { cursor: pointer; }
+.structure-found-actions { position: sticky; bottom: 0; display: flex; align-items: center; gap: .8rem;
+  margin: .4rem 0 0; padding: .5rem 0; background: var(--bg); }
+@media (max-width: 900px) {
+  .structure-panels.count-2, .structure-panels.count-3, .structure-panels.count-4 { grid-template-columns: minmax(0, 1fr); }
+}
+.help-popover b { font-weight: 600; }
+/* Full screen (structure.js): the page itself goes full screen and the Structures section
+   is laid over it, with its display controls, so they can be used there. */
+html.structure-full { overflow: hidden; }
+html.structure-full #view { position: fixed; inset: 0; z-index: 100; margin: 0; padding: .8rem 1.5rem 1rem;
+  overflow: auto; border: 0; border-radius: 0; background: var(--bg); }
+html.structure-full #view .structure-stage { height: max(20rem, calc(100vh - 28rem)); }
+html.structure-full #view .count-4 .structure-stage { height: max(14rem, calc(50vh - 13rem)); }
+html.structure-full #view .structure-fits { display: none; }
+.structure-checks label svg { opacity: .7; }

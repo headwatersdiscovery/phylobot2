@@ -1,0 +1,28 @@
+{# The Simulations page's cartoon: a root sequence evolves along a small tree, branches #}
+{# grow (blue to orange: time), substitutions appear, and the tips' sequences show what #}
+{# changed. Animated in site.css (sim-cartoon); still, in its final state, for reduced motion. #}
+<svg class="sim-cartoon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 330 84" width="330" height="84"
+     role="img" aria-label="A cartoon of a simulation: a root sequence, MKVLA, evolves along a tree into four sequences at its tips"
+     font-family="ui-monospace, 'SF Mono', Menlo, Consolas, monospace" font-size="13">
+  <defs><linearGradient id="sim-time" gradientUnits="userSpaceOnUse" x1="70" y1="0" x2="250" y2="0">
+    <stop offset="0" stop-color="#2a78d6"/><stop offset="1" stop-color="#eb6834"/></linearGradient></defs>
+  <text x="64" y="39" text-anchor="end" fill="#5d6675" font-size="9.5" font-family="system-ui, sans-serif">root</text>
+  <text x="64" y="54" text-anchor="end" fill="#1d2330" font-weight="600">MKVLA</text>
+  <text x="256" y="10" fill="#5d6675" font-size="9.5" font-family="system-ui, sans-serif">simulated tips</text>
+  <path class="sim-branch sim-b1" d="M70 49.5 V32.5 H150" pathLength="1" fill="none" stroke="url(#sim-time)" stroke-width="2.6" stroke-linecap="round"/>
+  <path class="sim-branch sim-b1" d="M70 49.5 V66.5 H150" pathLength="1" fill="none" stroke="url(#sim-time)" stroke-width="2.6" stroke-linecap="round"/>
+  <path class="sim-branch sim-b2" d="M150 32.5 V24 H250" pathLength="1" fill="none" stroke="url(#sim-time)" stroke-width="2.6" stroke-linecap="round"/>
+  <path class="sim-branch sim-b2" d="M150 32.5 V41 H250" pathLength="1" fill="none" stroke="url(#sim-time)" stroke-width="2.6" stroke-linecap="round"/>
+  <path class="sim-branch sim-b2" d="M150 66.5 V58 H250" pathLength="1" fill="none" stroke="url(#sim-time)" stroke-width="2.6" stroke-linecap="round"/>
+  <path class="sim-branch sim-b2" d="M150 66.5 V75 H250" pathLength="1" fill="none" stroke="url(#sim-time)" stroke-width="2.6" stroke-linecap="round"/>
+  <circle cx="70" cy="49.5" r="4" fill="#2a78d6"/>
+  <circle class="sim-mut sim-m1" cx="110" cy="32.5" r="3.6" fill="#eb6834" stroke="#ffffff" stroke-width="1.2"/>
+  <circle class="sim-mut sim-m2" cx="200" cy="24" r="3.6" fill="#eb6834" stroke="#ffffff" stroke-width="1.2"/>
+  <circle class="sim-mut sim-m2" cx="205" cy="41" r="3.6" fill="#eb6834" stroke="#ffffff" stroke-width="1.2"/>
+  <circle class="sim-mut sim-m2" cx="195" cy="58" r="3.6" fill="#eb6834" stroke="#ffffff" stroke-width="1.2"/>
+  <circle class="sim-mut sim-m2" cx="210" cy="75" r="3.6" fill="#eb6834" stroke="#ffffff" stroke-width="1.2"/>
+  <text fill="#1d2330" class="sim-tip sim-t1" x="256" y="28.5">MK<tspan fill="#eb6834" font-weight="700">I</tspan>L<tspan fill="#eb6834" font-weight="700">S</tspan></text>
+  <text fill="#1d2330" class="sim-tip sim-t2" x="256" y="45.5">MK<tspan fill="#eb6834" font-weight="700">I</tspan><tspan fill="#eb6834" font-weight="700">F</tspan>A</text>
+  <text fill="#1d2330" class="sim-tip sim-t3" x="256" y="62.5">M<tspan fill="#eb6834" font-weight="700">R</tspan>VLA</text>
+  <text fill="#1d2330" class="sim-tip sim-t4" x="256" y="79.5">MKVL<tspan fill="#eb6834" font-weight="700">G</tspan></text>
+</svg>

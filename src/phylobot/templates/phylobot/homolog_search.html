@@ -1,0 +1,70 @@
+{% extends "phylobot/base.html" %}
+{% load static %}
+{# One search's landing page (phylobot.homolog_views), for a search of your own or a #}
+{# saved example: its status while it runs, the error if it failed, the review once it #}
+{# finished. #}
+{% block title %}{% if saved_example %}{{ saved_example.label }}{% else %}{{ homolog_search.name|default:"Search" }}{% endif %} · Find Homologs · PhyloBot{% endblock %}
+{% block content %}
+<script src="{% static 'phylobot/homologs.js' %}" defer></script>
+<script src="{% static 'phylobot/rename.js' %}" defer></script>
+<p><a href="{% url 'homologs' %}">← Find homologs</a></p>
+{% if saved_example %}
+  <div class="page-head">
+    <div class="title-view">
+      <h1>{{ saved_example.label }}</h1>
+      <span class="locked" title="Saved examples come with PhyloBot and cannot be renamed or deleted">
+        <svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor"
+             stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+        read-only</span>
+    </div>
+    <form method="post" action="{% url 'duplicate_homolog_example' saved_example_key %}">
+      {% csrf_token %}
+      <button type="submit" title="Copy it into your searches, to rename or delete">Duplicate into your searches</button>
+    </form>
+  </div>
+  <p><span class="status succeeded">saved example</span>
+    {{ service }} · {{ search.database }} · query {{ search.query_length }} residues ·
+    searched {{ saved_example.searched }}, took {{ saved_example.took }}</p>
+  <p class="hint">A real search, saved so you can try the review. Your own searches open on
+    this same page.</p>
+{% else %}
+  <div class="page-head">
+    {% include "phylobot/_homolog_title.html" %}
+    <div class="actions">
+      {% if homolog_search.status == "succeeded" %}
+        <form method="post" action="{% url 'duplicate_homolog_search' homolog_search.id %}">
+          {% csrf_token %}
+          <button type="submit" title="Copy this search, to review it separately (nothing is sent again)">Duplicate</button>
+        </form>
+      {% endif %}
+      <form method="post" action="{% url 'delete_homolog_searches' %}" id="delete-search-form">
+        {% csrf_token %}<input type="hidden" name="search" value="{{ homolog_search.id }}">
+        <button type="button" class="danger-outline" id="delete-search"
+                data-name="{{ homolog_search.name|default:'Search' }}" data-status="{{ homolog_search.status }}">Delete search</button>
+      </form>
+    </div>
+  </div>
+  {% if homolog_search.is_copy %}<p class="hint">A copy of
+    {% if homolog_search.copied_from_example %}a saved example{% elif homolog_search.copied_from %}<a href="{% url 'homolog_search' homolog_search.copied_from_id %}">{{ homolog_search.copied_from.name|default:"a search" }}</a>{% else %}a deleted search{% endif %}.</p>{% endif %}
+  {% include "phylobot/_homolog_search_status.html" %}
+  {% if result_error %}
+    <p class="errors">The stored result could not be read.</p>
+  {% endif %}
+{% endif %}
+{% if search %}
+  <section class="step">
+    {% include "phylobot/_homolog_filters.html" %}
+  </section>
+{% endif %}
+{% if homolog_search %}
+{% include "phylobot/_delete_dialog.html" %}
+<script>
+  document.getElementById("delete-search").addEventListener("click", (event) => {
+    const button = event.currentTarget;
+    confirmDelete([{ name: button.dataset.name, status: button.dataset.status }],
+                  () => document.getElementById("delete-search-form").submit(), "search");
+  });
+</script>
+{% endif %}
+{% endblock %}

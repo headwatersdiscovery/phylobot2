@@ -1,0 +1,17 @@
+{# A line chart from phylobot.usage.line_chart: one series, a 10% area wash, the end value labelled; hover or focus a column for its value. #}
+{% if c.empty %}<p class="usage-empty">Nothing in this window.</p>{% else %}
+<div class="viz" data-line>
+  <svg class="viz-svg" viewBox="0 0 {{ c.width }} {{ c.height }}" role="img" aria-label="{{ what }} over time; the table below has every value">
+    {% for y, label in c.yticks %}<line class="viz-grid" x1="{{ c.left }}" x2="{{ c.right }}" y1="{{ y }}" y2="{{ y }}"/>
+    <text class="viz-tick" x="{{ c.tick_x }}" y="{{ y }}" text-anchor="end" dy=".32em">{{ label }}</text>{% endfor %}
+    {% for x, label in c.xticks %}<text class="viz-tick" x="{{ x }}" y="{{ c.xlabel_y }}" text-anchor="middle">{{ label }}</text>{% endfor %}
+    <path class="viz-area s1" d="{{ c.area }}"/>
+    <path class="viz-line s1" d="{{ c.line }}"/>
+    <line class="viz-cross" x1="0" x2="0" y1="{{ c.top }}" y2="{{ c.bottom }}" visibility="hidden"/>
+    <circle class="viz-dot s1" cx="{{ c.last.x }}" cy="{{ c.last.y }}" r="4.5"/>
+    <text class="viz-label" x="{{ c.last.x }}" y="{{ c.end_label_y }}" text-anchor="end">{{ c.end_label }}</text>
+    <circle class="viz-dot s1 viz-cross-dot" r="4.5" cx="0" cy="0" visibility="hidden"/>
+    {% for p, x in c.hits %}<rect class="viz-hit" x="{{ x }}" y="{{ c.top }}" width="{{ c.hit_width }}" height="{{ c.plot_height }}"
+      data-x="{{ p.x }}" data-y="{{ p.y }}" data-tip-value="{{ p.value }}" data-tip-label="{{ p.label }}" tabindex="0"/>{% endfor %}
+  </svg>
+</div>{% endif %}

@@ -1,0 +1,304 @@
+{# The mutational path page (phylobot.path_views): one GET form, as the other viewers, so #}
+{# every view has an address; HTMX swaps it in place. Sections fold (details), with an #}
+{# "On this page" nav inside the form so the two are swapped together. #}
+{% if not selection %}
+<p>This job has no ancestral sequences to trace a path through{% if job.status != "succeeded" %} yet{% endif %}.</p>
+{% else %}
+<form id="path-viewer" class="viewer sectioned path-viewer" method="get" action="{% url 'path_viewer' job.id %}"
+      hx-get="{% url 'path_viewer' job.id %}" hx-trigger="change, submit" hx-target="this"
+      hx-swap="outerHTML" hx-push-url="true">
+  {# The path's ends are names in one combination's tree: `of` says which, so that #}
+  {# choosing another combination carries them over by clade (path_views.translate). #}
+  <input type="hidden" name="path_from" value="{{ path_from }}">
+  <input type="hidden" name="path_to" value="{{ path_to }}">
+  <input type="hidden" name="of" value="{{ combination }}">
+  {% if choice.back %}<input type="hidden" name="back" value="{{ choice.back }}">{% endif %}
+  <nav class="viewer-toc page-toc" data-toc aria-label="On this page">
+    <p class="viewer-toc-title">On this page</p>
+    <ol>
+      <li><a href="#path">Select Path</a></li>
+      {% if path %}
+      <li><a href="#line">Path Line</a></li>
+      <li><a href="#changes">Changes</a></li>
+      <li><a href="#alignments">Ancestors Along the Path</a></li>
+      {% if compared %}<li><a href="#support">Support Across Combinations</a></li>{% endif %}
+      <li><a href="#columns">Changed Columns</a></li>
+      {% endif %}
+      <li><a href="#saved">Saved Paths{% if saved_paths %} ({{ saved_paths|length }}){% endif %}</a></li>
+    </ol>
+  </nav>
+
+  <div class="viewer-sections">
+    <details class="viewer-section" id="path" open>
+      <summary><h2>Select Path</h2></summary>
+      <div class="viewer-controls">
+        <label>Alignment
+          <select name="aligner">{% for key, label in aligners.items %}
+            <option value="{{ key }}"{% if key == aligner %} selected{% endif %}>{{ label }}</option>{% endfor %}
+          </select></label>
+        <label>Model
+          <select name="combination">{% for key, label in models %}
+            <option value="{{ key }}"{% if key == combination %} selected{% endif %}>{{ label }}</option>{% endfor %}
+          </select></label>
+        {% if path %}
+        <label>Gap/indel masking
+          <select name="gaps">{% for key, label in versions %}
+            <option value="{{ key }}"{% if key == version %} selected{% endif %}>{{ label }}</option>{% endfor %}
+          </select></label>
+        <label><span>Compare with {% include "phylobot/_help.html" with id="path-compare-with" title="Compare with" body="Every change on the path is checked against these other alignment and model combinations of the job: does each make the same change, on the same branch, at the same place in the sequences? A path read from one alignment can be quite wrong; the changes several alignments agree about are the ones to trust. Agreement is not proof: every alignment can make the same mistake." %}</span>
+          <select name="top">{% for key, label in tops %}
+            <option value="{{ key }}"{% if key == choice.top %} selected{% endif %}>{{ label }}</option>{% endfor %}
+          </select></label>
+        {% endif %}
+      </div>
+      {% if lost %}<p class="errors">This combination's tree has no ancestor of the same sequences as {{ lost|join:" or " }}, so the path cannot be followed here. Pick another combination, or <a href="{{ tree_url }}">trace a path on this tree</a>.</p>{% endif %}
+      {% if not path %}
+      {% if not lost %}<p>No path is traced. <a href="{{ tree_url }}">Open the tree viewer</a> and choose
+        <em>Trace a Mutational Path</em>: click an ancestor, then one of its descendants.{% if saved_paths %}
+        Or open one of the saved paths below.{% endif %}</p>{% endif %}
+      {% else %}{% with t=path_table %}
+      <p class="path-summary"><strong>{{ route_labels|join:" → " }}</strong></p>
+      <p>{{ t.changed_columns }} alignment column{{ t.changed_columns|pluralize }} change along
+        {{ t.branches|length }} branch{{ t.branches|length|pluralize:"es" }}.
+        {% if compared %}Checked against {{ compared_note }}{% if judged_total %}: of {{ judged_total }} change{{ judged_total|pluralize }}
+        that could be compared, {{ totals.all }} {{ totals.all|pluralize:"is,are" }} made by every one{% if totals.most %}, {{ totals.most }} by most{% endif %}{% if totals.few %}, {{ totals.few }} by few{% endif %}{% if totals.none %}, and {{ totals.none }} by this combination alone{% endif %}.{% else %}, none of which has this path's branches.{% endif %}
+        {% else %}This job has no other combination to compare it with.{% endif %}</p>
+      <div class="path-actions">
+        {# The path's two ends on a protein structure (phylobot.structure_views). #}
+        <a class="button plain" href="{% url 'structure_viewer' job.id %}?combination={{ combination|urlencode }}&amp;node={{ path_from|urlencode }}&amp;to={{ path_to|urlencode }}&amp;gaps={{ version|urlencode }}">View the changes on a structure</a>
+        {% if library_path_nodes %}<span class="library-actions">{% with n=library_path_nodes|length %}{% if n == 1 %}{% with add_label="Add the path's ancestor to" %}
+          {% include "phylobot/_library_add.html" with add_form="library-add-path" add_nodes=library_path_nodes %}{% endwith %}{% else %}{% with count=n|stringformat:"d" %}{% with add_label="Add the path's "|add:count|add:" ancestors to" %}
+          {% include "phylobot/_library_add.html" with add_form="library-add-path" add_nodes=library_path_nodes %}{% endwith %}{% endwith %}{% endif %}{% endwith %}</span>{% endif %}
+        {# Pinning posts the page's own query (path_views.save); the fields belong to the #}
+        {# page-level form, and path.js keeps their changes from reloading the viewer. #}
+        <span class="path-pin">
+          <input type="hidden" name="view" value="{{ view_query }}" form="path-save">
+          <input type="text" name="name" form="path-save" maxlength="80" required placeholder="Name this path" aria-label="Name for this path"
+                 value="{% if saved %}{{ saved.name }}{% endif %}" autocomplete="off">
+          <button type="submit" form="path-save" class="with-icon">{% include "phylobot/_icon.html" with name="pin" size=16 %} {% if saved %}Save again{% else %}Save path{% endif %}</button>
+          {% if saved %}<span class="hint">saved; this also keeps the view as it is now</span>{% endif %}
+        </span>
+        <a href="{{ path_excel_url }}" class="with-icon">{% include "phylobot/_icon.html" with name="download" size=16 %} Excel</a>
+      </div>
+      {% endwith %}{% endif %}
+    </details>
+
+    {% if path %}{% with t=path_table %}
+    <details class="viewer-section" id="line" open>
+      <summary><h2>Path Line</h2> <button type="button" class="help-dot" popovertarget="help-path-line" aria-label="About Path Line">?</button><span class="help-popover" popover id="help-path-line"><strong>Path Line</strong><span>The path along branches from {{ route_labels.0 }} to {{ route_labels|last }}{% if line.stations|length > 1 %}, the stretches between them {% if line.equal %}all drawn the same length{% else %}as long as their branches{% endif %}{% endif %}. {% if compared %}Each stretch is coloured by how widely its changes are shared with the compared combinations. {% endif %}The number under a stretch is how many changes it carries; click one for the list.</span></span></summary>
+      <figure class="plot path-line" data-filename="path.{{ path.0 }}-{{ path|last }}.line">
+        <div class="plot-tools">
+          <span class="segmented" role="group" aria-label="Branch lengths">
+            <label><input type="radio" name="lengths" value="real"{% if choice.lengths == "real" %} checked{% endif %}> Real branch lengths</label>
+            <label><input type="radio" name="lengths" value="equal"{% if choice.lengths == "equal" %} checked{% endif %}> Equal lengths</label>
+          </span>
+          <span class="tree-toolbar-downloads">Download <button type="button" class="link" data-plot-download="png">PNG</button> · <button type="button" class="link" data-plot-download="svg">SVG</button></span>
+        </div>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {{ line.width }} {{ line.height }}" width="{{ line.width }}" height="{{ line.height }}"
+             font-family="system-ui, -apple-system, 'Segoe UI', sans-serif" role="img"
+             aria-label="The path as a line: {{ route_labels|join:', ' }}">
+          <rect width="{{ line.width }}" height="{{ line.height }}" fill="#ffffff"/>
+          {% for s in line.stretches %}<a href="#branch-{{ s.index }}"><title>{{ s.title }}</title>
+            <rect x="{{ s.x1 }}" y="{{ line.thin_top }}" width="{{ s.width }}" height="3" fill="#b3bac5"/>
+            {% for b in s.bands %}<rect x="{{ b.x }}" y="{{ line.band_top }}" width="{{ b.width }}" height="10" fill="{{ b.colour }}"/>{% endfor %}
+            {% if s.total and s.roomy %}<text x="{{ s.middle }}" y="{{ line.count_y }}" text-anchor="middle" font-size="11" fill="#5d6675">{{ s.total }}</text>{% endif %}
+            <rect x="{{ s.x1 }}" y="{{ line.band_top }}" width="{{ s.width }}" height="30" fill="#ffffff" fill-opacity="0"/></a>
+          {% endfor %}
+          {% for st in line.stations %}
+          <line x1="{{ st.x }}" x2="{{ st.label_x }}" y1="{{ line.stem_y }}" y2="{{ st.stem_top }}" stroke="#b3bac5" stroke-width="1"/>
+          {% if st.url %}<a href="{{ st.url }}">{% endif %}<title>{{ st.label }}{% if st.extant %} (extant sequence){% else %}: open this ancestor{% endif %}</title>
+            <circle cx="{{ st.x }}" cy="{{ line.y }}" r="6.5" fill="{% if st.extant %}#1d2330{% else %}#ffffff{% endif %}" stroke="#1d2330" stroke-width="2.2"/>
+            <text x="{{ st.label_x }}" y="{{ st.label_y }}" text-anchor="{{ st.anchor }}" font-size="11.5" fill="#1d2330"{% if st.extant %} font-style="italic"{% endif %}>{{ st.label }}</text>{% if st.url %}</a>{% endif %}
+          {% endfor %}
+          {% if line.scale_width %}<line x1="28" x2="{{ line.scale_end }}" y1="{{ line.scale_y }}" y2="{{ line.scale_y }}" stroke="#1d2330" stroke-width="1.6"/>
+          <text x="{{ line.scale_text_x }}" y="{{ line.scale_text_y }}" font-size="11" fill="#5d6675">{{ line.scale_label }}</text>{% endif %}
+        </svg>
+      </figure>
+      {% if compared %}<p class="path-legend hint">Changes made by the compared combinations:
+        {% for level, colour, label in levels %}<span class="path-key"><span class="swatch" style="background: {{ colour }}"></span>{{ label }}</span>{% endfor %}</p>{% endif %}
+      {% if line.stretched %}<p class="hint">{{ line.stretched }} very short branch{{ line.stretched|pluralize:"es" }} {{ line.stretched|pluralize:"is,are" }} drawn
+        longer than to scale, to keep the stops apart.</p>{% endif %}
+    </details>
+
+    <details class="viewer-section" id="changes" open>
+      <summary><h2>Changes</h2> <button type="button" class="help-dot" popovertarget="help-path-changes" aria-label="About Changes">?</button><span class="help-popover" popover id="help-path-changes"><strong>Changes</strong><span>Numbered by alignment column (K300R: K became R; –300R: R gained; K300–: K lost{% if t.codons %}; L300L: a silent change, another codon for the same amino acid{% if t.uncertain %}; N300X: uncertain, an extant codon with ambiguous bases that may or may not change the amino acid{% endif %}{% endif %}). {% if compared %}The small numbers say how many of the {{ compared }} compared combination{{ compared|pluralize }} make the same change (3/4: three of four); hover over a change for which ones.{% endif %}{% if path_rates %} dN/dS per branch: codeml's free-ratio estimates (one per branch, so noisy; not a test).{% endif %}</span></span></summary>
+      <div class="viewer-table-head path-changes-head">
+        <div class="table-tools">
+          {% if compared %}<label class="palette">Show
+            <select name="show">{% for key, label in shown_choices %}
+              <option value="{{ key }}"{% if key == choice.shown %} selected{% endif %}>{{ label }}</option>{% endfor %}
+            </select></label>{% endif %}
+          {% if has_codons %}<label class="palette">Silent changes
+            <select name="silent">
+              <option value="show"{% if show_silent %} selected{% endif %}>Show</option>
+              <option value="hide"{% if not show_silent %} selected{% endif %}>Hide</option>
+            </select></label>{% endif %}
+        </div>
+      </div>
+      <ol class="branch-changes path-branches">{% for b in branches %}{% with br=b.branch %}
+        <li id="branch-{{ forloop.counter0 }}"><strong>{{ br.parent }} → {{ br.child }}</strong>:
+          {% if t.codons %}{{ br.substitutions }} amino-acid change{{ br.substitutions|pluralize }} (non-synonymous), {{ br.synonymous }} silent (synonymous){% if br.hidden_silent %}, hidden{% endif %}{% if br.uncertain %}, {{ br.uncertain }} uncertain (an ambiguous extant codon){% endif %}{% else %}{{ br.substitutions }} substitution{{ br.substitutions|pluralize }}{% endif %}{% if br.gains %}, {{ br.gains }} gained{% endif %}{% if br.losses %}, {{ br.losses }} lost{% endif %}{% if br.rate %}
+          <span class="branch-rate" title="codeml free ratios: dN {{ br.rate.dn|floatformat:4 }}, dS {{ br.rate.ds|floatformat:4 }}; expected changes on this branch ≈ {{ br.rate.n_dn|floatformat:1 }} non-synonymous, {{ br.rate.s_ds|floatformat:1 }} synonymous">{% if br.rate.defined %}dN/dS {{ br.rate.omega|floatformat:2 }}{% else %}dN/dS undefined: fewer than one synonymous change expected{% endif %}</span>{% endif %}
+          {% if compared and b.bar %}<span class="support-bar" title="{{ b.words }}">{% for level, colour, share, n in b.bar %}<i style="width: {{ share }}%; background: {{ colour }}"></i>{% endfor %}</span>
+          <span class="hint support-words">{{ b.words }}</span>{% endif %}
+          <div class="chips">
+          {% for c in b.chips|slice:":60" %}{% include "phylobot/_path_change.html" %}{% endfor %}
+          {% if b.chips|length > 60 %}<details class="more"><summary>{{ b.chips|length|add:"-60" }} more</summary>{% for c in b.chips|slice:"60:" %}{% include "phylobot/_path_change.html" %}{% endfor %}</details>{% endif %}
+          {% if b.hidden %}<span class="hint">{{ b.hidden }} not shown</span>{% endif %}
+          </div>
+        </li>{% endwith %}{% endfor %}
+      </ol>
+    </details>
+
+    <details class="viewer-section" id="alignments" open>
+      <summary><h2>Ancestors Along the Path</h2> <button type="button" class="help-dot" popovertarget="help-path-ancestors" aria-label="About Ancestors Along the Path">?</button><span class="help-popover" popover id="help-path-ancestors"><strong>Ancestors Along the Path</strong><span>Each row is a stop on the path, oldest first, on its alignment's columns. {% if choice.mutations == "only" %}Sites are grey; a site is coloured (by its posterior probability) where it differs from the row above: the change happened on the branch into that row. {% elif choice.mutations == "support" %}Sites are grey; a changed site is coloured by how many of the compared combinations make the same change. {% else %}Every site is coloured by its posterior probability; a site is outlined where it differs from the row above.{% endif %} Add other alignments to see the same path through them{% if frames|length > 1 %}: they scroll together, held to {% if anchor %}{{ anchor }}'s residues{% else %}the residues the alignments share{% endif %}{% endif %}.</span></span></summary>
+      <div class="viewer-controls path-toolbar">
+        <label>Changes
+          <select name="mutations">{% for key, label in mutation_choices %}
+            <option value="{{ key }}"{% if key == choice.mutations %} selected{% endif %}{% if key == "support" and not compared %} disabled{% endif %}>{{ label }}</option>{% endfor %}
+          </select></label>
+        <label{% if choice.mutations == "support" %} class="inactive"{% endif %}>Palette
+          <select name="palette"{% if choice.mutations == "support" %} disabled{% endif %}>{% for key, label in palettes %}
+            <option value="{{ key }}"{% if key == palette %} selected{% endif %}>{{ label }}</option>{% endfor %}
+          </select></label>
+        {% if choice.mutations == "support" %}<input type="hidden" name="palette" value="{{ palette }}">{% endif %}
+        <span class="layout-toggle" role="radiogroup" aria-label="Layout">
+          <span class="layout-toggle-label">Layout</span>
+          <span class="icon-toggle">{% for key, label in layouts %}
+            <label title="{{ label }}"><input type="radio" name="layout" value="{{ key }}"{% if key == choice.layout %} checked{% endif %}>{% include "phylobot/_icon.html" with name=key size=18 %}<span class="visually-hidden">{{ label }}</span></label>{% endfor %}
+          </span>
+        </span>
+        <span class="aln-zoom path-zoom" role="group" aria-label="Zoom">
+          <span>Zoom</span>
+          <span class="zoom-inputs"><input type="range" class="zoom-slider" min="0" max="100" value="50" aria-label="Zoom">
+            <button type="button" class="zoom-fit">Fit</button></span>
+          <input type="hidden" name="zoom" value="{% if choice.zoom == "fit" %}fit{% else %}{{ choice.zoom|stringformat:"g" }}{% endif %}">
+        </span>
+        <details class="path-extant" id="path-extant">
+          <summary>Extant sequences ({{ extant|length }} shown)</summary>
+          <fieldset class="extant-choice">
+            <legend>Show under each alignment · the alignments scroll together held to the first one ticked</legend>
+            <input type="search" class="extant-search" placeholder="Find a sequence" aria-label="Find a sequence">
+            <div class="extant-list">{% for name in sequence_names %}
+              <label class="check"><input type="checkbox" name="extant" value="{{ name }}"{% if name in extant %} checked{% endif %}> <span>{{ name }}</span></label>{% endfor %}
+            </div>
+          </fieldset>
+        </details>
+      </div>
+      <p class="path-legend hint">{% if choice.mutations == "support" %}{% for level, colour, label in viewer_levels %}<span class="path-key"><span class="swatch" style="background: {{ colour }}"></span>{{ label }}</span>{% endfor %}{% if frames|length > 1 %}<span class="path-key"><span class="swatch" style="background: {{ not_on_path_colour }}"></span>not on the traced path</span>{% endif %}
+        {% else %}<span class="legend-tiles">{% for pp, style in legend %}<span style="{{ style }}">{{ pp }}</span>{% endfor %}</span>
+        <span class="path-key"><span class="swatch" style="background: #6b7280"></span>changed, no probability (an extant sequence, a gap)</span>{% endif %}</p>
+
+      <div class="path-frames{% if side_by_side %} side{% endif %}" data-path-frames style="--frames: {{ frames|length }}">
+        {% for f in frames %}
+        <div class="library-frame path-frame{% if f.main %} main{% endif %}">
+          <div class="frame-head">
+            <p class="overview-title">{{ f.title }} <span class="frame-sub">· {{ f.columns }} columns{% if f.main and frames|length > 1 %} · the traced path{% endif %}</span></p>
+            {% if not f.main %}<span class="frame-tools">
+              <input type="hidden" name="also" value="{{ f.key }}">
+              <a href="{{ f.trace_url }}" title="Make this the traced path: follow it through this combination's tree, and compare the others with it">Trace here</a>
+              {# Never name="remove": a control of that name hides the form's own remove(), which HTMX calls. #}
+              <button type="submit" class="mini" name="drop" value="{{ f.key }}" title="Remove this alignment" aria-label="Remove {{ f.title }}">×</button>
+            </span>{% endif %}
+          </div>
+          {% if not f.main %}<p class="hint overview-note">{% if not f.placed %}Its alignment holds other sequences, so its columns cannot be laid beside the traced ones.
+            {% elif f.total %}{{ f.same }} of the traced path's {{ f.total }} comparable change{{ f.total|pluralize }} {{ f.same|pluralize:"is,are" }} made here too.{% endif %}
+            {% if f.missing %}Its tree has no ancestor of the same sequences as {{ f.missing|join:", " }}.{% endif %}</p>{% endif %}
+          <div class="aln-root">
+            <div class="aln-overview" hidden title="The whole alignment. The box is the part in view: drag it, or click anywhere, to move.">
+              <canvas></canvas><div class="aln-overview-window"></div>
+            </div>
+            <div class="aln-wrap" data-viewer>
+              <canvas class="aln-canvas"></canvas>
+              <div class="aln-scroller"><div class="aln-sizer"></div></div>
+              <div class="aln-tip" hidden></div>
+            </div>
+            {{ f.data|json_script:f.json_id }}
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% if can_add %}
+      <div class="path-add">
+        <span class="path-add-plus" aria-hidden="true">+</span>
+        <label>Add an alignment
+          <select name="add" aria-label="Add an alignment and model combination">
+            <option value="">Choose an alignment and model…</option>{% for aligner_label, options in add_options %}{% if options %}
+            <optgroup label="{{ aligner_label }}">{% for key, label in options %}
+              <option value="{{ key }}">{{ aligner_label }} · {{ label }}</option>{% endfor %}
+            </optgroup>{% endif %}{% endfor %}
+          </select></label>
+        {% if unshown_best %}<button type="submit" name="add_best" value="1" class="secondary">Add every other alignment's best model ({{ unshown_best|length }})</button>{% endif %}
+      </div>
+      {% endif %}
+    </details>
+
+    {% if compared %}
+    <details class="viewer-section" id="support" open>
+      <summary><h2>Support Across Combinations</h2> <button type="button" class="help-dot" popovertarget="help-path-support" aria-label="About Support Across Combinations">?</button><span class="help-popover" popover id="help-path-support"><strong>Support Across Combinations</strong><span>Each row is one branch of your path; each column is another alignment and model. A cell such as 9/12 means that combination makes 9 of this branch's 12 changes too. A small +3 means it makes 3 further changes on that branch that your path does not. A dash means that combination's tree does not have this branch, so there is nothing to compare. {% if by_clade %}Branches are matched by the sequences that descend from each ancestor.{% else %}{{ match_note }}{% endif %} Changes that most combinations share are the safer ones; a change that only one alignment makes deserves a second look. Agreement is still not proof: every alignment can make the same mistake.</span></span></summary>
+      <div class="results-scroll path-support-scroll">
+      <table class="results path-support">
+        <thead><tr><th>Branch</th><th class="num">Changes</th>{% for c in matrix_columns %}<th class="combo">{{ c.label }}</th>{% endfor %}</tr></thead>
+        <tbody>{% for row in matrix %}
+          <tr><th><a href="#branch-{{ row.index }}">{{ row.branch.parent }} → {{ row.branch.child }}</a></th>
+            <td class="num">{{ row.branch.changes|length }}</td>{% for cell in row.cells %}
+            <td class="num"{% if cell.style %} style="{{ cell.style }}"{% endif %} title="{{ cell.title }}">{% if cell.match.comparable %}{% if cell.match.total %}{{ cell.match.same }}/{{ cell.match.total }}{% else %}·{% endif %}{% if cell.match.extra %} <small>+{{ cell.match.extra }}</small>{% endif %}{% else %}–{% endif %}</td>{% endfor %}</tr>{% endfor %}
+        </tbody>
+        <tfoot><tr><th>Whole path</th><td class="num">{{ judged_total }}</td>{% for c in matrix_columns %}
+          <td class="num"{% if c.total.style %} style="{{ c.total.style }}"{% endif %} title="over the {{ c.total.branches }} branch{{ c.total.branches|pluralize:'es' }} its tree has">{% if c.total.total %}{{ c.total.same }}/{{ c.total.total }}{% else %}–{% endif %}</td>{% endfor %}</tr></tfoot>
+      </table>
+      </div>
+    </details>
+    {% endif %}
+
+    <details class="viewer-section" id="columns">
+      <summary><h2>Changed Columns</h2></summary>
+      <div class="viewer-table-head">
+        <p class="hint">The same path as a table, for this combination alone: each ancestor's ML {% if t.cells == "codons" %}codons{% else %}residues{% endif %} with their
+          posterior probabilities (small number, and colour); outlined cells differ from the row above{% if t.codons and t.show_silent %}, dashed ones
+          have the same amino acid but another codon (a silent change){% endif %}. <span class="legend-tiles">{% for pp, style in legend %}<span style="{{ style }}">{{ pp }}</span>{% endfor %}</span></p>
+        <div class="table-tools"><a href="{{ path_excel_url }}">Download Excel</a>
+          <label class="palette">Columns
+            <select name="cols">
+              <option value="changes"{% if only_changes %} selected{% endif %}>Only those that change</option>
+              <option value="all"{% if not only_changes %} selected{% endif %}>All</option>
+            </select></label>
+          {% if has_codons %}<label class="palette">Cells
+            <select name="cells">
+              <option value="amino"{% if cells == "amino" %} selected{% endif %}>Amino acids</option>
+              <option value="codons"{% if cells == "codons" %} selected{% endif %}>Codons</option>
+            </select></label>{% endif %}
+        </div>
+      </div>
+      {% if t.columns %}
+      <div class="path-scroll">
+      <table class="path-table{% if t.cells == 'codons' %} codons{% endif %}">
+        <thead>
+          <tr><th class="name">Alignment column</th>{% for c in t.columns %}<th class="col"><span>{{ c }}</span></th>{% endfor %}</tr>
+          <tr><th class="name">Site in {{ path.0 }}</th>{% for n in t.first_numbers %}<th class="col"><span>{{ n|default_if_none:"–" }}</span></th>{% endfor %}</tr>
+        </thead>
+        <tbody>{% for row in t.rows %}{% ifchanged row.on_path %}{% if not row.on_path %}
+          <tr class="separator"><th class="name">For comparison</th><td colspan="{{ t.columns|length }}"></td></tr>{% endif %}{% endifchanged %}
+          <tr class="{% if row.on_path %}on-path{% else %}compare{% endif %}"><th class="name"{% if row.extant %} title="extant sequence"{% endif %}>{% if row.extant %}<em>{{ row.name }}</em>{% else %}{{ row.name }}{% endif %}</th>{% for cell in row.cells %}<td class="{% if cell.changed %}changed{% elif cell.silent %}silent{% endif %}{% if cell.char == '–' %} gap{% endif %}"{% if cell.style %} style="{{ cell.style }}"{% endif %}{% if cell.codon and t.cells != 'codons' %} title="{{ cell.codon }}"{% endif %}>{{ cell.char }}{% if cell.pp is not None %}<small>{{ cell.pp|floatformat:2 }}</small>{% endif %}</td>{% endfor %}</tr>{% endfor %}
+        </tbody>
+      </table>
+      </div>
+      {% else %}<p>No alignment column changes along this path.</p>{% endif %}
+    </details>
+    {% endwith %}{% endif %}
+
+    <details class="viewer-section" id="saved"{% if saved_paths or not path %} open{% endif %}>
+      <summary><h2>Saved Paths</h2></summary>
+      {% if saved_paths %}
+      <ul class="saved-paths">{% for s in saved_paths %}
+        <li{% if saved and s.id == saved.id %} class="current"{% endif %}><a href="{{ s.url }}">{{ s.name }}</a>
+          <span class="hint">{{ s.start }} → {{ s.end }} · {{ s.combination }}</span>
+          <button type="submit" class="mini" form="path-unsave" formaction="{% url 'path_unsave' job.id s.id %}" name="next" value="{% if canonical_url %}{{ canonical_url }}{% else %}{% url 'path_viewer' job.id %}{% endif %}" title="Remove this saved path" aria-label="Remove {{ s.name }}">×</button></li>{% endfor %}
+      </ul>
+      {% else %}<p class="hint">None yet. Name a path at the top of this page and choose <em>Save path</em>: it is
+        then listed here and on the tree viewer, with the view it was saved in.</p>{% endif %}
+    </details>
+  </div>
+</form>
+{% endif %}
+{% if oob %}{% include "phylobot/_path_back.html" %}{% endif %}

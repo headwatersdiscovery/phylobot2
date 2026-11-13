@@ -1,0 +1,141 @@
+{% extends "phylobot/base.html" %}
+{% block title %}Properties · {{ job.name|default:"Job" }} · PhyloBot{% endblock %}
+{% block content %}
+{% load static %}<script src="{% static 'phylobot/plots.js' %}" defer></script><script src="{% static 'phylobot/property_help.js' %}" defer></script><script src="{% static 'phylobot/compare.js' %}" defer></script>
+<p class="hint"><a href="{% url 'job_detail' job.id %}">← {{ job.name|default:"Job" }}</a></p>
+<h1>Properties Across Combinations</h1>
+{% if selection and panels %}
+{# One GET form, so every view — node, gap version, which combinations are shown — is #}
+{# in the address and can be shared or put in a paper. #}
+<form id="compare" class="viewer compare sectioned" method="get" action="{% url 'job_properties' job.id %}"
+      data-palette="{{ palette }}">
+  <aside class="compare-side">
+    <label>Ancestral node
+      <select name="node" onchange="this.form.submit()">{% for choice in nodes %}
+        <option value="{{ choice.name }}"{% if choice.name == node %} selected{% endif %}>{{ choice.label }}</option>{% endfor %}
+      </select></label>
+    <label>Reconstruction / gap masking
+      <select name="gaps" onchange="this.form.submit()">{% for key, label in versions %}
+        <option value="{{ key }}"{% if key == version %} selected{% endif %}>{{ label }}</option>{% endfor %}
+      </select></label>
+    <input type="hidden" name="aligner" value="{{ aligner }}">
+    <input type="hidden" name="combination" value="{{ combination }}">
+
+    <p class="compare-side-title">Ancestors compared</p>
+    {% if top_choices %}
+    <label>Combinations per alignment
+      <select name="top" data-top-default="{{ top_default }}" data-per-alignment="{{ per_alignment }}"
+              data-groups="{{ alignment_groups }}">{% for n in top_choices %}
+        <option value="{{ n }}"{% if n == top %} selected{% endif %}>Best {{ n }} by BIC</option>{% endfor %}
+        <option value="all"{% if top == "all" %} selected{% endif %}>All ({{ per_alignment }})</option>
+      </select></label>
+    <p class="hint">Comparing {{ compared }} of this job's {{ combination_count }} combinations.</p>
+    {% endif %}
+    <p class="hint">The same ancestor, reconstructed under each alignment × tree × model.
+      Untick one to take it off the plots; the axes do not move, so the readings stay
+      comparable.</p>
+    <ul class="compare-list">{% for c in candidates %}
+      <li><label class="viz-pill s{{ forloop.counter0|add:1 }}">
+        <input type="checkbox" name="show" value="{{ c.key }}"{% if c.shown %} checked{% endif %}
+               onchange="this.form.submit()">
+        <span class="swatch" aria-hidden="true"></span>
+        <span class="compare-name">{{ c.label }}<br><small>{{ c.node }}</small></span>
+      </label></li>{% endfor %}
+    </ul>
+    <p class="compare-side-title">Display</p>
+    {# The hidden field is what an unticked box submits: without it the parameter is #}
+    {# simply absent, which is indistinguishable from "never set" and so could never #}
+    {# turn the means off. Django's QueryDict.get takes the last value, so a ticked #}
+    {# box, which submits after this, wins. #}
+    <input type="hidden" name="means" value="off">
+    <label class="compare-check"><input type="checkbox" name="means" value="on"
+             {% if show_means %}checked{% endif %} onchange="this.form.submit()">
+      Show posterior means on the histograms</label>
+    <label>Colours
+      <select name="palette" onchange="this.form.submit()">{% for key, label, note in palettes %}
+        <option value="{{ key }}"{% if key == palette %} selected{% endif %}>{{ label }}</option>{% endfor %}
+      </select></label>
+    {% for key, label, note in palettes %}{% if key == palette %}<p class="hint">{{ note }}</p>{% endif %}{% endfor %}
+    <noscript><button class="primary">Update</button></noscript>
+    <dialog id="top-warning" class="top-warning" aria-labelledby="top-warning-title">
+      <h2 id="top-warning-title">Compare More Combinations?</h2>
+      <p>This reads and overlays the property draws of up to
+        <strong data-top-count></strong> combinations. On a large job the page can take
+        several seconds to load, and scrolling and redrawing the plots can become
+        sluggish, more so on a slower computer.</p>
+      <p class="actions">
+        <button type="button" class="primary" data-top-confirm>Compare them</button>
+        <button type="button" data-top-cancel>Cancel</button>
+      </p>
+    </dialog>
+    {% if missing %}
+    <p class="compare-missing"><strong>Not recovered under:</strong>
+      {% for label in missing %}{{ label }}{% if not forloop.last %}, {% endif %}{% endfor %}.
+      Those combinations' trees do not contain this clade, so there is no ancestor of
+      theirs to compare — which is itself worth knowing.</p>
+    {% endif %}
+    <p class="hint"><a href="{{ viewer_url }}">Open {{ node }} in the ancestor viewer →</a></p>
+  </aside>
+
+  <div class="compare-main">
+    <p class="hint">{{ node }} · {{ version_label }} · {{ candidates|length }} combination{{ candidates|length|pluralize }}
+      measured this ancestor.</p>
+    {% for item in panels %}{% with panel=item.panel %}
+    <section class="viewer-section compare-panel">
+      <h2>{{ panel.label }}{% if panel.units %} <span class="units">({{ panel.units }})</span>{% endif %}{% include "phylobot/_property_help.html" with key=panel.key method=item.method help_id=panel.key %}</h2>
+      {% if panel.spread %}<p class="compare-lead">Posterior means span
+        <strong>{{ panel.spread }}</strong> across the combinations shown.</p>{% endif %}
+
+      {# The overlay: every distribution on one axis, filled with alpha so agreement #}
+      {# shows as overlap and disagreement as separation. #}
+      <figure class="plot compare-overlay" data-filename="{{ node }}.{{ panel.key }}.overlay">
+        <div class="plot-tools">Download <button type="button" class="link" data-plot-download="png">PNG</button> · <button type="button" class="link" data-plot-download="svg">SVG</button></div>
+        {% with a=panel.axis %}
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {{ a.width }} {{ a.height }}"
+             width="{{ a.width }}" height="{{ a.height }}" role="img"
+             font-family="system-ui, -apple-system, 'Segoe UI', sans-serif"
+             aria-label="{{ panel.label }}: the posterior distribution under each combination, on one axis">
+          <line class="viz-grid" x1="{{ a.left }}" x2="{{ a.right }}" y1="{{ a.baseline }}" y2="{{ a.baseline }}"/>
+          {% for s in panel.drawn %}<polygon class="viz-area s{{ s.colour }}" points="{{ s.area }}"/>
+          <polyline class="viz-line s{{ s.colour }}" fill="none" points="{{ s.outline }}"/>{% endfor %}
+          {# Each mean as a line, labelled directly above it. Labels stack into lanes #}
+          {# rather than shifting sideways, so each stays over the line it names. #}
+          {% for m in panel.means %}<line class="viz-mean s{{ m.colour }}" x1="{{ m.x }}" x2="{{ m.x }}"
+                y1="{{ m.y }}" y2="{{ a.baseline }}"/>
+          <text class="viz-mean-label s{{ m.colour }}" x="{{ m.label_x }}" y="{{ m.y }}"
+                text-anchor="middle" font-size="10.5"
+                {# A halo, as the tree viewer's labels use: a line from a higher lane #}
+                {# passes through the labels below it, and would otherwise strike them out. #}
+                stroke="#ffffff" stroke-width="2.5" paint-order="stroke">{{ m.text }}</text>{% endfor %}
+          {% for x, label in a.ticks %}<text x="{{ x }}" y="{{ a.baseline|add:'18' }}" text-anchor="middle" font-size="13" class="viz-label">{{ label }}</text>{% endfor %}
+        </svg>
+        {% endwith %}
+      </figure>
+
+      <div class="sites-scroll">
+        <table class="compare-table">
+          <thead><tr><th>Combination</th><th>Node</th><th>Mean</th><th>sd</th>
+            <th>{{ panel.level }}% interval</th><th>f(ML)</th><th>Offset (sd)</th><th>Draws</th></tr></thead>
+          <tbody>{% for s in panel.series %}
+            <tr{% if not s.shown %} class="off"{% endif %}>
+              <th scope="row" class="viz-pill s{{ s.colour }}"><span class="swatch" aria-hidden="true"></span>{{ s.label }}</th>
+              <td>{{ s.node }}</td><td>{{ s.mean }}</td><td>{{ s.sd }}</td>
+              <td>{{ s.low }} to {{ s.high }}</td><td>{{ s.ml }}</td><td>{{ s.shift }}</td>
+              <td>{{ s.draws }}</td></tr>{% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </section>
+    {% endwith %}{% endfor %}
+    <p class="property-caveat">Draws are per-column marginal posteriors, drawn
+      independently, so each drawn sequence is not guaranteed to be jointly plausible;
+      these distributions describe reconstruction uncertainty, not a prediction of any
+      measured quantity.</p>
+  </div>
+</form>
+{% else %}
+<p>Nothing to compare: {% if not selection %}this job has no ancestors{% else %}no
+  combination of this job measured properties for this ancestor{% endif %}.
+  {% if selection %}<a href="{{ viewer_url|default:'' }}">Back to the ancestor viewer</a>.{% endif %}</p>
+{% endif %}
+{% endblock %}

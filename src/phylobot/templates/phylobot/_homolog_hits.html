@@ -1,0 +1,33 @@
+{# Every hit, selected or not, with a checkbox each: ticked = in the selection. homologs.js #}
+{# turns a tick that disagrees with the base (data-default) into an include/exclude, and a #}
+{# heading's button into ?sort= (the server sorts: homolog_views.hit_rows). #}
+<table class="hits">
+  <thead><tr>
+    {% for key, heading, numeric in sort_columns %}
+    {% with up=key down="-"|add:key %}
+    <th{% if numeric %} class="num"{% endif %}{% if sort == up or not sort and key == "rank" %} aria-sort="ascending"{% elif sort == down %} aria-sort="descending"{% endif %}>
+      <button type="button" class="sort" data-sort="{{ key }}"
+              title="Sort by {{ heading|lower }}{% if sort == up or not sort and key == 'rank' %} (reversed){% endif %}">{% if key == "use" %}<span class="visually-hidden">Selected</span>✓{% else %}{{ heading }}{% endif %}<span class="sort-mark" aria-hidden="true">{% if sort == up or not sort and key == "rank" %}▲{% elif sort == down %}▼{% endif %}</span></button></th>
+    {% endwith %}
+    {% endfor %}
+  </tr></thead>
+  <tbody>
+    {% for r in rows %}
+      <tr class="{% if r.choice %}choice-{{ r.choice }}{% endif %}{% if not r.selected %} unselected{% endif %}">
+        <td><input type="checkbox" class="pick" data-id="{{ r.hit.id }}" data-default="{{ r.default|yesno:'1,0' }}"
+                   aria-label="Use {{ r.hit.id }}"{% if r.selected %} checked{% endif %}></td>
+        <td class="num">{{ r.rank }}</td><td>{{ r.hit.name }}</td><td>{{ r.hit.taxon }}</td>
+        <td class="num">{{ r.hit.coverage|floatformat:0 }}%</td><td class="num">{{ r.hit.identity|floatformat:0 }}%</td>
+        <td class="num">{{ r.hit.evalue|stringformat:".1e" }}</td><td class="num">{{ r.hit.length }}</td>
+        <td><a href="{{ r.link }}" rel="noopener noreferrer" target="_blank">{{ r.hit.id }}</a></td>
+        <td>{% if r.is_query %}<span class="tag query" title="The query sequence; kept despite the identity filter, since the reconstruction needs it. Untick to leave it out.">query</span>
+          {% elif r.choice == "included" %}<span class="tag included">included by you</span>
+          {% elif r.choice == "excluded" %}<span class="tag excluded">excluded by you</span>{% endif %}
+          {% if r.reason %}<span class="hint">{{ r.reason }}</span>{% endif %}
+          {% if not r.has_sequence %}<span class="hint">no full-length sequence</span>{% endif %}</td>
+      </tr>
+    {% empty %}
+      <tr><td colspan="10" class="hint">None.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>

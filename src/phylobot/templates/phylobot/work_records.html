@@ -1,0 +1,82 @@
+{% extends "phylobot/base.html" %}
+{% load phylobot_extras l10n static %}
+{% block title %}Work Records · PhyloBot{% endblock %}
+{% block content %}
+<script src="{% static 'phylobot/sort.js' %}" defer></script>
+<h1>Work Records</h1>
+<p>Each finished job's estimated work beside the CPU time it used, stage by stage{% if not local_mode %}, for
+  every user{% endif %}: the data <a href="{% url 'work_estimate' %}">the work estimate</a> learns
+  from. A stage counts each step once, as the estimate does (steps that finished or were
+  reused from an earlier attempt); failed steps and retries are only in the job's total.</p>
+<p class="hint">{% if seconds_per_unit %}One work unit is {{ seconds_per_unit|duration }} of CPU time
+  here, the median over the last {{ learned_from }} successful job{{ learned_from|pluralize }}
+  (at most {{ history }}, marked ●).{% else %}This server is not calibrated yet, so ratios
+  use the reference machine's {{ per_unit|duration }} per unit.{% endif %}
+  A ratio is CPU time used ÷ (units × that time): 1 means the estimate was right. Jobs from
+  before input sizes were recorded have no estimate per stage, only the job's.</p>
+<p><a class="button with-icon" href="?format=csv&amp;limit={{ limit }}" download>{% include "phylobot/_icon.html" with name="download" size=16 %} Download as CSV</a>
+  <span class="hint">one line per job and stage, {{ rows|length }} job{{ rows|length|pluralize }}
+  (newest first; <a href="?limit=2000">show up to 2000</a>)</span></p>
+
+{% if summary %}
+<section class="step">
+  <h2>By Stage</h2>
+  <p class="hint">Over the successful jobs below.</p>
+  <table class="results">
+    <thead><tr><th class="label">Stage</th><th>CPU time used</th><th>Jobs with an estimate</th><th>Median used ÷ estimated</th></tr></thead>
+    <tbody>
+      {% for s in summary %}
+        <tr><td class="label">{{ s.label }}</td><td>{{ s.cpu_seconds|duration }}</td><td>{{ s.jobs }}</td>
+          <td>{% if s.median_ratio is not None %}{{ s.median_ratio|floatformat:2 }}{% else %}–{% endif %}</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</section>
+{% endif %}
+
+<section class="step">
+  <h2>Jobs</h2>
+  {% if rows %}<p class="table-search-row"><span class="hint" data-table-search-count="work-records-table"></span>
+      <input type="search" class="table-search" data-table-search="work-records-table" placeholder="Search…" aria-label="Search Jobs" autocomplete="off"></p>{% endif %}
+  {% if rows %}
+    {# table.grouped: sort.js sorts and searches each job's <tbody> by its job row. #}
+    <table class="results work-records grouped" id="work-records-table">
+      <thead><tr><th class="sortable label"><button type="button" class="sort">Job</button></th><th class="label">Stage</th><th>Steps</th><th class="sortable"><button type="button" class="sort">Work units</button></th>
+        <th class="sortable"><button type="button" class="sort">CPU time used</button></th><th class="sortable"><button type="button" class="sort">Used ÷ estimated</button></th><th>Largest step's memory</th><th class="sortable"><button type="button" class="sort">Finished</button></th></tr></thead>
+      {% for row in rows %}{% with r=row.record %}
+        <tbody class="work-record">
+          <tr class="job-total">
+            <td class="label" data-sort="{{ r.job.name|default:'(unnamed)' }}"><a href="{% url 'job_detail' r.job.id %}">{{ r.job.name|default:"(unnamed)" }}</a>
+              {% if r.counted %}<span title="counted in this server's calibration">●</span>{% endif %}
+              <span class="hint">{{ r.job.id|stringformat:"s"|slice:":8" }}{% if not local_mode %} · {{ r.job.owner }}{% endif %}
+                · {{ r.job.status }}
+                {% if r.size %}· {{ r.size.sequences }} seq × {{ r.size.length|floatformat:"0" }}{% endif %}
+                {% if r.cpus %}· given {{ r.cpus }} CPU{{ r.cpus|pluralize }}, {{ r.memory_bytes|filesizeformat }}{% endif %}</span></td>
+            <td class="label"><strong>Job</strong></td>
+            <td></td>
+            <td>{% if r.job.work_units %}{{ r.job.work_units|floatformat:1 }}{% else %}–{% endif %}</td>
+            <td data-sort="{{ r.job.cpu_seconds|default_if_none:''|unlocalize }}">{{ r.job.cpu_seconds|duration }}</td>
+            <td>{% if row.ratio is not None %}{{ row.ratio|floatformat:2 }}{% else %}–{% endif %}</td>
+            <td></td>
+            <td data-sort="{{ r.job.finished_at|date:'c' }}">{{ r.job.finished_at|date:"Y-m-d H:i" }}</td>
+          </tr>
+          {% for stage, ratio in row.stages %}
+            <tr class="stage">
+              <td></td>
+              <td class="label">{{ stage.label }}</td>
+              <td>{{ stage.tasks }}</td>
+              <td>{% if stage.estimated_units is not None %}{{ stage.estimated_units|floatformat:2 }}{% else %}–{% endif %}</td>
+              <td>{{ stage.cpu_seconds|duration }}</td>
+              <td>{% if ratio is not None %}{{ ratio|floatformat:2 }}{% else %}–{% endif %}</td>
+              <td>{% if stage.peak_rss_bytes %}{{ stage.peak_rss_bytes|filesizeformat }}{% else %}–{% endif %}</td>
+              <td></td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      {% endwith %}{% endfor %}
+    </table>
+  {% else %}
+    <p class="hint">None yet: jobs appear here once they have finished.</p>
+  {% endif %}
+</section>
+{% endblock %}

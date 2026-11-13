@@ -1,0 +1,90 @@
+/* High legibility skin (phylobot.skins), for low-vision readers: Clean's layout
+   (clean.css applies to it too) with larger text, the Atkinson Hyperlegible typefaces
+   (letters that are hard to confuse: I l 1, O 0, rn m), darker text, visible control
+   borders, always-underlined links, larger click targets and a strong focus ring.
+   Text and muted text are at least 7:1 against their background (WCAG AAA); borders
+   of controls at least 3:1.
+   Server-drawn SVG figures scale with their width, not with the text size. */
+
+/* Fonts live in static/phylobot/fonts (see its README); a browser downloads them only
+   when this skin is in use. */
+@font-face { font-family: "Atkinson Hyperlegible Next"; font-style: normal; font-weight: 400; font-display: swap;
+  src: url("../fonts/atkinson-hyperlegible-next-latin-400-normal.woff2") format("woff2"); }
+@font-face { font-family: "Atkinson Hyperlegible Next"; font-style: italic; font-weight: 400; font-display: swap;
+  src: url("../fonts/atkinson-hyperlegible-next-latin-400-italic.woff2") format("woff2"); }
+@font-face { font-family: "Atkinson Hyperlegible Next"; font-style: normal; font-weight: 600; font-display: swap;
+  src: url("../fonts/atkinson-hyperlegible-next-latin-600-normal.woff2") format("woff2"); }
+@font-face { font-family: "Atkinson Hyperlegible Next"; font-style: normal; font-weight: 700; font-display: swap;
+  src: url("../fonts/atkinson-hyperlegible-next-latin-700-normal.woff2") format("woff2"); }
+@font-face { font-family: "Atkinson Hyperlegible Mono"; font-style: normal; font-weight: 400; font-display: swap;
+  src: url("../fonts/atkinson-hyperlegible-mono-latin-400-normal.woff2") format("woff2"); }
+@font-face { font-family: "Atkinson Hyperlegible Mono"; font-style: normal; font-weight: 600; font-display: swap;
+  src: url("../fonts/atkinson-hyperlegible-mono-latin-600-normal.woff2") format("woff2"); }
+
+:root[data-skin="legible"] {
+  --font: "Atkinson Hyperlegible Next", system-ui, sans-serif;
+  --mono: "Atkinson Hyperlegible Mono", ui-monospace, Menlo, monospace;
+  font-size: 18px;          /* rem: every rem-sized rule grows by an eighth */
+  --fg: #0f141b;            /* 18:1 on white */
+  --fg-2: #1f2733;
+  --muted: #434c59;         /* 8.6:1 on white, 7.7:1 on the page grey */
+  --line: #c9cfd7;
+  --edge: #6f7887;          /* control and card borders: 4.6:1 */
+  --hover-edge: #3f4855;
+  --accent: #1b4b94;        /* 8.9:1 on white */
+  --accent-hover: #153d7a;
+  --accent-soft: #e3ecfa;
+  --accent-ring: rgba(27, 75, 148, .35);
+  --link-line: currentColor;
+  --running-fg: #173f7e; --ok-fg: #14532b; --bad-fg: #7d1d14; --neutral-fg: #2f3742;
+  --danger: #8f2418;
+  --danger-edge: #8f2418;
+  --track: #c9cfd7;
+  --select-arrow: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%23434c59' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E");
+
+  & body { font-family: var(--font); font-size: 18px; line-height: 1.6; letter-spacing: .005em; }
+  & :is(textarea, pre, code, .change, .command pre) { font-family: var(--mono); }
+  & textarea { font-size: 16px; line-height: 1.5; }
+  & input[type=file] { font-size: .95rem; color: var(--muted); }
+  & input[type=file]::file-selector-button { font-family: var(--font); font-size: 1rem; font-weight: 600; }
+  & pre { font-size: 15px; }
+  & :is(table.grid, table.results) { font-size: 16px; }
+  & main { max-width: 1280px; }
+  & h1 { font-size: 2rem; letter-spacing: -.01em; }
+  & h2, & section.step h2 { font-size: 1.3rem; }
+  & h3 { font-size: 1.08rem; }
+  & :is(.hint, .search-summary) { font-size: .95em; }
+  & header .user, & .skin-picker, & .skin-picker select { font-size: .9rem; }
+
+  /* Links: always underlined (not by colour alone), thicker on hover. */
+  & a { text-decoration-thickness: 1px; }
+  & a:hover { text-decoration-thickness: 2px; }
+  & header nav :is(a, summary), & header .brand, & a.button, & .head-action, & a.chip { text-decoration: none; }
+  & header nav :is(a, summary) { color: var(--fg); font-weight: 600; }
+  & header nav :is(a[aria-current="page"], summary.current) { outline: 2px solid var(--accent); outline-offset: -2px; }
+
+  /* Larger targets (about 44 px), firmer edges, a focus ring that cannot be missed. */
+  & button:not(.link, .toggle, .icon-button, .chip-remove, .job-panel-close, .job-panel-tab, .sort, .help-dot, .mini, .fold-toggle),
+  & a.button, & .head-action { min-height: 2.5rem; padding: .5rem 1.1rem; font-size: 1rem; font-weight: 600; }
+  & input:is([type=text], [type=number], [type=email], [type=password], [type=search], :not([type])),
+  & select { min-height: 2.4rem; font-size: 1rem; padding: .4rem .7rem; }
+  & select { padding-right: 2rem; }
+  & input[type=checkbox], & input[type=radio] { width: 1.25rem; height: 1.25rem; vertical-align: -.25em; margin-right: .45rem; }
+  & ul label, & .model-options label { line-height: 2.1; }
+  & :is(button, a, input, select, textarea, summary):focus-visible {
+    outline: 3px solid var(--accent); outline-offset: 2px; box-shadow: 0 0 0 6px #ffd84d; }
+  & :is(input, select, textarea):focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-ring); }
+  & section.step, & section.results, & details.inputs, & details.stages, & details.files, & details.libraries, & .snippet, & .viewer {
+    border-color: #aab2bd; }
+  & :is(table.results, table.grid) :is(th, td) { border-color: var(--line); padding: .45rem .75rem; }
+  & table.jobs thead th, & table.hits thead th { color: var(--fg-2); font-size: .85rem; }
+  & .status { font-size: .85rem; }
+
+  /* Residues: the monospaced face, where I/L/l and O/Q/0 matter most. */
+  & :is(table.ancestor-sites td.tile, table.ancestor-sites td.extant, table.path-table td) { font-family: var(--mono); }
+  & table.ancestor-sites td.tile { width: 3.6rem; min-width: 3.6rem; }
+  & table.path-table td { width: 2.2rem; min-width: 2.2rem; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  :root[data-skin="legible"] :is(button, a, input, select) { transition-duration: .1s; }
+}

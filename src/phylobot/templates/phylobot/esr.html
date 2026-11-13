@@ -1,0 +1,166 @@
+{% extends "phylobot/base.html" %}
+{% load static %}
+{% block title %}Extant Sequence Reconstruction · PhyloBot{% endblock %}
+{% block content %}
+<script src="{% static 'phylobot/simulations.js' %}" defer></script><script src="{% static 'phylobot/toc.js' %}" defer></script><script src="{% static 'phylobot/sort.js' %}" defer></script>
+<div class="toc-layout">
+<nav class="about-toc page-toc" data-toc aria-label="On this page">
+  <p class="about-toc-title">On this page</p>
+  <ol>
+    <li><a href="#esr-form">New ESR Run</a>
+      <ol>
+        <li><a href="#esr-name">Name and Seed</a></li>
+        <li><a href="#esr-combo">Alignment, Tree and Model</a></li>
+        <li><a href="#esr-holdout">Sequences to Hold Out</a></li>
+        <li><a href="#esr-levels">Levels</a></li>
+      </ol></li>
+    <li><a href="#my-esr">My ESR Jobs</a></li>
+  </ol>
+</nav>
+<div class="toc-main">
+<h1>Extant Sequence Reconstruction</h1>
+<div class="sim-intro">
+<p class="hint">How good are the posteriors behind your ancestors? ESR holds out a sequence
+  whose residues are known, reconstructs it as if it were an ancestor, and compares the two.
+  <button type="button" class="help-dot" popovertarget="help-esr" aria-label="About extant sequence reconstruction (ESR)">?</button><span class="help-popover" popover id="help-esr"><strong>Extant sequence reconstruction (ESR)</strong><span><span>The held-out sequence is reconstructed with the same alignment, tree and model as your ancestors were. Over many sequences it shows whether a posterior of 0.8 is right about 80% of the time: the accuracy and calibration of the reconstruction, on your own data.</span><span><a href="https://doi.org/10.1007/s00239-024-10162-3" target="_blank" rel="noopener noreferrer">Sennett &amp; Theobald 2024</a>.</span></span></span></p>
+  {% include "phylobot/_esr_cartoon.html" %}
+</div>
+
+<form method="post" id="esr-form" class="simulation-form" enctype="multipart/form-data" data-show-when-form>
+  {% csrf_token %}
+  {% if form.errors %}
+    <div class="errors">
+      {% for message in form.non_field_errors %}<p>{{ message }}</p>{% endfor %}
+      {% for field in form %}{% for message in field.errors %}
+        <p>{{ field.label }}: {{ message }}</p>
+      {% endfor %}{% endfor %}
+    </div>
+  {% endif %}
+
+  <section class="step" id="esr-name">
+    <h2><span class="step-number">1</span> Name and Seed</h2>
+    <p><label for="{{ form.name.id_for_label }}">{{ form.name.label }}</label> {{ form.name }}</p>
+    <p><label for="{{ form.seed.id_for_label }}">Random seed</label> {{ form.seed }}
+      <button type="button" class="help-dot" popovertarget="help-esr-seed" aria-label="About random seed">?</button><span class="help-popover" popover id="help-esr-seed"><strong>Random seed</strong><span>IQ-TREE's seed, and the one that draws a random sample of sequences in step 3.</span></span></p>
+  </section>
+
+  <section class="step" data-stage="trees" id="esr-combo">
+    <h2><span class="step-number">2</span> Alignment, Tree and Model <button type="button" class="help-dot" popovertarget="help-esr-combo" aria-label="About alignment, tree and model">?</button><span class="help-popover" popover id="help-esr-combo"><strong>Alignment, tree and model</strong><span><span><b>From a job</b>: the combination's own alignment, tree (with its branch lengths) and model, its parameters as the job fitted them.</span><span><b>Uploaded</b>: the tree's topology is kept; its branch lengths and the model's parameters are fitted on the alignment first, as a job fits a tree you give it.</span></span></span></h2>
+    <div class="choices">{% for radio in form.source %}<label>{{ radio.tag }} {{ radio.choice_label }}</label>{% endfor %}</div>
+    <div data-show-when="source=job">
+      <p class="chosen-job-line"><span class="field-label" id="esr-job-label">Job</span>
+        <input type="hidden" name="job" id="esr-job" value="{{ chosen_job.id|default:'' }}">
+        <span id="esr-job-chosen" class="chosen-job" aria-labelledby="esr-job-label">{% if chosen_job %}{{ chosen_job.name|default:"(unnamed)" }} · {{ chosen_job.created_at|date:"Y-m-d H:i" }}{% else %}<span class="hint">none chosen</span>{% endif %}</span>
+        <button type="button" data-open-job-picker{% if not has_jobs %} disabled{% endif %}>{% if chosen_job %}Change…{% else %}Choose a job…{% endif %}</button>
+        {% if not has_jobs %}<span class="hint">None yet: your finished jobs with trees appear here.</span>{% endif %}</p>
+      <div id="esr-combinations">{% include "phylobot/_esr_combination_options.html" %}</div>
+    </div>
+    <div data-show-when="source=upload">
+      <p><label for="{{ form.alignment_file.id_for_label }}">{{ form.alignment_file.label }}</label> {{ form.alignment_file }}
+        <span class="hint">protein, aligned; at most {{ limits.max_sequences }} sequences
+          and {{ limits.max_length }} columns</span></p>
+      <p><label for="{{ form.tree_file.id_for_label }}">{{ form.tree_file.label }}</label> {{ form.tree_file }}
+        <span class="hint">the same sequences, named as in the alignment</span></p>
+      <p><label for="{{ form.matrix.id_for_label }}">Model</label> {{ form.matrix }} {{ form.variant }}</p>
+    </div>
+  </section>
+
+  <section class="step" data-stage="sequences" id="esr-holdout">
+    <h2><span class="step-number">3</span> Sequences to Hold Out <button type="button" class="help-dot" popovertarget="help-esr-holdout" aria-label="About sequences to hold out">?</button><span class="help-popover" popover id="help-esr-holdout"><strong>Sequences to hold out</strong><span>Each one is its own step, so they run side by side. The others stay in the tree as they are.</span></span></h2>
+    <div class="choices">{% for radio in form.tips %}<label>{{ radio.tag }} {{ radio.choice_label }}</label>{% endfor %}</div>
+    <p data-show-when="tips=sample"><label for="{{ form.sample.id_for_label }}">{{ form.sample.label }}</label> {{ form.sample }}</p>
+    <p data-show-when="tips=list">{{ form.tip_names }}
+      <span class="hint">Names exactly as in the alignment, one per line.</span></p>
+  </section>
+
+  <section class="step" data-stage="ancestors" id="esr-levels">
+    <h2><span class="step-number">4</span> Levels</h2>
+    {% for key, text in level_help.items %}
+      {% if key == "e0" %}<p><label>{{ form.e0 }} <strong>E0</strong> <span class="hint">· as fitted with the sequence in (quick)</span></label>
+        <button type="button" class="help-dot" popovertarget="help-esr-e0" aria-label="About E0">?</button><span class="help-popover" popover id="help-esr-e0"><strong>E0</strong><span>{{ text }}</span></span></p>
+      {% else %}<p><label>{{ form.e1 }} <strong>E1</strong> <span class="hint">· refitted without the sequence</span></label>
+        <button type="button" class="help-dot" popovertarget="help-esr-e1" aria-label="About E1">?</button><span class="help-popover" popover id="help-esr-e1"><strong>E1</strong><span>{{ text }}</span></span></p>{% endif %}
+    {% endfor %}
+  </section>
+
+  <p><button type="submit" class="primary">Run ESR</button></p>
+</form>
+
+{# Outside the form: its search box is not an ESR setting. The Simulations page's picker. #}
+<dialog id="job-picker" class="alignment-picker" aria-labelledby="job-picker-title">
+  <div class="picker-head">
+    <h2 id="job-picker-title">Choose a Job</h2>
+    <button type="button" class="icon-button" data-close-job-picker aria-label="Close">×</button>
+  </div>
+  <input type="search" name="q" placeholder="Search by name or ID…" autocomplete="off"
+         aria-label="Search your jobs"
+         hx-get="{% url 'simulation_job_picker' %}" hx-trigger="input changed delay:200ms, search"
+         hx-target="#job-picker-list" hx-swap="innerHTML">
+  <ul id="job-picker-list" class="picker-list" aria-label="Your finished jobs with trees, newest first"></ul>
+  <p class="hint">Finished jobs with trees, newest first. Its combinations are then
+    offered below.</p>
+</dialog>
+<script>
+  (() => {
+    const picker = document.getElementById("job-picker");
+    const input = document.getElementById("esr-job");
+    const shown = document.getElementById("esr-job-chosen");
+    const list = document.getElementById("job-picker-list");
+    const markChosen = () => list.querySelectorAll("[data-pick]").forEach((row) =>
+      row.classList.toggle("chosen", row.dataset.pick === input.value));
+    document.addEventListener("click", (event) => {
+      if (event.target.closest("[data-open-job-picker]")) {
+        picker.showModal();
+        if (!list.children.length) {
+          htmx.ajax("GET", "{% url 'simulation_job_picker' %}", { target: list, swap: "innerHTML" });
+        }
+        picker.querySelector('input[type="search"]').focus();
+      } else if (event.target.closest("[data-close-job-picker]")) {
+        picker.close();
+      } else if (event.target === picker) {
+        picker.close();  // a click on the backdrop
+      }
+      const row = event.target.closest("#job-picker [data-pick]");
+      if (!row) return;
+      input.value = row.dataset.pick;
+      shown.textContent = row.dataset.label;
+      document.querySelector("[data-open-job-picker]").textContent = "Change…";
+      picker.close();
+      const url = "{% url 'esr_combination_options' %}?job=" + encodeURIComponent(input.value);
+      htmx.ajax("GET", url, { target: "#esr-combinations", swap: "innerHTML" });
+    });
+    list.addEventListener("htmx:afterSwap", markChosen);
+    document.body.addEventListener("htmx:afterSettle", markChosen);
+  })();
+</script>
+
+<section class="my-simulations" id="my-esr">
+  <h2>My ESR Jobs</h2>
+  {% if esr_jobs %}<p class="table-search-row"><span class="hint" data-table-search-count="esr-table"></span>
+      <input type="search" class="table-search" data-table-search="esr-table" placeholder="Search…" aria-label="Search My ESR Jobs" autocomplete="off"></p>{% endif %}
+  {% if esr_jobs %}
+    {% if esr_jobs|length > 20 %}<div class="results-scroll" tabindex="0" aria-label="My ESR Jobs: scroll for more rows">{% endif %}
+    <table class="results" id="esr-table">
+      <thead><tr><th class="sortable label"><button type="button" class="sort">Name</button></th><th class="sortable label"><button type="button" class="sort">Status</button></th><th class="sortable"><button type="button" class="sort">Submitted</button></th><th class="sortable"><button type="button" class="sort">Sequences held out</button></th><th class="sortable label"><button type="button" class="sort">Levels</button></th><th class="sortable label"><button type="button" class="sort">On</button></th></tr></thead>
+      <tbody>
+        {% for job in esr_jobs %}{% with of=job.params.esr_of %}
+          <tr>
+            <td class="label"><a href="{% url 'job_detail' job.id %}">{{ job.name|default:"(unnamed)" }}</a></td>
+            <td class="label"><span class="status {{ job.status }}">{{ job.status }}</span></td>
+            <td>{{ job.created_at|date:"Y-m-d H:i" }}</td>
+            <td>{{ of.tips }} of {{ of.sequences }}</td>
+            <td class="label">{{ of.levels|join:", "|upper }}</td>
+            <td class="label">{% if of.kind == "job" %}{{ of.label }}{% else %}uploaded, {{ of.model }}{% endif %}</td>
+          </tr>
+        {% endwith %}{% endfor %}
+      </tbody>
+    </table>
+    {% if esr_jobs|length > 20 %}</div>
+    <p class="hint results-scroll-note">{{ esr_jobs|length }} runs: scroll the table for more.</p>{% endif %}
+  {% else %}
+    <p class="hint">None yet.</p>
+  {% endif %}
+</section>
+</div>{# .toc-main #}
+</div>{# .toc-layout #}
+{% endblock %}

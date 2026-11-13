@@ -1,0 +1,146 @@
+{% extends "phylobot/base.html" %}
+{% load static phylobot_extras %}
+{% block title %}{{ job.name|default:"Job" }} · PhyloBot{% endblock %}
+{% block content %}
+<script src="{% static 'phylobot/rename.js' %}" defer></script><script src="{% static 'phylobot/sort.js' %}" defer></script><script src="{% static 'phylobot/toc.js' %}" defer></script><script src="{% static 'phylobot/fold.js' %}" defer></script>
+<script src="{% static 'phylobot/plots.js' %}" defer></script>
+{% if job.params.branch_site %}<script src="{% static 'phylobot/ancestors.js' %}" defer></script>{% endif %}
+<div class="page-head">
+  {% include "phylobot/_job_title.html" %}
+  <div class="actions">
+    <a class="head-action" href="{% url 'job_download' job.id %}" download
+       title="The inputs and every result file, as one ZIP">
+      {% include "phylobot/_icon.html" with name="download" size=16 %} Download ZIP</a>
+    {% if not job.params.branch_site and not job.params.simulate and not job.params.esr %}<a class="head-action" href="{% url 'submit' %}?from={{ job.id }}"
+       title="Open the New Job page with this job's sequences and settings: change anything, then submit. This job is kept.">
+      {% include "phylobot/_icon.html" with name="run-again" size=16 %} Duplicate and run again</a>{% endif %}
+    <form method="post" action="{% url 'delete_jobs' %}" id="delete-job-form">
+      {% csrf_token %}<input type="hidden" name="job" value="{{ job.id }}">
+      <button type="button" class="danger-outline" id="delete-job"
+              data-name="{{ job.name|default:'(unnamed)' }}" data-status="{{ job.status }}"
+              data-dependents="{{ dependents|join:'\n' }}">Delete job</button>
+    </form>
+  </div>
+</div>
+<p class="hint">Job {{ job.id }} · submitted {{ job.created_at|date:"Y-m-d H:i" }} ·
+  {% if job.params.simulate %}simulation{% elif job.params.esr %}ESR on {{ esr_run.of.tips }} sequence{{ esr_run.of.tips|pluralize }}{% elif job.params.branch_site %}branch-site test{% elif job.params.properties_only %}properties on {{ properties_run.of.ancestors }} ancestor{{ properties_run.of.ancestors|pluralize }}{% elif job.params.uncertainty_only %}uncertainty of {{ uncertainty_run.of.combinations }} combination{{ uncertainty_run.of.combinations|pluralize }}{% elif combinations %}{{ combinations }} combination{{ combinations|pluralize }}{% else %}alignments only{% endif %}</p>
+{% if properties_run.of %}
+  {# A properties run: the way back to the ancestor it measured. #}
+  <p class="hint">Measured on <strong>{{ properties_run.of.node }}</strong> of
+    {% if properties_run.parent %}<a href="{% url 'job_detail' properties_run.parent.id %}">{{ properties_run.parent.name|default:"the job it came from" }}</a>{% else %}a job that is no longer listed{% endif %}{% if properties_run.viewer_url %} ·
+    <a href="{{ properties_run.viewer_url }}">open it in the ancestor viewer</a>{% endif %}.
+    The numbers appear there, beside that job's own.</p>
+{% endif %}
+{% if esr_run.of.kind == "job" %}
+  {# An ESR job on a combination: the way back to the job it came from (none when an #}
+  {# imported job's source was not imported with it: job_import.LINKS). #}
+  <p class="hint">On {% if esr_run.of.job %}<a href="{% url 'job_detail' esr_run.of.job %}">{{ esr_run.of.label }}</a>{% else %}{{ esr_run.of.label }} (not on this server){% endif %}.</p>
+{% endif %}
+{% if uncertainty_run.of %}
+  {# An uncertainty run: the way back to the job it measured. #}
+  <p class="hint">Measured on
+    {% if uncertainty_run.parent %}<a href="{% url 'job_detail' uncertainty_run.parent.id %}">{{ uncertainty_run.parent.name|default:"the job it came from" }}</a> ·
+    <a href="{{ uncertainty_run.url }}">open it on that job's Uncertainty page</a>{% else %}a job that is no longer listed{% endif %}.</p>
+{% endif %}
+{% if job.extends_id or job.params.extends or extensions %}
+  {# Extend (phylobot.extend): a job's results never change, so additions are new jobs. #}
+  <p class="hint lineage">{% if job.extends_id %}Extends
+    {% if job.extends.deleted_at %}{{ job.extends.name|default:"(unnamed)" }} (deleted){% else %}<a href="{% url 'job_detail' job.extends_id %}">{{ job.extends.name|default:"(unnamed)" }}</a>{% endif %}{% if job.params.inherits %}: the results of its
+    {{ job.params.inherits.alignments|join:", " }} alignment{{ job.params.inherits.alignments|pluralize }} are read from it, not copied,
+    and shown here beside this job's own{% else %}: its alignments are this job's{% endif %}.
+    {% elif job.params.extends %}{# imported: the link as the ZIP gave it #}Extends
+    {% if job.params.extends.job %}<a href="{% url 'job_detail' job.params.extends.job %}">{{ job.params.extends.name|default:"(unnamed)" }}</a>{% else %}“{{ job.params.extends.name|default:"(unnamed)" }}” (not imported here){% endif %}: its alignments are this job's.{% endif %}
+    {% if extensions %}Extended in {% for e in extensions %}<a href="{% url 'job_detail' e.id %}">{{ e.name|default:"(unnamed)" }}</a> <span class="status {{ e.status }}">{{ e.status }}</span>{% if not forloop.last %}, {% endif %}{% endfor %}.{% endif %}</p>
+{% endif %}
+{% if inherited.lost %}
+  <p class="warning">The job this one extends was deleted, and with it the results this
+    job read from it ({{ job.params.inherits.alignments|join:", " }}). Only this job's own
+    alignments are shown.</p>
+{% endif %}
+{% include "phylobot/_job_tags.html" %}
+{% if job.imported_at %}
+  <p class="imported-banner"><span class="badge imported">Imported</span>
+    Imported {{ job.imported_at|date:"Y-m-d H:i" }} from a ZIP{% if job.imported_from.phylobot_version and job.imported_from.phylobot_version != "unknown" %}
+    made by PhyloBot {{ job.imported_from.phylobot_version }}{% endif %}{% if job.exported_at %}
+    on {{ job.exported_at|date:"Y-m-d" }}{% endif %}. Its results were computed
+    elsewhere, not on this server{% if job.imported_from.cpu_seconds %}, using
+    {{ job.imported_from.cpu_seconds|duration }} of CPU time (not counted here){% endif %}.</p>
+{% endif %}
+{% if job.params.simulated %}
+  <p class="simulated-banner"><span class="badge simulated">Simulated data</span>
+    This job ran on simulated sequences{% if job.params.simulated_from %}: replicate
+    {{ job.params.simulated_from.seed }} of the simulation
+    {% if job.params.simulated_from.job %}<a href="{% url 'job_detail' job.params.simulated_from.job %}">{{ job.params.simulated_from.name|default:"(unnamed)" }}</a>{% else %}{{ job.params.simulated_from.name|default:"(unnamed)" }}{% endif %}{% endif %}.
+    Its results are not observations of real proteins.</p>
+{% endif %}
+<div class="job-layout">
+{% include "phylobot/_job_toc.html" %}
+<div class="job-sections">
+{% if inputs %}
+  <details class="inputs" id="inputs">
+    <summary><strong>{% if job.params.simulate or job.params.esr %}Inputs{% else %}Input Sequences{% endif %}</strong>{% if input_stats %}:
+      {{ input_stats.sequences }} sequence{{ input_stats.sequences|pluralize }},
+      {% if input_stats.min_length == input_stats.max_length %}{{ input_stats.min_length }}{% else %}{{ input_stats.min_length }}–{{ input_stats.max_length }}{% endif %} {% if input_stats.seqtype == "codon" %}codons (coding DNA, genetic code {{ input_stats.genetic_code.ncbi }}: {{ input_stats.genetic_code.name }}){% else %}residues{% endif %}{% endif %}
+      {% if outgroup %}· {{ outgroup|length }} in the outgroup{% endif %}
+      {% if input_stats.ambiguous_codons %}· {{ input_stats.ambiguous_codons.codons }} codon{{ input_stats.ambiguous_codons.codons|pluralize }} with ambiguous bases{% endif %}
+      {% if input_size %}<span class="hint">({{ input_size|filesizeformat }}, as submitted)</span>{% endif %}
+    </summary>
+    <p class="outgroup-names"><strong>Outgroup:</strong>
+      {% if outgroup %}{{ outgroup|join:", " }}{% else %}<span class="hint">none given (trees are not rooted on an outgroup)</span>{% endif %}</p>
+    {% if input_stats.ambiguous_codons %}{% with a=input_stats.ambiguous_codons %}<p class="ambiguity-note"><strong>Ambiguous bases:</strong>
+      {{ a.codons }} codon{{ a.codons|pluralize }} in {{ a.sequences }} sequence{{ a.sequences|pluralize }}, confirmed at submission.
+      Translated as the amino acid every possible codon gives, otherwise X; PAML codeml weighs
+      every possible codon, IQ-TREE's codon models treat the codon as unknown. Each one is
+      listed in validation.json{% if a.codons > a.listed|length %} (the first {{ a.listed|length }}){% endif %}.</p>{% endwith %}{% endif %}
+    <p>{% for name in inputs %}<a href="{% url 'job_input' job.id name %}">{{ name }}</a>{% if not forloop.last %} · {% endif %}{% endfor %}</p>
+    {% if input_text %}<pre class="sequences">{{ input_text }}</pre>
+    {% elif input_size %}<p class="hint">Too large to show here; use the download link.</p>{% endif %}
+  </details>
+{% endif %}
+<datalist id="tag-suggestions">{% for name in all_tags %}<option value="#{{ name }}">{% endfor %}</datalist>
+{% include "phylobot/_job_status.html" %}
+{% if libraries_possible %}{% include "phylobot/_job_libraries.html" %}{% endif %}
+{% if libraries_possible %}{% include "phylobot/_job_structures.html" %}{% endif %}
+</div>
+</div>
+{% include "phylobot/_delete_dialog.html" %}
+<script>
+  // The status fragment is replaced every few seconds while the job runs: keep the
+  // steps panel open or closed as the reader left it.
+  let stagesOpen = null;
+  document.body.addEventListener("toggle", (event) => {
+    if (event.target.id === "job-stages") stagesOpen = event.target.open;
+  }, true);
+  // Colour scheme of the steps graph: remembered in this browser, reapplied after each
+  // refresh.
+  const SCHEME_KEY = "phylobot.stageScheme";
+  function applyScheme(scheme) {
+    const figure = document.querySelector(".stage-graph");
+    const select = document.querySelector("[data-stage-scheme]");
+    if (!figure || !select) return;
+    if (![...select.options].some((option) => option.value === scheme)) scheme = "simple";
+    figure.dataset.scheme = scheme;
+    select.value = scheme;
+  }
+  function savedScheme() {
+    try { return localStorage.getItem(SCHEME_KEY) || "simple"; } catch { return "simple"; }
+  }
+  document.body.addEventListener("change", (event) => {
+    if (!event.target.matches("[data-stage-scheme]")) return;
+    applyScheme(event.target.value);
+    try { localStorage.setItem(SCHEME_KEY, event.target.value); } catch {}
+  });
+  applyScheme(savedScheme());
+  document.body.addEventListener("htmx:afterSwap", () => {
+    const panel = document.getElementById("job-stages");
+    if (panel && stagesOpen !== null) panel.open = stagesOpen;
+    applyScheme(savedScheme());
+  });
+  document.getElementById("delete-job").addEventListener("click", (event) => {
+    const button = event.currentTarget;
+    confirmDelete([{ name: button.dataset.name, status: button.dataset.status,
+                     dependents: button.dataset.dependents ? button.dataset.dependents.split("\n") : [] }],
+                  () => document.getElementById("delete-job-form").submit());
+  });
+</script>
+{% endblock %}

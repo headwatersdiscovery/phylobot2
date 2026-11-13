@@ -1,0 +1,231 @@
+{# The structure page's viewer (structure_views.page): one GET form, swapped by HTMX on #}
+{# any change, so a view has an address. Each panel's 3D stage is kept across swaps #}
+{# (hx-preserve): structure.js reads the new #structure-data and repaints the structures #}
+{# where they stand. Every panel sends one `ps`, `pw` and `pc`, in order: the view pairs #}
+{# them by position, so a panel with no choice to offer still sends a hidden one. #}
+<form id="viewer" class="viewer sectioned structure-viewer" method="get" action="{% url 'structure_viewer' job.id %}"
+      hx-get="{% url 'structure_viewer' job.id %}" hx-trigger="change, submit" hx-target="this"
+      hx-swap="outerHTML" hx-push-url="true">
+  <nav class="viewer-toc page-toc" data-toc aria-label="On this page">
+    <p class="viewer-toc-title">On this page</p>
+    <ol>
+      <li><a href="#choose">Select Ancestor</a></li>
+      <li><a href="#view">Structure{{ panels|length|pluralize }}</a></li>
+      {% if panels %}<li><a href="#strip">Sequence on the Structure{{ panels|length|pluralize }}</a></li>{% endif %}
+      {% if second and panels %}<li><a href="#changes">Changes</a></li>{% endif %}
+      <li><a href="#structures">Attached Structures</a></li>
+    </ol>
+  </nav>
+
+  <div class="viewer-sections">
+    {% if no_ancestors %}<p class="hint">This combination has no reconstructed ancestors.</p>{% else %}
+    <details class="viewer-section" id="choose" open>
+      <summary><h2>Select Ancestor</h2></summary>
+      <div class="viewer-controls">
+        <label>Alignment
+          <select name="aligner">{% for key, label in aligners.items %}
+            <option value="{{ key }}"{% if key == aligner %} selected{% endif %}>{{ label }}</option>{% endfor %}
+          </select></label>
+        <label>Model
+          <select name="combination">{% for key, label in models %}
+            <option value="{{ key }}"{% if key == combination %} selected{% endif %}>{{ label }}</option>{% endfor %}
+          </select></label>
+        <label>Ancestor
+          <select name="node">{% for choice in nodes %}
+            <option value="{{ choice.name }}"{% if choice.name == node %} selected{% endif %}>{{ choice.label }}</option>{% endfor %}
+          </select></label>
+        <label>Compare with
+          <select name="to">
+            <option value="">nothing: one ancestor</option>
+            <optgroup label="Ancestors">{% for choice in nodes %}{% if choice.name != node %}
+              <option value="{{ choice.name }}"{% if choice.name == to %} selected{% endif %}>{{ choice.label }}</option>{% endif %}{% endfor %}
+            </optgroup>
+            <optgroup label="Extant sequences">{% for name in extant_names %}
+              <option value="{{ name }}"{% if name == to %} selected{% endif %}>{{ name }}</option>{% endfor %}
+            </optgroup>
+          </select></label>
+        <label>Reconstruction / gap masking
+          <select name="gaps">{% for key, label in versions %}
+            <option value="{{ key }}"{% if key == version %} selected{% endif %}>{{ label }}</option>{% endfor %}
+          </select></label>
+        <input type="hidden" name="shown" value="{{ combination }}">
+        <noscript><button>Show</button></noscript>
+      </div>
+      <p class="hint"><strong>{{ first.label }}</strong>{% if second %} compared with <strong>{{ second.label }}</strong>{% endif %} ·
+        <a href="{% url 'ancestor_viewer' job.id %}?combination={{ combination|urlencode }}&amp;node={{ node|urlencode }}&amp;gaps={{ version|urlencode }}">ancestor viewer</a>{% if second and not second.extant %} ·
+        <a href="{% url 'path_viewer' job.id %}?combination={{ combination|urlencode }}&amp;path_from={{ node|urlencode }}&amp;path_to={{ to|urlencode }}&amp;gaps={{ version|urlencode }}">mutational path between them</a>{% endif %}</p>
+      {# Modelling an ancestor happens elsewhere, by the reader's own hand: nothing is sent. #}
+      <p class="hint structure-model">No structure of {% if second and not second.extant %}these ancestors{% else %}this ancestor{% endif %}? Predict one:
+        <button type="button" class="link" data-structure-copy="{{ first.residues }}">copy {{ first.label }}'s sequence</button>
+        ({{ first.residues|length }} residues){% if second and not second.extant %} or
+        <button type="button" class="link" data-structure-copy="{{ second.residues }}">{{ second.label }}'s</button>
+        ({{ second.residues|length }}){% endif %}, fold it at
+        <a href="https://alphafoldserver.com" target="_blank" rel="noopener noreferrer">AlphaFold Server</a>, ColabFold or ESMFold,
+        and <a href="#structures">upload what it gives you</a>.
+        <button type="button" class="help-dot" popovertarget="help-structure-model" aria-label="About modelling an ancestor">?</button><span class="help-popover" popover id="help-structure-model"><strong>A Model of an Ancestor</strong><span><span>PhyloBot sends nothing: you paste the sequence into the predictor yourself. The sequence copied is this page's reconstruction ({{ version_label }}), gaps removed.</span><span>AlphaFold Server and AlphaFold 3 write mmCIF files (.cif), with JSON files of confidence scores beside them. Upload the ZIP as downloaded, or one .cif: only the mmCIF is read, and from several models the top-ranked one is taken. ColabFold and ESMFold write PDB files, which upload the same way.</span><span>A model of an ancestor is recognised by its sequence, and becomes the structure that ancestor is shown on. Check the predictor's terms for what its models may be used for.</span></span></span></p>
+    </details>
+
+    <details class="viewer-section" id="view" open>
+      <summary><h2>Structure{{ panels|length|pluralize }}</h2></summary>
+      {% if not structures %}
+      <p class="hint">No structure is attached to this job yet.
+        <a href="#structures">Attach one or several</a>: PDB entries, AlphaFold models or your own files.</p>
+      {% else %}
+      <div class="viewer-controls">
+        <label><span>Colour <button type="button" class="help-dot" popovertarget="help-structure-colour" aria-label="About the colour schemes">?</button><span class="help-popover" popover id="help-structure-colour"><strong>What the Colours Show</strong><span>{% for label, about in scheme_help %}<span><b>{{ label }}.</b> {{ about }}</span>{% endfor %}<span>Every panel uses the same scheme. Grey always means "nothing to say": unchanged, or a part of the structure the alignment does not cover.</span></span></span></span>
+          <select name="scheme">{% for key, label in schemes %}
+            <option value="{{ key }}"{% if key == display.scheme %} selected{% endif %}>{{ label }}</option>{% endfor %}
+          </select></label>
+        {% if display.scheme == "pp" %}<label>Palette
+          <select name="palette">{% for key, label in palettes %}
+            <option value="{{ key }}"{% if key == palette %} selected{% endif %}>{{ label }}</option>{% endfor %}
+          </select></label>{% else %}<input type="hidden" name="palette" value="{{ palette }}">{% endif %}
+        <label>Drawn as
+          <select name="style">{% for key, label in styles.items %}
+            <option value="{{ key }}"{% if key == display.style %} selected{% endif %}>{{ label }}</option>{% endfor %}
+          </select></label>
+        <label>Side chains
+          <select name="sidechains">{% for key, label in sidechain_choices.items %}
+            <option value="{{ key }}"{% if key == display.sidechains %} selected{% endif %}>{{ label }}</option>{% endfor %}
+          </select></label>
+        <label>Background
+          <select name="background">{% for key, label in backgrounds.items %}
+            <option value="{{ key }}"{% if key == display.background %} selected{% endif %}>{{ label }}</option>{% endfor %}
+          </select></label>
+      </div>
+      {# An unticked box submits nothing, so each has its "off" before it. #}
+      <p class="structure-checks">
+        <label><input type="hidden" name="surface" value="off"><input type="checkbox" name="surface" value="on"{% if display.surface == "on" %} checked{% endif %}> Surface</label>
+        <label><input type="hidden" name="ligands" value="off"><input type="checkbox" name="ligands" value="on"{% if display.ligands == "on" %} checked{% endif %}> Ligands and ions</label>
+        <label><input type="hidden" name="labels" value="off"><input type="checkbox" name="labels" value="on"{% if display.labels == "on" %} checked{% endif %}> Label the differences</label>
+        <label><input type="hidden" name="spin" value="off"><input type="checkbox" name="spin" value="on"{% if display.spin == "on" %} checked{% endif %}> Spin</label>
+        <label{% if not several %} hidden{% endif %}><input type="hidden" name="link" value="off"><input type="checkbox" name="link" value="on"{% if display.link == "on" %} checked{% endif %}> Move the panels together</label>
+      </p>
+      <p class="structure-presets"><span class="hint">Arrange:</span>
+        {% for key, label in presets %}<button type="submit" name="preset" value="{{ key }}">{{ label }}</button>
+        {% endfor %}{% if can_add %}<button type="submit" name="add" value="1">+ Add a panel</button>{% endif %}
+        <button type="button" class="help-dot" popovertarget="help-structure-panels" aria-label="About panels">?</button><span class="help-popover" popover id="help-structure-panels"><strong>Panels</strong><span><span>A panel is one structure painted with one of the page's two sequences. Put up to four side by side: both ends of a branch on one structure, each end on the structure most like it, or one ancestor on several structures to see whether the choice of structure matters.</span><span>Panels of different structures are laid on the first one, through the residues they share alignment columns with, and then turn and zoom together. A residue picked in one panel is picked in all of them.</span></span></span></p>
+
+      <div class="structure-panels count-{{ panels|length }}" data-structure-panels>
+        {% for p in panels %}
+        <div class="structure-panel">
+          <div class="structure-panel-head">
+            <label>Structure
+              <select name="ps">{% for s in structures %}
+                <option value="{{ s.id }}"{% if s.id == p.structure.id %} selected{% endif %}>{{ s.label }}{% if s.title and not several %} · {{ s.title|truncatechars:50 }}{% endif %}</option>{% endfor %}
+              </select></label>
+            {% if second %}<label>Painted with
+              <select name="pw">
+                <option value="a"{% if p.which == "a" %} selected{% endif %}>{{ first.label }}</option>
+                <option value="b"{% if p.which == "b" %} selected{% endif %}>{{ second.label }}</option>
+              </select></label>{% else %}<input type="hidden" name="pw" value="a">{% endif %}
+            {% if p.chains|length > 1 %}<label>Chain
+              <select name="pc">{% for id in p.chains %}
+                <option value="{{ id }}"{% if id == p.focus %} selected{% endif %}>{{ id }}</option>{% endfor %}
+              </select></label>{% else %}<input type="hidden" name="pc" value="{{ p.focus }}">{% endif %}
+            {% if several %}<button type="submit" class="mini" name="drop" value="{{ p.index }}" title="Remove this panel" aria-label="Remove panel {{ p.number }}">×</button>{% endif %}
+          </div>
+          {% if p.error %}<p class="errors">{{ p.error }}</p>{% else %}
+          <div class="structure-stage" id="structure-stage-{{ p.index }}" hx-preserve="true">
+            <div class="structure-canvas" data-structure-canvas></div>
+            <div class="structure-tip" data-structure-tip hidden></div>
+            <p class="structure-status hint" data-structure-status>Loading the structure…</p>
+          </div>
+          {% if not p.focus_map %}
+          <p class="message warning">None of this structure's chains is like any sequence of this alignment, so
+            nothing can be painted on it. Is it the right protein?</p>
+          {% else %}
+          <p class="hint structure-mapping">Chain {{ p.focus }} is read through <strong>{{ p.focus_map.reference }}</strong>:
+            {{ p.focus_map.mapped }} of {{ p.residues }} residues aligned, {% widthratio p.focus_map.identity 1 100 %}% identical.{% if forloop.first %}
+            {% include "phylobot/_help.html" with id="structure-mapping" title="How an ancestor gets onto a structure" body="Each chain is aligned with the extant sequence of this job that is most like it. A residue of the structure then belongs to that sequence's column of the job's alignment, and is coloured by what the ancestor has in that column. The structure's coordinates and side chains are never changed: the drawing is the extant (or predicted) structure, painted with the ancestor." %}{% endif %}
+            {% if p.focus_map.weak %}<strong>That is distant: read the mapping as a guess.</strong>{% endif %}
+            {% if p.fit %}{% if p.fit.is_model %}<strong>This structure is {{ p.painted.label }} itself.</strong>{% else %}{{ p.painted.label }} is {% widthratio p.fit.identity 1 100 %}% identical to the chain{% if p.counts.absent %}, has no residue at {{ p.counts.absent }} of its sites{% endif %}{% if p.counts.extra %}, and has {{ p.counts.extra }} residue{{ p.counts.extra|pluralize }} where the structure has none (<span class="structure-swatch" style="background: {{ insertion_colour }}"></span>){% endif %}.{% endif %}{% endif %}
+            {% if p.superposed == "fitted" %}Laid on panel 1 by {{ p.superposition.kept }} of {{ p.superposition.pairs }} shared residues (RMSD {{ p.superposition.rmsd|floatformat:1 }} Å).{% elif p.superposed == "free" %}<strong>Too little in common with panel 1 to lay on it: this panel moves on its own.</strong>{% endif %}</p>
+          {% endif %}
+          {% if legend_per_panel %}<ul class="structure-legend">{% for label, colour in p.legend %}
+            <li><span class="structure-swatch" style="background: {{ colour }}"></span> {{ label }}</li>{% endfor %}</ul>{% endif %}
+          {% endif %}
+        </div>
+        {% endfor %}
+      </div>
+
+      {% if not legend_per_panel %}<ul class="structure-legend"><li class="structure-legend-title">{{ legend_note|default:"Colours" }}</li>{% for label, colour in legend %}
+        <li><span class="structure-swatch" style="background: {{ colour }}"></span> {{ label }}</li>{% endfor %}</ul>{% endif %}
+      <p class="structure-buttons">
+        <button type="button" data-structure-reset>Reset view</button>
+        <button type="button" data-structure-image>Save image</button>
+        <button type="button" data-structure-full>Full screen</button>
+        <span class="hint">Drag to rotate, scroll to zoom, right-drag (or Ctrl-drag) to move. Click a residue to
+          find it in the sequence below{% if several %} and in the other panels{% endif %}.</span>
+      </p>
+      <p class="structure-picked" data-structure-picked aria-live="polite"></p>
+
+      {% if fit_rows|length > 1 %}
+      <details class="structure-fits">
+        <summary>Which structure suits which sequence</summary>
+        <table class="hits">
+          <thead><tr><th>Structure</th><th>{{ first.label }}</th>{% if second %}<th>{{ second.label }}</th>{% endif %}</tr></thead>
+          <tbody>{% for row in fit_rows %}
+            <tr><td>{{ row.structure.label }}{% if row.structure.predicted %} <span class="hint">predicted</span>{% endif %}</td>
+              <td>{% if row.a %}{% if row.a.is_model %}<strong>is this sequence</strong>{% else %}{% widthratio row.a.identity 1 100 %}% identical{% endif %} · holds {% widthratio row.a.coverage 1 100 %}% of it{% else %}—{% endif %}</td>
+              {% if second %}<td>{% if row.b %}{% if row.b.is_model %}<strong>is this sequence</strong>{% else %}{% widthratio row.b.identity 1 100 %}% identical{% endif %} · holds {% widthratio row.b.coverage 1 100 %}% of it{% else %}—{% endif %}</td>{% endif %}</tr>{% endfor %}
+          </tbody>
+        </table>
+        <p class="hint">Identity is over the residues the structure and the sequence both have; "holds" is how much
+          of the sequence has a residue of the structure to be painted on. The closer the structure, the more
+          its side chains and loops mean for the ancestor.</p>
+      </details>
+      {% endif %}
+      {{ structure_data|json_script:"structure-data" }}
+      {% endif %}
+    </details>
+
+    {% if panels %}
+    <details class="viewer-section" id="strip" open>
+      <summary><h2>Sequence on the Structure{{ panels|length|pluralize }}</h2></summary>
+      <p class="hint">Each panel's chain, residue by residue: the structure's own residue, then
+        {{ first.label }}{% if second %}, then {{ second.label }}{% endif %}, in the colours above.
+        Click a residue to go to it in 3D.</p>
+      {# The lock: the strips scroll as one, held at the same alignment column (structure.js). #}
+      <p class="structure-checks"{% if not several %} hidden{% endif %}><label title="Scrolling one sequence scrolls the others to the same alignment column"><input type="hidden" name="scroll" value="off"><input type="checkbox" name="scroll" value="on"{% if display.scroll == "on" %} checked{% endif %}> {% include "phylobot/_icon.html" with name="lock" size=14 %} Scroll the sequences together</label></p>
+      {% for p in panels %}{% if p.strip %}
+      {% if several %}<p class="structure-strip-title">Panel {{ p.number }}: {{ p.painted.label }} on {{ p.structure.label }}, chain {{ p.focus }}</p>{% endif %}
+      <div class="structure-strip" data-structure-strip="{{ p.index }}">
+        <div class="sx-names"><span>&nbsp;</span><span>{{ p.structure.label }}</span><span>{{ first.label }}</span>{% if second %}<span>{{ second.label }}</span>{% endif %}</div>
+        <div class="sx-scroll">{% for cell in p.strip %}<span class="sx" data-key="{{ cell.site.key }}"{% if cell.site.column is not None %} data-col="{{ cell.site.column }}"{% endif %} title="{{ cell.tip }}"><i>{% if cell.tick or forloop.first %}{{ cell.site.residue.label }}{% endif %}</i><b>{{ cell.site.residue.aa }}</b><b{% if cell.a_style %} style="{{ cell.a_style }}"{% endif %}>{% firstof cell.a "·" %}</b>{% if second %}<b{% if cell.b_style %} style="{{ cell.b_style }}"{% endif %}>{% firstof cell.b "·" %}</b>{% endif %}</span>{% if cell.between %}<span class="sx sx-between" title="Columns {{ cell.between.first|add:1 }} to {{ cell.between.last|add:1 }}: residues the structure has no place for"><i></i><b></b>{% if p.which == "a" %}<b style="background: {{ insertion_colour }}">+{{ cell.between.count }}</b>{% if second %}<b style="background: {{ insertion_colour }}">+{{ cell.between.other }}</b>{% endif %}{% else %}<b style="background: {{ insertion_colour }}">+{{ cell.between.other }}</b><b style="background: {{ insertion_colour }}">+{{ cell.between.count }}</b>{% endif %}</span>{% endif %}{% endfor %}</div>
+      </div>
+      {% endif %}{% endfor %}
+    </details>
+    {% endif %}
+
+    {% if second and panels %}
+    <details class="viewer-section" id="changes" open>
+      <summary><h2>Changes</h2></summary>
+      <p>{{ changes_total }} site{{ changes_total|pluralize }} differ between <strong>{{ first.label }}</strong> and
+        <strong>{{ second.label }}</strong>; {{ changes_on_structure }} of them {{ changes_on_structure|pluralize:"is,are" }} at a residue of {% if several %}a structure shown{% else %}this structure{% endif %}.
+        {% if steps %}They happened along {{ steps.branches|length }} branches.{% endif %}
+        {% if changes_total > changes|length %}<span class="hint">The first {{ changes|length }} are listed.</span>{% endif %}</p>
+      {% if changes %}
+      <div class="structure-changes">
+        <table class="hits">
+          <thead><tr><th>Change</th><th class="num">Column</th><th>Kind</th>{% for p in panels %}<th>On {{ p.structure.label }}{% if several %} <span class="hint">({{ p.number }})</span>{% endif %}</th>{% endfor %}
+            <th class="num">Probability before</th><th class="num">after</th>{% if steps %}<th>Branch</th>{% endif %}</tr></thead>
+          <tbody>{% for c in changes %}
+            <tr{% if not c.on_structure %} class="off-structure"{% endif %}>
+              <td>{% if c.on_structure %}<button type="button" class="link" data-structure-col="{{ c.column|add:-1 }}">{{ c.label }}</button>{% else %}{{ c.label }}{% endif %}</td>
+              <td class="num">{{ c.column }}</td>
+              <td>{% if c.kind == "sub" %}substitution{% elif c.kind == "lost" %}deletion{% else %}insertion{% endif %}</td>
+              {% for where in c.where %}<td>{{ where|default:"—" }}</td>{% endfor %}
+              <td class="num">{% if c.pp is not None %}{{ c.pp|floatformat:2 }}{% else %}—{% endif %}</td>
+              <td class="num">{% if c.other_pp is not None %}{{ c.other_pp|floatformat:2 }}{% else %}—{% endif %}</td>
+              {% if steps %}<td>{{ c.when }}</td>{% endif %}
+            </tr>{% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% endif %}
+    </details>
+    {% endif %}
+    {% endif %}
+  </div>
+</form>

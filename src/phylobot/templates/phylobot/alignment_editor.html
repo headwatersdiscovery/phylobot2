@@ -1,0 +1,45 @@
+{% extends "phylobot/base.html" %}
+{% block title %}{{ record.title }} · Alignment Editor · PhyloBot{% endblock %}
+{% block content %}
+{% load static %}<script src="{% static 'phylobot/alignment.js' %}" defer></script>
+<script src="{% static 'phylobot/alignment_editor.js' %}" defer></script><script src="{% static 'phylobot/rename.js' %}" defer></script>
+<p class="hint"><a href="{% url 'my_alignments' %}">← My alignments</a></p>
+{# A saved alignment's name has a pencil to rename it in place (rename.js); the check #}
+{# saves it and comes back here with the edits in the URL. A job's alignment is named by its job. #}
+<div class="editable-title">
+  <div class="title-view">
+    <h1 class="aln-editor-title">Alignment Editor <span class="subtitle">{{ record.title }}</span>{% if record.simulated %} <span class="badge simulated" title="Simulated data, not real sequences">Simulated data</span>{% endif %}</h1>
+    {% if not record.from_job %}<button type="button" class="icon-button" data-rename aria-label="Rename this alignment" title="Rename">
+      {% include "phylobot/_icon.html" with name="pencil" %}
+    </button>{% endif %}
+  </div>
+  {% if not record.from_job %}<form class="title-edit" hidden method="post" action="{% url 'alignment_rename' record.id %}">{% csrf_token %}
+    <input type="hidden" name="next" value="{{ request.get_full_path }}">
+    <span class="aln-editor-title">Alignment Editor</span>
+    <input name="name" value="{{ record.name }}" maxlength="100" required aria-label="Alignment name" autocomplete="off">
+    <button type="submit" class="confirm" title="Save the new name">
+      {% include "phylobot/_icon.html" with name="check" size=18 %} Save
+    </button>
+  </form>{% endif %}
+</div>
+<p class="hint aln-origin">
+  {% if record.from_job %}{% include "phylobot/_icon.html" with name="lock" size=14 %}
+    Made by the job <a href="{% url 'job_detail' record.job.id %}">{{ record.job.name|default:"Job" }}</a>
+    ({{ record.name }}). The job depends on it, so it stays as it is: saving makes a new
+    alignment of your own.
+  {% elif record.origin == "upload" %}Uploaded{% if record.filename %} from {{ record.filename }}{% endif %}
+    on {{ record.created_at|date:"Y-m-d H:i" }}{% if record.version > 1 %}; overwritten
+    {{ record.version|add:"-1" }} time{{ record.version|add:"-1"|pluralize }} since, last on {{ record.updated_at|date:"Y-m-d H:i" }}{% if record.edits.kept_sites %}:
+    columns {{ record.edits.kept_sites }} of the uploaded file's {{ record.edits.parent_sites }}{% if record.edits.removed_sequences %},
+    {{ record.edits.removed_sequences|length }} of its sequence{{ record.edits.removed_sequences|length|pluralize }} removed{% endif %}{% endif %}{% endif %}.
+  {% else %}Saved {{ record.created_at|date:"Y-m-d H:i" }}{% if record.version > 1 %} (overwritten
+    {{ record.version|add:"-1" }} time{{ record.version|add:"-1"|pluralize }} since){% endif %}{% if derived %}, {% if record.edits.duplicate %}copied{% else %}edited{% endif %} from
+    {% if derived_older %}an earlier version of {% endif %}<a href="{% url 'alignment_editor' derived.id %}">{{ derived.title }}</a>{% endif %}{% if record.edits.kept_sites and not record.edits.duplicate %}:
+    kept columns {{ record.edits.kept_sites }} of {{ record.edits.parent_sites }}{% if record.edits.removed_sequences %},
+    removed {{ record.edits.removed_sequences|length }} sequence{{ record.edits.removed_sequences|length|pluralize }}{% endif %}{% endif %}.
+  {% endif %}
+  {% if record.seqtype == "codon" %}Coding DNA: each column is a codon.{% endif %}
+</p>
+{% include "phylobot/_alignment_editor.html" %}
+{% include "phylobot/_delete_dialog.html" %}
+{% endblock %}

@@ -1,0 +1,28 @@
+{% comment %}My alignments: the upload form's live check (alignment_editor_views.upload_check).
+A name used for different rows is the user's to resolve (rename, keep the first, or
+cancel the upload), as on the New Job page (phylobot.inputs).{% endcomment %}
+{% if not empty %}
+  {% if valid %}
+    <p class="check-ok">✓ {{ rows }} {% if codon %}coding DNA{% else %}protein{% endif %} sequence{{ rows|pluralize }} × {{ columns }} columns{% if codon %} ({{ columns }} nt){% endif %}: ready to save.</p>
+  {% elif repeats.unresolved %}{# the choice below says it all #}
+  {% elif form.non_field_errors %}
+    <div class="errors">{{ form.non_field_errors }}</div>
+  {% endif %}
+  {% if repeats.identical %}<p class="hint">{{ repeats.identical|length }} row{{ repeats.identical|length|pluralize }}
+    repeat{{ repeats.identical|length|pluralize:"s," }} a sequence already in the alignment under the same name, so one copy of
+    each is kept:{% for name, file in repeats.identical|slice:":8" %} {{ name }}{% if not forloop.last %},{% endif %}{% endfor %}{% if repeats.identical|length > 8 %} and {{ repeats.identical|length|add:"-8" }} more{% endif %}.</p>{% endif %}
+  {% if repeats.clashes %}
+    <fieldset class="name-clashes">
+      <legend>{{ repeats.clashes|length }} sequence name{{ repeats.clashes|length|pluralize:" is,s are" }} used for different rows</legend>
+      <ul class="clash-list">{% for c in repeats.clashes|slice:":12" %}
+        <li><strong>{{ c.name }}</strong> appears more than once</li>{% endfor %}
+        {% if repeats.clashes|length > 12 %}<li class="hint">and {{ repeats.clashes|length|add:"-12" }} more</li>{% endif %}
+      </ul>
+      <label><input type="radio" name="duplicates" value="rename"{% if duplicates == "rename" %} checked{% endif %}>
+        Keep both: rename the later rows ({% with c=repeats.clashes.0 %}<code>{{ c.renamed }}</code>{% endwith %}{% if repeats.clashes|length > 1 %}, …{% endif %})</label>
+      <label><input type="radio" name="duplicates" value="first"{% if duplicates == "first" %} checked{% endif %}>
+        Keep only the first one (remove the later rows)</label>
+      <p><button type="button" data-upload-cancel>Cancel this upload</button></p>
+    </fieldset>
+  {% endif %}
+{% endif %}

@@ -1,0 +1,95 @@
+{# A branch-site job's page (phylobot.branch_site_views.context): what it tests, and once #}
+{# finished the likelihood-ratio test, the two models' estimates and the BEB sites. #}
+{% with of=branch_site_of %}
+<section class="results branch-site-result">
+  <h2>Branch-Site Test of Positive Selection</h2>
+  <p>Foreground: {{ branch_site_foreground }}{% if of.branches %} ({{ of.branches }} branch{{ of.branches|pluralize:"es" }}){% endif %},
+    on the tree of {{ of.label }}
+    {% if branch_site_parent %}in <a href="{% url 'job_detail' branch_site_parent.id %}">{{ branch_site_parent.name|default:"the job it came from" }}</a>
+    (<a href="{{ branch_site_tree_url }}">show the foreground on the tree</a>){% else %}(the job it came from has been deleted){% endif %}.
+    Every other branch is background.
+    <a href="{% url 'alignment_viewer' job.id %}?scheme=synonymous&amp;tracks_set=1&amp;track=branch_site&amp;track=jsd">View the codon alignment</a>
+    with each site's probability of positive selection.</p>
+  {% if branch_site %}{% with r=branch_site %}
+  <p class="verdict"><strong>{% if r.p_value < 0.05 %}Evidence of positive selection on the foreground{% else %}No significant evidence of positive selection on the foreground{% endif %}</strong>
+    (5% level): 2ΔlnL = {{ r.statistic|floatformat:2 }}, p = {{ r.p_text }}
+    (χ², 1 degree of freedom; {{ r.p_mixture_text }} under the 50:50 mixture of 0 and χ²₁,
+    the test's exact null distribution, which is less conservative).</p>
+  {% if r.omega2_at_bound %}<p class="hint">codeml put the foreground dN/dS of the selected class (ω₂) at its
+    upper limit (999): the data cannot say how large it is (often few synonymous changes on the
+    foreground). The test can still hold, but ω₂ itself is not an estimate.</p>{% endif %}
+  <table class="results branch-site-models">
+    <thead><tr><th>Model</th><th>lnL</th><th>Parameters</th><th title="Proportions of sites in classes 0, 1, 2a, 2b">Site classes 0 / 1 / 2a / 2b</th><th title="dN/dS of class 0 (and of the background in 2a)">ω₀</th><th title="Foreground dN/dS of classes 2a and 2b">ω₂ (foreground)</th></tr></thead>
+    <tbody>{% for m in r.models %}
+      <tr><td>{% if m.model == "A" %}Model A{% else %}Null (ω₂ = 1){% endif %}</td><td>{{ m.log_likelihood|floatformat:2 }}</td><td>{{ m.free_parameters }}</td>
+        <td>{{ m.p0|floatformat:3 }} / {{ m.p1|floatformat:3 }} / {{ m.p2a|floatformat:3 }} / {{ m.p2b|floatformat:3 }}</td>
+        <td>{{ m.omega0|floatformat:3 }}</td><td>{{ m.omega2|floatformat:3 }}</td></tr>{% endfor %}
+    </tbody>
+  </table>
+  <p class="hint">Site classes: 0, dN/dS = ω₀ &lt; 1 on every branch; 1, dN/dS = 1 everywhere; 2a and 2b,
+    ω₂ on the foreground (ω₀ or 1 on the background). Model A started from ω₂ = 1.5 and 4; the best start is kept
+    (both are in branch_site/models.tsv).</p>
+  <h3>Sites</h3>
+  <p>For every codon column, Model A gives the posterior probability (Bayes empirical Bayes) that it
+    belongs to a class under positive selection on the foreground (2a or 2b).
+    {% if not r.p_value < 0.05 %}<strong>The test is not significant, so these are not evidence of
+    selection</strong>; they show where Model A would put it.{% endif %}</p>
+  {% if r.significant %}<p><strong>Above 0.95</strong> ({{ r.significant|length }} site{{ r.significant|length|pluralize }}; ** above 0.99):
+    {% for site, residue, p in r.significant %}<strong>{{ site }} {{ residue }}</strong> ({{ p|floatformat:3 }}{% if p > 0.99 %} **{% endif %}){% if not forloop.last %}, {% endif %}{% endfor %}.
+    Numbered by alignment column, as in the ancestor viewer; the residue is the alignment's first sequence's.</p>
+  {% else %}<p>No site is above 0.95{% if r.highest %}; the highest is column {{ r.highest.column }} {{ r.highest.residue }}
+    ({{ r.highest.positive|floatformat:3 }}){% endif %}.</p>{% endif %}
+  {% if r.plots %}{% with pl=r.plots %}
+  <div class="plots-row">
+    {% with f=pl.hist_frame %}
+    <figure class="plot histogram" data-filename="branch-site.{{ job.id|stringformat:'s'|slice:':8' }}.histogram">
+      <div class="plot-tools">Download <button type="button" class="link" data-plot-download="png">PNG</button> · <button type="button" class="link" data-plot-download="svg">SVG</button></div>
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {{ f.width }} {{ f.height }}" width="{{ f.width }}" height="{{ f.height }}"
+           font-family="system-ui, -apple-system, 'Segoe UI', sans-serif" role="img"
+           aria-label="Histogram: proportion of sites by posterior probability of positive selection on the foreground">
+        <rect class="background" width="{{ f.width }}" height="{{ f.height }}" fill="#ffffff"/>
+        {% for y, label in f.y_ticks %}<line x1="{{ f.left }}" x2="{{ f.right }}" y1="{{ y }}" y2="{{ y }}" stroke="#d8dde5" stroke-width="1"/>
+        <text x="{{ f.left|add:'-6' }}" y="{{ y }}" text-anchor="end" dominant-baseline="middle" font-size="13" fill="#5d6675">{{ label }}</text>{% endfor %}
+        {% for bar in pl.histogram %}<rect x="{{ bar.x }}" y="{{ bar.y }}" width="{{ bar.width }}" height="{{ bar.height }}" fill="{{ bar.fill }}">
+          <title>{{ bar.label }} ({{ bar.proportion|floatformat:3 }})</title></rect>{% endfor %}
+        {% for x, label in pl.hist_ticks %}<text x="{{ x }}" y="{{ f.bottom|add:'16' }}" text-anchor="middle" font-size="13" fill="#5d6675">{{ label }}</text>{% endfor %}
+        <text x="{{ f.center }}" y="{{ f.height|add:'-4' }}" text-anchor="middle" font-size="14" fill="#1d2330">P(positive selection on the foreground)</text>
+        <text transform="translate(12 {{ f.middle }}) rotate(-90)" text-anchor="middle" font-size="14" fill="#1d2330">Proportion of sites</text>
+      </svg>
+    </figure>
+    {% endwith %}
+    {% with f=pl.trace_frame %}
+    <figure class="plot trace" data-filename="branch-site.{{ job.id|stringformat:'s'|slice:':8' }}.sites">
+      <div class="plot-tools">Download <button type="button" class="link" data-plot-download="png">PNG</button> · <button type="button" class="link" data-plot-download="svg">SVG</button></div>
+      <svg xmlns="http://www.w3.org/2000/svg" class="pp-trace" viewBox="0 0 {{ f.width }} {{ f.height }}" width="{{ f.width }}" height="{{ f.height }}"
+           font-family="system-ui, -apple-system, 'Segoe UI', sans-serif" role="img"
+           data-left="{{ f.left }}" data-width="{{ f.plot_width }}" data-sites="bs-sites"
+           aria-label="Posterior probability of positive selection on the foreground at each alignment column">
+        <rect class="background" width="{{ f.width }}" height="{{ f.height }}" fill="#ffffff"/>
+        {% for y, label in f.y_ticks %}<line x1="{{ f.left }}" x2="{{ f.right }}" y1="{{ y }}" y2="{{ y }}" stroke="#d8dde5" stroke-width="1"/>
+        <text x="{{ f.left|add:'-8' }}" y="{{ y }}" text-anchor="end" dominant-baseline="middle" font-size="18" fill="#5d6675">{{ label }}</text>{% endfor %}
+        {% for x, number in pl.x_ticks %}<text x="{{ x }}" y="{{ f.bottom|add:'22' }}" text-anchor="middle" font-size="18" fill="#5d6675">{{ number }}</text>{% endfor %}
+        <line x1="{{ f.left }}" x2="{{ f.right }}" y1="{{ pl.threshold_y }}" y2="{{ pl.threshold_y }}" stroke="#6e6e6e" stroke-width="1.2" stroke-dasharray="6 4"/>
+        <polyline points="{{ pl.points }}" fill="none" stroke-linejoin="round" stroke="#1f4e8c" stroke-width="1.8"/>
+        {% for x, y, column, p, labelled in pl.marks %}<circle cx="{{ x }}" cy="{{ y }}" r="5" fill="#e08214"/>
+        {% if labelled %}<text x="{{ x }}" y="{{ y|add:'-10' }}" text-anchor="middle" font-size="15" fill="#1d2330">{{ column }}</text>{% endif %}{% endfor %}
+        <line class="guide" x1="0" x2="0" y1="{{ f.top }}" y2="{{ f.bottom }}" stroke="#1d2330" stroke-dasharray="3 3" visibility="hidden" pointer-events="none"/>
+        <rect class="hover" x="{{ f.left }}" y="{{ f.top }}" width="{{ f.plot_width }}" height="{{ f.plot_height }}" fill="transparent"/>
+        <text x="{{ f.center }}" y="{{ f.height|add:'-4' }}" text-anchor="middle" font-size="19" fill="#1d2330">Alignment column</text>
+        <text transform="translate(18 {{ f.middle }}) rotate(-90)" text-anchor="middle" font-size="19" fill="#1d2330">P(positive)</text>
+      </svg>
+      <div class="pp-tip" hidden></div>
+      <figcaption><span class="hint">Dashed line: 0.95; orange: sites above it (labelled where there is room). Hover for a column's probabilities.</span></figcaption>
+    </figure>
+    {% endwith %}
+  </div>
+  {{ pl.tooltip|json_script:"bs-sites" }}
+  {% endwith %}{% endif %}
+  <details class="beb-sites"><summary>Every site above 0.5 ({{ r.sites|length }}, codeml's list)</summary>
+    <ul class="selection">{% for site, residue, p in r.sites %}
+      <li>{{ site }} {{ residue }}: {{ p|floatformat:3 }}{% if p > 0.99 %} **{% elif p > 0.95 %} *{% endif %}</li>{% endfor %}
+    </ul></details>
+  {% if r.every_site %}<p class="hint">Every column with all four classes' probabilities: <a href="{% url 'job_file' job.id 'branch_site/sites.tsv' %}">sites.tsv</a>.</p>{% endif %}
+  {% endwith %}{% endif %}
+</section>
+{% endwith %}

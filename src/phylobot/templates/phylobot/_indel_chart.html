@@ -1,0 +1,25 @@
+{# The alignment viewer's indel-length histogram; inside the form, so it swaps with the alignment. #}
+{% if indel_chart %}{% with c=indel_chart m=indel_chart.measured.lengths %}
+<section id="indels" class="indel-chart">
+  <h2>Indel Lengths</h2>
+  <p class="aln-summary">{% if m.events %}{{ m.events }} interior indel{{ m.events|pluralize }} ·
+    mean {{ m.mean|floatformat:1 }} · median {{ m.median }} · longest {{ m.longest }}{% else %}No interior indels{% endif %}
+    · {{ m.end_gaps }} end gap{{ m.end_gaps|pluralize }} left out{% if m.on_tree %} ·
+    {{ m.rate|floatformat:4 }} indels per substitution{% endif %}
+    · Download: <a href="{{ export_url }}&amp;export=indels">counts (TSV)</a></p>
+  {% if m.events %}<figure class="plot" data-tips data-filename="{{ file_stem }}.indel-lengths">
+    <div class="plot-tools">Download <button type="button" class="link" data-plot-download="png">PNG</button> · <button type="button" class="link" data-plot-download="svg">SVG</button></div>
+    {% include "phylobot/_indel_histogram.html" with small=False %}
+    <div class="pp-tip" hidden></div>
+  </figure>{% endif %}
+  <p class="hint">{% if m.on_tree %}Gaps placed on the tree by Fitch parsimony
+    ({{ indel_chart.measured.combination }}, this alignment's best by BIC): an indel is a run
+    of adjacent columns gained or lost on one branch. Insertions and deletions are counted
+    together, because parsimony's ties cannot tell them apart.{% else %}This alignment has no
+    tree, so each distinct interior gap counts once. Overlapping indels read as one long
+    gap, so these lengths run longer than the indels themselves.{% endif %}
+    Gaps reaching a sequence's end are left out: most are truncated or extended sequences,
+    not indels. Bars taller than the dashed line show lengths commoner than a geometric
+    distribution predicts.</p>
+</section>
+{% endwith %}{% endif %}

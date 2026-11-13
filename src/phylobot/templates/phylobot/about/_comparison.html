@@ -1,0 +1,17 @@
+{# About: the feature comparison table (phylobot.about.COMPARISON). Shared with phylobot.com (website/). #}
+<h3 id="comparison">Feature Comparison</h3>
+<p>How PhyloBot 2 compares with its predecessor and with other tools for ASR, feature by
+  feature. Hover over a mark for details.</p>
+<p class="cmp-legend hint">{% for symbol, label in comparison_legend %}<span class="cmp {{ label.0 }}" aria-hidden="true">{{ symbol }}</span> {{ label.1 }}{% if not forloop.last %}<span class="sep"> · </span>{% endif %}{% endfor %}</p>
+<table class="comparison">
+  <colgroup><col class="feature">{% for tool in comparison_tools %}<col>{% endfor %}</colgroup>
+  <thead><tr><th scope="col">Feature</th>{% for tool in comparison_tools %}<th scope="col"{% if forloop.first %} class="ours"{% endif %}>{{ tool }}</th>{% endfor %}</tr></thead>
+  {% for section, features in comparison %}
+  <tbody>
+    <tr class="cmp-section"><th scope="rowgroup" colspan="{{ comparison_tools|length|add:1 }}">{{ section }}</th></tr>
+    {% for feature in features %}
+    <tr><th scope="row">{{ feature.name }}</th>{% for mark in feature.marks %}<td class="{{ mark.kind }}{% if forloop.first %} ours{% endif %}" title="{{ mark.title }}"><span class="cmp {{ mark.kind }}" aria-hidden="true">{{ mark.symbol }}{% if mark.unsure %}?{% endif %}</span><span class="visually-hidden">{{ mark.title }}</span>{% if mark.shown %}<span class="cmp-note" aria-hidden="true">{{ mark.note }}</span>{% endif %}</td>{% endfor %}</tr>
+    {% endfor %}
+  </tbody>
+  {% endfor %}
+</table>

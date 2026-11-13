@@ -1,0 +1,42 @@
+{% comment %}Step 3's uploaded alignments (input_views.alignment_files): one row each, beside the
+aligners, and a warning when the alignments (uploaded or from My alignments) and step 2's
+sequences do not hold the same sequences, with the choice to use the ones they share.{% endcomment %}
+{% if rows %}
+  <ul class="file-list aligner-files" aria-label="Your uploaded alignments">
+    {% include "phylobot/_file_list.html" with rows=rows kind="alignment" field="alignment_files" %}
+  </ul>
+{% endif %}
+{% if identical %}<p class="hint">{{ identical|length }} row{{ identical|length|pluralize }} repeat{{ identical|length|pluralize:"s," }}
+  a sequence already in the same alignment under the same name, so one copy of each is used:{% for name, file in identical|slice:":8" %} {{ name }} ({{ file }}){% if not forloop.last %},{% endif %}{% endfor %}.</p>{% endif %}
+{% if clashes %}
+  <fieldset class="name-clashes">
+    <legend>{{ clashes|length }} sequence name{{ clashes|length|pluralize:" is,s are" }} used for different rows</legend>
+    <ul class="clash-list">{% for c in clashes|slice:":12" %}
+      <li><strong>{{ c.name }}</strong> {% include "phylobot/_clash_where.html" %}</li>{% endfor %}
+      {% if clashes|length > 12 %}<li class="hint">and {{ clashes|length|add:"-12" }} more</li>{% endif %}
+    </ul>
+    <label><input type="radio" name="alignment_duplicates" value="rename"{% if alignment_duplicates == "rename" %} checked{% endif %}>
+      Keep both: rename the later rows ({% with c=clashes.0 %}<code>{{ c.renamed }}</code>{% endwith %}{% if clashes|length > 1 %}, …{% endif %})</label>
+    <label><input type="radio" name="alignment_duplicates" value="first"{% if alignment_duplicates == "first" %} checked{% endif %}>
+      Keep only the first one</label>
+    {% if alignment_duplicates != "rename" and alignment_duplicates != "first" %}<p class="warning">Choose one before submitting.</p>{% endif %}
+  </fieldset>
+{% endif %}
+{% if too_many %}<p class="errors">At most 5 of your own alignments: untick or remove some.</p>{% endif %}
+{% if mismatch %}
+  <div class="name-mismatch">
+    <p><strong>These don't all hold the same sequences:</strong></p>
+    <ul>{% for s in mismatch.sources %}
+      <li>{{ s.label }}: {{ s.count }} sequence{{ s.count|pluralize }}{% if s.missing_count %}, without
+        {{ s.missing|join:", " }}{% if s.missing_count > s.missing|length %} and {{ s.missing_count|add:"-8" }} more{% endif %}{% endif %}</li>{% endfor %}
+    </ul>
+    {% if mismatch.enough %}
+      <label><input type="checkbox" name="shared_names"{% if shared_names %} checked{% endif %}>
+        Use the {{ mismatch.shared }} sequences they all share (leaves out {{ mismatch.left_out }})</label>
+      {% if not shared_names %}<p class="warning">Tick that, or untick or remove an alignment, before submitting.</p>{% endif %}
+    {% else %}
+      <p class="errors">They share only {{ mismatch.shared }} sequence{{ mismatch.shared|pluralize }}; a job needs at
+        least {{ mismatch.minimum }}. Untick or remove an alignment.</p>
+    {% endif %}
+  </div>
+{% endif %}

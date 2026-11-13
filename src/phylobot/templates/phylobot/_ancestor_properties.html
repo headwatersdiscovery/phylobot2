@@ -1,0 +1,74 @@
+{# Property posteriors for the chosen node and gap version (phylobot.property_views). #}
+{# Per property a histogram of the draws, with the posterior mean #}
+{# (blue, solid), f(ML) (red, dotted) and f(AltAll) (purple, dashed) drawn over it. #}
+{# Each property's (?) opens how it is computed and what it is not, with citations. #}
+{# Colours are the SVG literals dark.css remaps by attribute, #}
+{# so this reads correctly in every skin; the markers differ by dash pattern too, so #}
+{# colour alone never carries the meaning. #}
+{% if properties or property_offer %}
+<details class="property-panel viewer-section" id="properties" open>
+  <summary><h2>Properties of This Ancestor, over Its Posterior</h2></summary>
+  {% if properties %}
+  {# A <div>, not a <p>: the recompute dialog is one of its children. #}
+  <div class="property-tools">{% if compare_url %}<a href="{{ compare_url }}">Compare across alignments × models →</a> ·
+    {% endif %}<a href="{{ properties_csv_url }}">Download these metrics (CSV)</a></div>
+  <p class="property-legend">
+    <span class="key"><svg width="26" height="10" aria-hidden="true"><line x1="0" x2="26" y1="5" y2="5" stroke="#2457a6" stroke-width="2.5"/></svg>posterior mean</span>
+    <span class="key"><svg width="26" height="10" aria-hidden="true"><line x1="0" x2="26" y1="5" y2="5" stroke="#c0392b" stroke-width="2.5" stroke-dasharray="2 2"/></svg>f(ML)</span>
+    {% if properties.altall_threshold %}<span class="key"><svg width="26" height="10" aria-hidden="true"><line x1="0" x2="26" y1="5" y2="5" stroke="#8e44ad" stroke-width="2.5" stroke-dasharray="6 3"/></svg>f(AltAll)</span>{% endif %}
+    <button type="button" class="help-dot" popovertarget="help-property-panel" aria-label="About reading these histograms">?</button><span class="help-popover" popover id="help-property-panel"><strong>Reading these histograms</strong><span><span>Each property is computed on {% if properties.draws %}{{ properties.draws }} sequences{% else %}the number of sequences shown with it{% endif %} drawn from this ancestor's per-site posteriors; the histogram is that distribution, and the {{ properties.level }}% credible interval is read off it.</span><span><b>f(ML)</b> is the value of the published ancestor itself, and the offset is how far it sits from the posterior mean, in standard deviations.</span><span>{% if properties.altall_threshold %}<b>f(AltAll)</b> is the AltAll sequence's value at the threshold set under Support ({{ properties.altall_threshold }}), so it moves with that slider.{% endif %}</span></span></span>
+  </p>
+  <ul class="property-list">
+    {% for row in properties.rows %}
+    <li>
+      <h4>{{ row.label }}{% if row.units %} <span class="units">({{ row.units }})</span>{% endif %}{% include "phylobot/_property_help.html" with key=row.key method=row.method %}</h4>
+      <p class="property-numbers">
+        mean <strong>{{ row.mean }}</strong> ± {{ row.sd }} ·
+        {{ properties.level }}% interval <strong>{{ row.low }}</strong> to <strong>{{ row.high }}</strong>
+      </p>
+      <p class="property-numbers">
+        f(ML) <strong>{{ row.ml }}</strong>,
+        <span class="property-shift{% if row.shift_notable %} notable{% endif %}">{{ row.shift }} sd from the mean</span>{% if row.altall %} ·
+        f(AltAll) <strong>{{ row.altall }}</strong>{% endif %}
+      </p>
+      {% if not properties.draws or row.source %}<p class="property-source">
+        {{ row.draws }} draws{% if row.source %} · {{ row.source }}{% endif %}</p>{% endif %}
+      {% if row.plot %}{% with p=properties %}
+      <figure class="plot property-figure" data-filename="{{ file_stem }}.{{ row.key }}">
+        <div class="plot-tools">Download <button type="button" class="link" data-plot-download="png">PNG</button> · <button type="button" class="link" data-plot-download="svg">SVG</button></div>
+      <svg xmlns="http://www.w3.org/2000/svg" class="property-plot" viewBox="{{ row.plot.view_box }}"
+           width="{{ p.width }}" height="{{ row.plot.svg_height }}" preserveAspectRatio="xMidYMid meet"
+           font-family="system-ui, -apple-system, 'Segoe UI', sans-serif" role="img"
+           aria-label="{{ row.label }}: distribution over {{ row.draws }} draws, {{ p.level }}% interval {{ row.low }} to {{ row.high }}, mean {{ row.mean }}, f(ML) {{ row.ml }}{% if row.altall %}, f(AltAll) {{ row.altall }}{% endif %}">
+        {% for bar in row.plot.bars %}{% if bar.count %}<rect x="{{ bar.x }}" y="{{ bar.y }}" width="{{ bar.width }}" height="{{ bar.height }}" fill="#2457a6" fill-opacity="0.3">
+          <title>{{ bar.label }}: {{ bar.count }} of {{ row.draws }} draws</title></rect>{% endif %}{% endfor %}
+        <line x1="{{ p.left }}" x2="{{ p.right }}" y1="{{ p.baseline }}" y2="{{ p.baseline }}" stroke="#d8dde5" stroke-width="1"/>
+        {% for m in row.plot.markers %}<line x1="{{ m.x }}" x2="{{ m.x }}" y1="{{ p.top }}" y2="{{ p.baseline }}"
+              stroke="{% if m.kind == 'mean' %}#2457a6{% elif m.kind == 'ml' %}#c0392b{% else %}#8e44ad{% endif %}"
+              stroke-width="2.5"{% if m.kind == 'ml' %} stroke-dasharray="2 2"{% elif m.kind == 'altall' %} stroke-dasharray="6 3"{% endif %}>
+          <title>{{ m.label }}: {{ m.value }}</title></line>
+        <text x="{{ m.label_x }}" y="{{ m.label_y }}" text-anchor="middle" font-size="10.5"
+              fill="{% if m.kind == 'mean' %}#2457a6{% elif m.kind == 'ml' %}#c0392b{% else %}#8e44ad{% endif %}"
+              stroke="#ffffff" stroke-width="2.5" paint-order="stroke">{{ m.label }}</text>{% endfor %}
+        <text x="{{ p.left }}" y="{{ p.label_y }}" text-anchor="start" font-size="11" fill="#5d6675">{{ row.plot.low_label }}</text>
+        <text x="{{ p.right }}" y="{{ p.label_y }}" text-anchor="end" font-size="11" fill="#5d6675">{{ row.plot.high_label }}</text>
+      </svg>
+      </figure>
+      {% endwith %}{% else %}
+      <p class="hint">This job kept no per-draw values, so there is no histogram to draw.</p>
+      {% endif %}
+    </li>
+    {% endfor %}
+  </ul>
+  <p class="property-caveat">
+    Draws are {{ properties.sampling }}, so each drawn sequence is not guaranteed to be
+    jointly plausible; these intervals describe the reconstruction's uncertainty, not a
+    prediction of any measured quantity.
+  </p>
+  {% else %}
+  <p>No properties have been measured for this ancestor in {{ version_label }}: either
+    this job ran before the measurement existed, or the option was switched off.</p>
+  {% endif %}
+  {% if property_offer %}{% include "phylobot/_property_offer.html" %}{% endif %}
+</details>
+{% endif %}

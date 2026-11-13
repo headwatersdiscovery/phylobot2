@@ -1,0 +1,13 @@
+<ol id="job-toc-live"{% if oob %} hx-swap-oob="true"{% endif %}>
+  <li><a href="#job-stages">Status and steps</a></li>
+  {% if esr_run.levels %}<li><a href="#esr-result">ESR results</a></li>{% endif %}
+  {% if alignment_results %}<li><a href="#results">Results</a>
+    <ol>
+      <li><a href="#alignments-overview">Alignments</a></li>
+      {% for result in alignment_results %}{% if result.table.rows %}
+        <li><a href="#{{ result.anchor }}" title="{{ result.table.title }}: {{ result.table.rows|length }} model{{ result.table.rows|length|pluralize }}">{{ result.label }}{% if result.data == "codon" %} · codons{% endif %}</a></li>
+      {% endif %}{% endfor %}
+    </ol></li>{% endif %}
+  {% if file_count and not indexing %}<li><a href="#files">All files</a></li>{% endif %}
+  {% if log_tail and not finished %}<li><a href="#log">Pipeline log</a></li>{% endif %}
+</ol>

@@ -1,0 +1,130 @@
+{% extends "phylobot/base.html" %}
+{% load static %}
+{% block title %}{% if local_mode %}Settings{% else %}Admin Settings{% endif %} · PhyloBot{% endblock %}
+{% block content %}
+<h1>{% if local_mode %}Settings{% else %}Admin Settings{% endif %}</h1>
+<p class="lede">{% if not local_mode %}These settings apply to every user of this site.
+  {% endif %}A value entered here overrides the environment (<code>.env</code>) and the built-in default,
+  and applies at once: no restart. Leave a field blank to use the environment's value or the
+  default again.</p>
+{% if row and row.updated_at %}
+  <p class="hint">Last changed {{ row.updated_at|date:"Y-m-d H:i" }}{% if row.updated_by and not local_mode %} by {{ row.updated_by }}{% endif %}.</p>
+{% endif %}
+<div class="settings-layout">
+<nav class="viewer-toc page-toc settings-toc" data-toc aria-label="On this page">
+  {# Save lives in the sticky sidebar, so it stays in reach however far the page scrolls. #}
+  {# It turns amber (.dirty) once anything differs from the page as loaded (script below). #}
+  <button type="submit" form="settings-form" class="primary settings-save">Save Changes</button>
+  <p class="viewer-toc-title">On this page</p>
+  <ol>
+    {% for section in sections %}<li><a href="#{{ section.key|slugify }}">{{ section.title }}</a></li>{% endfor %}
+    <li><a href="#display">Display</a></li>
+  </ol>
+</nav>
+<div class="settings-main">
+<form method="post" class="site-settings" id="settings-form">
+  {% csrf_token %}
+  {% if form.non_field_errors %}<div class="errors">{{ form.non_field_errors }}</div>{% endif %}
+  {% for section in sections %}
+    <section class="step collapsible" id="{{ section.key|slugify }}" data-settings="{{ section.key|slugify }}">
+      <h2>{{ section.title }}</h2>
+      <table class="settings-table">
+        <thead><tr><th>Setting</th><th>In effect</th><th>Override</th></tr></thead>
+        <tbody>
+          {% for r in section.rows %}
+            <tr>
+              <td><label for="{{ r.field.id_for_label }}">{{ r.label }}</label>
+                <span class="hint">{{ r.field.help_text }}</span>
+                {% if r.kept %}<span class="hint kept-work">Kept now: {% if r.kept.jobs %}{{ r.kept.size|filesizeformat }}
+                  in {{ r.kept.jobs }} failed job{{ r.kept.jobs|pluralize }}{% else %}none{% endif %} (as measured by the worker).</span>{% endif %}
+                {% if r.archived %}<span class="hint kept-work">Archived now: {% if r.archived.jobs %}{{ r.archived.size|filesizeformat }}
+                  for {{ r.archived.jobs }} failed job{{ r.archived.jobs|pluralize }}{% else %}none{% endif %}.</span>{% endif %}</td>
+              <td class="in-effect">{% if r.setting.switch %}<strong>{{ r.value|yesno:"on,off" }}</strong>{% elif r.value == 0 and r.setting.zero %}<strong>{{ r.setting.zero }}</strong>{% else %}<strong>{% if r.value == "" or r.value is None %}(empty){% else %}{{ r.value }}{% endif %}</strong>{% if r.setting.unit %} {{ r.setting.unit }}{% endif %}{% endif %}
+                <span class="source {% if r.source == 'set here' %}here{% endif %}">{{ r.source }}</span></td>
+              <td>{{ r.field }}{% if r.setting.unit %} {{ r.setting.unit }}{% endif %}
+                {% for error in r.field.errors %}<span class="errors inline-error">{{ error }}</span>{% endfor %}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% if section.key == jobs_group %}{% include "phylobot/_machine.html" with m=machine %}{% endif %}
+      {% if section.key == calibration_group %}
+        {# Posted through the page-level form below, so they reset only these fields. #}
+        <p class="calibration-resets">
+          <button type="submit" form="calibration-defaults" name="to" value="default">Reset to built-in defaults</button>
+          <button type="submit" form="calibration-defaults" name="to" value="none">No effect (T = 1)</button>
+          <span class="hint">These are the site's defaults. "No effect" sets every term to 0,
+            so ln T = 0 and calibrated equals raw. Each user can set their own over these on
+            <a href="{% url 'my_calibration' %}">My calibration</a>.</span>
+        </p>
+      {% endif %}
+    </section>
+  {% endfor %}
+</form>
+<form id="calibration-defaults" method="post" action="{% url 'calibration_defaults' %}">{% csrf_token %}</form>
+<section class="step display-settings collapsible" id="display" data-settings="display">
+  <h2>Display</h2>
+  <p class="hint">Remembered in this browser only, like the skin: they change nothing for
+    anyone else. The background appears on the <a href="{% url 'home' %}">home</a> and
+    <a href="{% url 'about' %}">About</a> pages, under the Clean, Dark, Spectrum, Lagoon and Abyss skins.</p>
+  <p class="hint" data-no-backdrop{% if backdrop != "none" %} hidden{% endif %}>The
+    <b data-skin-name>{% for s in skins %}{% if s.key == skin %}{{ s.label }}{% endif %}{% endfor %}</b>
+    skin has no background. Your choice below is kept for when you switch back to Clean,
+    Dark or Spectrum.</p>
+  <div class="display-dials">
+    <label>Background
+      <select data-look data-cookie="phylobot_backdrop" data-attr="backdrop">{% for b in backdrops %}
+        <option value="{{ b.key }}"{% if b.key == backdrop_preference %} selected{% endif %}>{{ b.label }}</option>{% endfor %}
+      </select>
+    </label>
+    <label>Speed
+      <select data-look data-cookie="phylobot_backdrop_speed" data-attr="backdropSpeed">{% for s in backdrop_speeds %}
+        <option value="{{ s.value }}"{% if s.value == backdrop_speed %} selected{% endif %}>{{ s.label }}</option>{% endfor %}
+      </select>
+    </label>
+    <label>Density
+      <select data-look data-cookie="phylobot_backdrop_density" data-attr="backdropDensity">{% for d in backdrop_densities %}
+        <option value="{{ d.value }}"{% if d.value == backdrop_density %} selected{% endif %}>{{ d.label }}</option>{% endfor %}
+      </select>
+    </label>
+  </div>
+  {% include "phylobot/_backdrop.html" with preview=1 %}
+  <p class="hint" data-has-backdrop{% if backdrop == "none" %} hidden{% endif %}>Changes show
+    in the box above as you make them.</p>
+</section>
+
+<p><a href="{% url 'work_estimate' %}">Advanced: work estimate →</a>
+  <span class="hint">how the New Job page estimates a job's work, this server's
+  calibration, and estimates beside the CPU time jobs actually used</span></p>
+<p><a href="{% url 'work_records' %}">Advanced: work records →</a>
+  <span class="hint">every finished job{% if not local_mode %} of every user{% endif %},
+  stage by stage: estimated work beside the CPU time and memory it used, the data the
+  calibration learns from (and a CSV of it)</span></p>
+<p class="hint">Not here, on purpose: the mode (local or cloud), debugging, allowed hosts, the
+  secret key and the database and storage credentials. They are read once when PhyloBot
+  starts, and belong in <code>.env</code>.{% if not local_mode %} Each user's own limits are
+  in the <a href="{% url 'admin:index' %}">Django admin</a> (User limits).{% endif %}</p>
+</div>{# .settings-main #}
+</div>{# .settings-layout #}
+{# Not deferred: sections close before the page is first drawn, not after. #}
+<script src="{% static 'phylobot/collapse.js' %}"></script>
+<script src="{% static 'phylobot/toc.js' %}" defer></script>
+<script>
+  // Unsaved changes: compare the form's values (fields inside it and those that name it
+  // with form=) with the values it loaded with; changing a value back clears the mark.
+  (() => {
+    const form = document.getElementById("settings-form");
+    const save = document.querySelector(".settings-save");
+    if (!form || !save) return;
+    const state = () => JSON.stringify([...new FormData(form)].filter(([, v]) => typeof v === "string"));
+    const loaded = state();
+    const check = () => {
+      const dirty = state() !== loaded;
+      save.classList.toggle("dirty", dirty);
+      save.title = dirty ? "You have unsaved changes" : "";
+    };
+    document.addEventListener("input", check);
+    document.addEventListener("change", check);
+  })();
+</script>
+{% endblock %}

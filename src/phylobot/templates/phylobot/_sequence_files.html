@@ -1,0 +1,31 @@
+{% comment %}Step 2's sequence files (input_views.sequence_files_context), refreshed with the live
+check (views.sequence_check, out of band). Several files are combined in order
+(phylobot.inputs.merge_sequences): the same sequence again under its name is used once;
+a name with another sequence is the user's to resolve (duplicate_names).{% endcomment %}
+<div id="sequence-files" class="file-list-block"{% if oob %} hx-swap-oob="true"{% endif %}>
+  {% if files.rows or files.merged.clashes or files.merged.identical %}
+    {% if files.rows %}<ul class="file-list" aria-label="Your sequence files">
+      {% include "phylobot/_file_list.html" with rows=files.rows kind="sequences" field="sequences_file" %}
+    </ul>{% endif %}
+    {% with m=files.merged %}{% if m %}
+      {% if m.error and files.rows %}<p class="errors{% if m.incompatible %} incompatible-files{% endif %}">{{ m.error }}.</p>{% endif %}
+      {% if m.identical %}<p class="hint">{{ m.identical|length }} sequence{{ m.identical|length|pluralize }}
+        {{ m.identical|length|pluralize:"appears,appear" }} again with identical residues, so one copy
+        of each is used:{% for name, file in m.identical|slice:":8" %} {{ name }}{% if not forloop.last %},{% endif %}{% endfor %}{% if m.identical|length > 8 %} and {{ m.identical|length|add:"-8" }} more{% endif %}.</p>{% endif %}
+      {% if m.clashes %}
+        <fieldset class="name-clashes">
+          <legend>{{ m.clashes|length }} sequence name{{ m.clashes|length|pluralize:" is,s are" }} given to different sequences</legend>
+          <ul class="clash-list">{% for c in m.clashes|slice:":12" %}
+            <li><strong>{{ c.name }}</strong> {% include "phylobot/_clash_where.html" %}</li>{% endfor %}
+            {% if m.clashes|length > 12 %}<li class="hint">and {{ m.clashes|length|add:"-12" }} more</li>{% endif %}
+          </ul>
+          <label><input type="radio" name="duplicate_names" value="rename"{% if files.duplicate_names == "rename" %} checked{% endif %}>
+            Keep both: rename the later copies ({% with c=m.clashes.0 %}<code>{{ c.renamed }}</code>{% endwith %}{% if m.clashes|length > 1 %}, …{% endif %})</label>
+          <label><input type="radio" name="duplicate_names" value="first"{% if files.duplicate_names == "first" %} checked{% endif %}>
+            Keep only the first one</label>
+          {% if not m.resolution %}<p class="warning">Choose one before submitting.</p>{% endif %}
+        </fieldset>
+      {% endif %}
+    {% endif %}{% endwith %}
+  {% endif %}
+</div>

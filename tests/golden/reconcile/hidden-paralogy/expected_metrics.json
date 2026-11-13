@@ -1,0 +1,9 @@
+{
+  "_note": "Signed off by the project owner 2026-10-18 as a known limitation, not an accuracy test. Per replicate, true species tree, MAFFT + LG+G4. GeneRax is expected to follow the species tree into the wrong history (chimeras in 7 of 10 replicates); what must hold is that the disagreement note (GeneRax's ancestors checked against IQ-TREE's tree) flags every one of them (14 of 14 observed), and that IQ-TREE's tree has none (0 in 10 of 10).",
+  "generax": {
+    "chimeric_flagged": true
+  },
+  "iqtree": {
+    "max_chimeric": 0
+  }
+}

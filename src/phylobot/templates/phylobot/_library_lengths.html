@@ -1,0 +1,29 @@
+{# The library's ancestors on one histogram of the extant lengths (library_glyphs.length_chart). #}
+{# Each line is labelled with its short name; hover it (data-tip, plots.js) for the full #}
+{# names and lengths. Styles are SVG attributes, not CSS, #}
+{# so the PNG/SVG downloads (plots.js) look as shown. #}
+{% if c and not c.empty %}
+<figure class="plot length-chart" data-tips data-filename="{{ library.code }}.lengths">
+  <div class="plot-tools">Download <button type="button" class="link" data-plot-download="png">PNG</button> · <button type="button" class="link" data-plot-download="svg">SVG</button></div>
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {{ c.width }} {{ c.height }}" width="{{ c.width }}" height="{{ c.height }}"
+       font-family="system-ui, -apple-system, 'Segoe UI', sans-serif" role="img"
+       aria-label="Histogram of the extant sequences' lengths, with each ancestor's length drawn as a line">
+    <rect class="background" width="{{ c.width }}" height="{{ c.height }}" fill="#ffffff"/>
+    {% for y, n in c.y_ticks %}<line x1="{{ c.left }}" x2="{{ c.right }}" y1="{{ y }}" y2="{{ y }}" stroke="#d8dde5" stroke-width="1"/>
+    <text x="{{ c.left|add:'-6' }}" y="{{ y }}" text-anchor="end" dominant-baseline="middle" font-size="12" fill="#5d6675">{{ n }}</text>{% endfor %}
+    {% for b in c.bars %}<rect x="{{ b.x }}" y="{{ b.y }}" width="{{ b.width }}" height="{{ b.height }}" fill="#b3bac5" data-tip="{{ b.title }}"/>{% endfor %}
+    {% for m in c.marks %}<g class="length-mark" data-tip="{{ m.title }}">
+      <line x1="{{ m.x }}" x2="{{ m.x }}" y1="{{ m.top }}" y2="{{ c.bottom }}" stroke="{% if m.beyond %}#d7301f{% else %}#1f4e8c{% endif %}" stroke-width="2"/>
+      <line class="hit" x1="{{ m.x }}" x2="{{ m.x }}" y1="{{ m.top }}" y2="{{ c.bottom }}" stroke="#000000" stroke-opacity="0" stroke-width="9" pointer-events="stroke"/>
+      <text x="{{ m.label_x }}" y="{{ m.label_y }}" font-size="11" fill="{% if m.beyond %}#d7301f{% else %}#1f4e8c{% endif %}"
+            stroke="#ffffff" stroke-width="3" stroke-linejoin="round" paint-order="stroke">{{ m.label }}</text>
+    </g>{% endfor %}
+    {% for x, n in c.x_ticks %}<text x="{{ x }}" y="{{ c.bottom|add:'15' }}" text-anchor="middle" font-size="12" fill="#5d6675">{{ n }}</text>{% endfor %}
+    <text x="{{ c.center }}" y="{{ c.height|add:'-5' }}" text-anchor="middle" font-size="13" fill="#1d2330">Length (residues)</text>
+    <text transform="translate(12 {{ c.middle }}) rotate(-90)" text-anchor="middle" font-size="13" fill="#1d2330">Extant sequences</text>
+    <text x="{{ c.left }}" y="18" font-size="14" font-weight="bold" fill="#1d2330">Sequence length</text>
+    <text x="{{ c.right }}" y="18" text-anchor="end" font-size="12" fill="#5d6675">{{ c.stats }}</text>
+  </svg>
+  <div class="pp-tip" hidden></div>
+</figure>
+{% endif %}

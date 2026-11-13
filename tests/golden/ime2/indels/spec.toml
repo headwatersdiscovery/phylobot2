@@ -1,0 +1,29 @@
+# Golden scenario: ime2/indels
+#
+# Like ime2/easy (same tree, root and substitution model) plus insertions and
+# deletions, so the true ancestors have gaps. Tests gap placement in ancestral
+# sequences, and alignment accuracy. Indel rate 0.03 (insertions and deletions, each
+# relative to the substitution rate) with geometric lengths of mean 3 gives an
+# alignment roughly 30% gaps; trials: 0.02 -> 21%, 0.04 -> 40%, 0.08 -> 50%.
+
+description = "Ime2 kinase domain on the 2014 Ime2 tree; LG+G4 with indels (rate 0.03, mean length 3)."
+
+[tree]
+file = "../../../legacy/ime2/trees/mafft_LG.ml.nwk"
+prune = ["Control1.IME2"]
+outgroup = "Yarrowia.lipolytica.IME2"
+
+[root]
+file = "../easy/root.fasta"
+name = "Scer_IME2_kinase_domain"
+
+[model]
+substitution = "LG+G4{0.747}"
+
+[indels]
+rates = "0.03,0.03"
+sizes = "GEO{3},GEO{3}"
+
+[simulation]
+image = "quay.io/biocontainers/iqtree:3.1.3--h8471819_0"
+seeds = [202, 203, 204, 205, 206, 207, 208, 209, 210, 211]  # first = quick tier

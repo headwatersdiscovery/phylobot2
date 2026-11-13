@@ -1,0 +1,47 @@
+﻿Section,Feature,PhyloBot 2,PhyloBot 2016,FireProtASR 2.0,Topiary,GRASP,AP-LASR,MEGA 12,IQ-TREE 3,PAML
+Use & automation,Graphical interface,✓ web,✓ web,✓ web,◐ HTML report,✓ web,?,✓ desktop,—,—
+Use & automation,Automates the whole workflow,✓,✓,✓,✓,—,✓,—,—,—
+Use & automation,Runs locally / offline,✓,◐,—,✓,✓,✓,✓,✓,✓
+Use & automation,"Same pipeline on laptop, HPC, cloud",◐ [cloud not deployed],—,—,◐,◐,—,—,✓,—
+Use & automation,Usable without a web stack (CLI only),✓ Nextflow,—,—,✓,✓,✓,◐ MEGA-CC,✓,✓
+Data,Homology search,✓ reviewed BLAST,—,✓,✓,—,✓,◐,—,—
+Data,"Dataset curation (redundancy, taxonomy, essential residues)",◐ filters,—,✓,✓,—,✓?,—,—,—
+Data,Species lookup from headers / accessions,✓,—,—,✓,—,—,—,—,—
+Data,Sequence alignment,✓ 4 aligners,✓ 2,✓ 1,✓ 1,—,✓ 1,✓ 2,—,—
+Data,Alignment viewer & editor,✓,—,◐,—,◐,—,✓,—,—
+Data,Bring your own alignment / tree,✓ both,?,◐,✓,✓ required,?,✓,✓,✓
+Data,Amino acids,✓,✓,✓,✓,✓,✓,✓,✓,✓
+Data,Codons (coding DNA),✓,—,—,—,—,—,✓,✓,✓
+Models & trees,Model fitting / selection,✓ ModelFinder + BIC ranking,◐,✓,✓,—,✓,✓,✓,◐ by hand
+Models & trees,ML tree inference,✓ IQ-TREE + RAxML-NG,✓,✓,✓,—,✓,✓,✓,◐
+Models & trees,Branch support,"✓ SH-aLRT, UFBoot",✓,✓?,✓,—,?,✓,✓,—
+Models & trees,Rooting,✓ outgroup / midpoint,✓ outgroup,✓ automatic,✓ via species tree,—,?,✓,◐,—
+Models & trees,Gene/species-tree reconciliation,✓ GeneRax,—,—,✓ GeneRax,—,—,◐,—,—
+Models & trees,Topology tests (AU),✓,—,—,—,—,—,—,✓,—
+Ancestors,Ancestral state inference with posteriors,✓,✓,✓,✓,✓,✓,✓,✓,✓
+Ancestors,Gap/indel placement,✓ 5 methods,◐ 1,✓ 1,◐ 1?,✓ several,◐?,—,—,—
+Ancestors,"Alternative ancestors (AltAll, samples)",✓,—,◐ VAE,✓?,✓,✓,—,—,—
+Ancestors,Design libraries of scaffolds,"✓ budgeted, validated",—,◐,—,◐ indel variants,✓,—,—,—
+Ancestors,Mutational trajectories between ancestors,✓,✓,— (predicts forward),—,—,—,—,—,—
+Ancestors,Same ancestor matched across analyses,✓,—,—,—,—,—,—,—,—
+Ancestors,Interactive tree & ancestor viewers,✓,✓,✓ logos,◐,✓,—,✓,—,—
+Robustness,Alignment uncertainty,✓ aligners side by side,✓,—,—,—,—,—,—,—
+Robustness,Tree uncertainty,"✓ tree sources, AU, support",◐,—,◐,—,—,—,◐,—
+Robustness,Model uncertainty (ancestors across models),✓,✓,—,—,—,—,—,—,—
+Robustness,Calibrate state uncertainty,◌ in progress,—,—,—,—,—,—,—,—
+Selection,"dN/dS (site models, free ratios)",✓ codeml,—,—,—,—,—,◐ Z-tests,◐,✓
+Selection,Branch-site test,✓ from tree viewer,—,—,—,—,—,—,—,✓
+Selection,Synonymous / non-synonymous changes on paths,✓,—,—,—,—,—,—,—,—
+Simulation & validation,"Simulate sequences (incl. indels, duplication/loss)",✓ AliSim,—,—,—,—,—,—,✓ AliSim,✓ evolver
+Simulation & validation,Benchmark accuracy against known truth,✓ golden + oracle inputs,—,◐ paper,◐ paper,◐ paper,—,—,—,—
+Reproducibility & practicalities,"Pinned containers, seeds, provenance",✓,—,—,◐,—,—,—,◐ seeds,—
+Reproducibility & practicalities,Figure & table exports (SVG/PNG/Excel/ZIP),✓,◐,✓,✓,◐,—,✓,—,—
+Reproducibility & practicalities,"Accessibility (palettes, skins, line styles)",✓,—,—,—,—,—,—,—,—
+Reproducibility & practicalities,Work estimate & usage accounting,✓,—,—,—,—,—,—,—,—
+Reproducibility & practicalities,Open source,✓ BSD,✓,— server,✓,◐ no licence,✓?,"◐ free, closed",✓,✓
+Gaps for PhyloBot 2,Functional loci prediction,— not rebuilt,✓,◐,—,—,—,—,—,—
+Gaps for PhyloBot 2,Forward / successor prediction,◌ roadmap,—,✓,—,—,—,—,—,—
+Gaps for PhyloBot 2,Protein structures,◌ roadmap,—,?,—,—,—,—,—,—
+Gaps for PhyloBot 2,Dating / timetrees,—,—,—,—,—,—,✓,◐,✓
+
+Legend,✓ yes; ◐ partial or limited; — no; ◌ in progress or planned; ? unsure (verify)

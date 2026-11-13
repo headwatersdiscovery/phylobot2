@@ -1,0 +1,123 @@
+<section class="results esr-result" id="esr-result">
+  <h2>ESR Results</h2>
+  {% with of=esr_run.of %}
+  <p class="hint">{{ of.tips }} of {{ of.sequences }} sequence{{ of.sequences|pluralize }} held out
+    ({{ of.columns }} columns){% if of.kind == "job" %}, on {{ of.label }}{% else %}, on the uploaded
+    alignment and tree{% endif %}{% if esr_run.fit %}; model {{ esr_run.fit.model }}, log-likelihood
+    {{ esr_run.fit.log_likelihood|floatformat:2 }}{% if esr_run.fit.lengths_refitted %}; branch lengths
+    fitted again on the tree's topology{% if of.kind == "job" %} (IQ-TREE cannot fit a FreeRate
+    model with the job's lengths held fixed){% endif %}{% endif %}{% endif %}.</p>
+  {% endwith %}
+  {% if esr_run.levels %}
+    <div class="esr-figures">
+      {% for level in esr_run.levels %}
+        <div class="esr-level">
+          {# One popover for both levels: the first "?" carries it, the second opens it. #}
+          <h3><span class="viz-swatch s{{ level.slot }}"></span> {{ level.label }}
+            {% if forloop.first %}{% include "phylobot/_help.html" with id="esr-levels" title="E0 and E1" body=esr_run.level_help %}{% else %}{% include "phylobot/_help.html" with id="esr-levels" title="E0 and E1" %}{% endif %}</h3>
+          <dl>
+            <div><dt>Accuracy</dt><dd>{% widthratio level.accuracy 1 100 %}%</dd></div>
+            <div><dt>Mean posterior</dt><dd>{% widthratio level.mean_pp 1 100 %}%</dd></div>
+            <div><dt title="Mean posterior minus accuracy: above 0 the posteriors promise more than they deliver (overconfident), below 0 less">Gap</dt>
+              <dd>{% if level.gap >= 0 %}+{% endif %}{{ level.gap|floatformat:3 }}</dd></div>
+            <div><dt title="Mean log posterior of the true residue (closer to 0 is better)">Log score</dt><dd>{{ level.log_score|floatformat:3 }}</dd></div>
+            {% if level.ece %}
+            <div><dt title="Expected calibration error: the gap between accuracy and mean posterior within each bin of 0.1, averaged over sites (0 is perfect)">ECE</dt><dd>{{ level.ece }}</dd></div>
+            <div><dt title="Wrong residues called with a posterior of {{ esr_run.lengths.confident }} or more, per sequence">Confidently wrong</dt><dd>{{ level.confident_wrong }}</dd></div>
+            <div><dt title="Of the wrong residues, how many had the true residue at a posterior of {{ esr_run.lengths.altall }} or more, so that an AltAll sequence would have caught them">AltAll catches</dt><dd>{{ level.caught }}</dd></div>
+            {% endif %}
+          </dl>
+          <p class="hint">{{ level.sites }} sites in {{ level.tips }} sequence{{ level.tips|pluralize }}</p>
+        </div>
+      {% endfor %}
+    </div>
+    <p class="hint">Accuracy: how often the most probable residue is the real one. Mean
+      posterior: how often the posteriors say it should be. If they agree, the posteriors
+      are calibrated; the gap says by how much they are not.</p>
+
+    {% with c=esr_run.chart %}
+    {# Colours are SVG attributes (light values; dark.css remaps them on the page), and #}
+    {# the key is inside the SVG, so plots.js's PNG and SVG keep both. #}
+    <figure class="plot esr-chart" data-filename="esr.{{ job.id|stringformat:'s'|slice:':8' }}.reliability">
+      <div class="esr-head">
+        <h3>Reliability</h3>
+        <div class="plot-tools">Download <button type="button" class="link" data-plot-download="png">PNG</button> · <button type="button" class="link" data-plot-download="svg">SVG</button></div>
+      </div>
+      <p class="hint">Sites grouped by the posterior of their most probable residue (bins of
+        0.1): how often that residue was right. On the dashed diagonal, a posterior of 0.8 is
+        right 80% of the time; below it, the posteriors are overconfident.</p>
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {{ c.width }} {{ c.height }}" width="{{ c.width }}" height="{{ c.height }}"
+           font-family="system-ui, -apple-system, 'Segoe UI', sans-serif" role="img"
+           aria-label="Observed accuracy against posterior probability, per level">
+        <rect class="background" width="{{ c.width }}" height="{{ c.height }}" fill="#ffffff"/>
+        {% for t in c.ticks %}
+          <line x1="{{ c.left }}" x2="{{ c.right_edge }}" y1="{{ t.y }}" y2="{{ t.y }}" stroke="#d8dde5" stroke-width="1"/>
+          <text x="{{ c.left|add:-8 }}" y="{{ t.y }}" text-anchor="end" dominant-baseline="middle" font-size="13" fill="#5d6675">{{ t.value }}</text>
+          <text x="{{ t.x }}" y="{{ c.bottom_edge|add:18 }}" text-anchor="middle" font-size="13" fill="#5d6675">{{ t.value }}</text>
+        {% endfor %}
+        <path d="{{ c.diagonal }}" fill="none" stroke="#5d6675" stroke-width="1" stroke-dasharray="4 4"/>
+        <text x="{{ c.x_middle }}" y="{{ c.height|add:-4 }}" text-anchor="middle" font-size="14" fill="#1d2330">Posterior of the most probable residue</text>
+        <text transform="translate(14 {{ c.y_middle }}) rotate(-90)" text-anchor="middle" font-size="14" fill="#1d2330">Observed accuracy</text>
+        {% for s in c.series %}
+          <path d="{{ s.path }}" fill="none" stroke="{{ s.colour }}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+          {% for p in s.points %}
+            <circle cx="{{ p.x|floatformat:1 }}" cy="{{ p.y|floatformat:1 }}" r="5" fill="{{ s.colour }}" stroke="#ffffff" stroke-width="2" tabindex="0">
+              <title>{{ s.level|upper }}, posterior {{ p.low|floatformat:1 }}–{{ p.high|floatformat:1 }}: right {% widthratio p.accuracy 1 100 %}% of {{ p.sites }} site{{ p.sites|pluralize }} (mean posterior {{ p.pp|floatformat:3 }})</title>
+            </circle>
+          {% endfor %}
+        {% endfor %}
+        {% if c.series|length > 1 %}{% for s in c.series %}
+          <rect x="{{ c.legend_x }}" y="{{ s.legend_y|add:-6 }}" width="12" height="12" rx="3" fill="{{ s.colour }}"/>
+          <text x="{{ c.legend_x|add:18 }}" y="{{ s.legend_y }}" dominant-baseline="middle" font-size="13" fill="#1d2330">{{ s.level|upper }}</text>
+        {% endfor %}{% endif %}
+      </svg>
+      <details class="usage-table">
+        <summary>The bins as a table</summary>
+        <table class="results">
+          <thead><tr><th class="label">Level</th><th>Posterior</th><th>Sites</th><th>Mean posterior</th><th>Accuracy</th></tr></thead>
+          <tbody>{% for s in c.series %}{% for p in s.points %}
+            <tr><td class="label">{{ s.level|upper }}</td><td>{{ p.low|floatformat:1 }}–{{ p.high|floatformat:1 }}</td><td>{{ p.sites }}</td><td>{{ p.pp|floatformat:3 }}</td><td>{{ p.accuracy|floatformat:3 }}</td></tr>
+          {% endfor %}{% endfor %}</tbody>
+        </table>
+      </details>
+    </figure>
+    {% endwith %}
+
+    {% if esr_run.lengths %}{% include "phylobot/_esr_lengths.html" with l=esr_run.lengths %}{% endif %}
+
+    {% if esr_run.tips %}
+      <div class="esr-block">{# as wide as the table, so its links sit at its upper right #}
+      <div class="esr-head">
+        <h3>Each sequence held out</h3>
+        <div class="plot-tools">Download <a href="{% url 'esr_tips_export' job.id 'csv' %}" download>CSV</a> · <a href="{% url 'esr_tips_export' job.id 'xlsx' %}" download>Excel</a></div>
+      </div>
+      <div class="esr-tips-scroll">
+      <table class="results esr-tips">
+        <thead><tr>
+          <th class="label sortable"><button type="button" class="sort">Sequence</button></th>
+          <th class="sortable"><button type="button" class="sort" title="Its branch length in the tree (substitutions per site)">Pendant</button></th>
+          <th class="sortable"><button type="button" class="sort">Sites</button></th>
+          {% for level in esr_run.levels %}
+            <th class="sortable"><button type="button" class="sort">{{ level.label }} accuracy</button></th>
+            <th class="sortable"><button type="button" class="sort">{{ level.label }} mean pp</button></th>
+          {% endfor %}
+        </tr></thead>
+        <tbody>{% for row in esr_run.tips %}
+          <tr><td class="label">{{ row.tip }}</td><td>{{ row.pendant }}</td><td>{{ row.sites }}</td>
+            {% for accuracy, mean_pp in row.cells %}<td>{{ accuracy }}</td><td>{{ mean_pp }}</td>{% endfor %}</tr>
+        {% endfor %}</tbody>
+      </table>
+      </div>
+      </div>
+    {% endif %}
+    {% if esr_run.files %}
+      <div class="esr-head"><h3>Downloads</h3></div>
+      <p class="esr-downloads">{% for path in esr_run.files %}<a href="{% url 'job_file' job.id path %}">{{ path|cut:"esr/" }}</a>{% if not forloop.last %} · {% endif %}{% endfor %}</p>
+      <p class="hint">esr_tips.tsv: one row per sequence and level. esr_sites.tsv: every
+        scored site, with its whole posterior over the 20 amino acids. tree.nwk: the tree
+        ESR ran on. esr_summary.json: this section's figures.</p>
+    {% endif %}
+  {% elif job.status == "succeeded" %}
+    <p class="hint">No results were written.</p>
+  {% endif %}
+</section>

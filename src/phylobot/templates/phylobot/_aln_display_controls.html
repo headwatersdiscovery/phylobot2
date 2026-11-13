@@ -1,0 +1,26 @@
+{# The alignment viewer's and editor's display controls: colours, the reference for #}
+{# differences, zoom (alignment.js drives the slider in place) and height. #}
+  <div class="viewer-controls">
+    <label>Colours
+      <select name="scheme">{% for key, label in schemes %}
+        <option value="{{ key }}"{% if key == scheme %} selected{% endif %}>{{ label }}</option>{% endfor %}
+      </select></label>
+    {% if scheme == "differences" or scheme == "synonymous" %}<label>Compared with
+      <select name="reference">
+        <option value=""{% if not reference %} selected{% endif %}>The consensus</option>{% for name in references %}
+        <option value="{{ name }}"{% if name == reference %} selected{% endif %}>{{ name }}</option>{% endfor %}
+      </select></label>{% else %}{% if reference %}<input type="hidden" name="reference" value="{{ reference }}">{% endif %}{% endif %}
+    <div class="aln-zoom" role="group" aria-label="Zoom">
+      <span aria-hidden="true">Zoom</span>
+      <span class="zoom-inputs">
+        <input type="hidden" name="zoom" value="{{ zoom }}">
+        <input type="range" class="zoom-slider" min="0" max="100" value="50" aria-label="Zoom">
+        <button type="button" class="zoom-fit">Fit</button>
+      </span>
+    </div>
+    <label>Height
+      <select name="height">{% for key, label in heights %}
+        <option value="{{ key }}"{% if key == height %} selected{% endif %}>{{ label }}</option>{% endfor %}
+      </select></label>
+    <noscript><button>Show</button></noscript>
+  </div>

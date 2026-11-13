@@ -1,0 +1,12 @@
+{% comment %}Stop a queued or running job (views.stop_job, jobs.stop). The runner stops its
+containers at the next heartbeat. A stopped job is cancelled, and only a failed job can
+resume, so this cannot be undone: the warning below has to stay.{% endcomment %}
+<form class="job-stop" method="post" action="{% url 'stop_job' job.id %}">
+  {% csrf_token %}
+  <button type="submit" class="danger-outline">Stop this job</button>
+  <span class="hint">{% if job.status == "queued" %}It has not started, so nothing is
+    running yet.{% else %}Its steps stop within a few seconds; steps that finished keep
+    their results and the CPU time already used is still counted.{% endif %}
+    A stopped job <strong>cannot be resumed</strong>, so finishing this work later means
+    running it again from the start.</span>
+</form>

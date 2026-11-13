@@ -1,0 +1,21 @@
+{# A homolog search's status (views.homolog_search_status). While it waits, HTMX polls #}
+{# this part; the view reloads the page once the search has finished or failed. #}
+<div id="search-status"{% if active %} hx-get="{% url 'homolog_search_status' homolog_search.id %}"
+     hx-trigger="every 5s" hx-swap="outerHTML"{% endif %}>
+  <p><span class="status {{ homolog_search.status }}">{{ homolog_search.status }}</span>
+    {{ service_label }} · {{ database_label }} · query {{ homolog_search.query_length }} residues</p>
+  {% if homolog_search.status == "queued" %}
+    <p class="hint">Waiting to be sent to the service.</p>
+  {% elif homolog_search.status == "running" %}
+    <p class="hint">Sent {{ homolog_search.submitted_at|timesince }} ago; waiting for
+      {{ service_label }}.{% if homolog_search.last_checked_at %} Last checked
+      {{ homolog_search.last_checked_at|timesince }} ago: the service says it is still
+      working.{% endif %} Searches usually take a minute at NCBI and up to a quarter of an
+      hour at EBI, longer when the service is busy. This page updates by itself, and you
+      can leave it and come back.</p>
+  {% elif homolog_search.status == "failed" %}
+    <p class="errors">{{ homolog_search.error|default:"The search failed." }}</p>
+  {% elif homolog_search.status == "cancelled" %}
+    <p class="hint">Cancelled.</p>
+  {% endif %}
+</div>

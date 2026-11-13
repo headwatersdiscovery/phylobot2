@@ -1,0 +1,4 @@
+{% load static %}{# The backdrop (backdrop.js): full-page on the landing and About pages, a small preview on the Settings page. #}
+{# `clear` is a selector for an element the structures fall to either side of, never behind. #}
+<div class="backdrop{% if preview %} preview{% endif %}" aria-hidden="true"{% if clear %} data-clear="{{ clear }}"{% endif %}
+     data-structures="{% static 'phylobot/backdrop/structures.json' %}"></div>

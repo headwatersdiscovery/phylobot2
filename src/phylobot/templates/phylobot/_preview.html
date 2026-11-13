@@ -1,0 +1,60 @@
+{# The job panel's contents (views.preview): refreshed on every change to the form. #}
+<div class="work" data-units="{{ estimate.units|floatformat:2 }}">
+  <h3>Work estimate</h3>
+  <p class="work-total"><strong>{% if estimate.units < 10 %}{{ estimate.units|floatformat:1 }}{% else %}{{ estimate.units|floatformat:"0g" }}{% endif %}</strong>
+    work unit{{ estimate.units|pluralize }} <span class="work-delta" aria-live="polite"></span></p>
+  <div class="work-bar" role="img" aria-label="Work by stage">{% for key, label, units in estimate.groups %}<span class="seg {{ key }}" style="flex-grow: {{ units|floatformat:4 }}" title="{{ label }}: {{ units|floatformat:2 }} units"></span>{% endfor %}</div>
+  <ul class="work-legend">{% for key, label, units in estimate.groups %}
+    <li><span class="swatch {{ key }}"></span>{{ label }} <span class="units">{% if units < 0.1 %}&lt; 0.1{% elif units < 10 %}{{ units|floatformat:1 }}{% else %}{{ units|floatformat:"0g" }}{% endif %}</span></li>{% endfor %}
+  </ul>
+  <p class="hint">{% if compute_time %}{{ compute_time|capfirst }} of computing on this server
+    (less when steps run side by side).{% else %}A time estimate appears once this server has
+    finished a few jobs.{% endif %}
+    {% if size %}For {{ size.sequences }} sequence{{ size.sequences|pluralize }} of about
+    {{ size.length|floatformat:"0" }} {% if params.seqtype == "codon" %}codons{% else %}residues{% endif %}.{% endif %} One unit is about a CPU-minute on
+    the reference machine; cost grows roughly with the square of the number of sequences.
+    <a href="{% url 'work_estimate' %}" target="_blank" rel="noopener">How is this estimated?</a></p>
+</div>
+
+<h3>This job will</h3>
+<ol class="job-plan">{% for step in steps %}<li>{{ step|capfirst }}</li>{% endfor %}</ol>
+{% if params.stop_after == "alignments" %}
+<p><strong>{{ alignment_count }}</strong> alignment{{ alignment_count|pluralize }}.</p>
+{% else %}
+<p><strong>{{ combinations }}</strong> combination{{ combinations|pluralize }}
+  (alignments × tree sources × models).</p>
+{% if params.modelfinder %}
+  {% if candidates.shortcuts %}
+    <p>ModelFinder will test {{ candidates.matrices|length }} matri{{ candidates.matrices|length|pluralize:"x,ces" }}
+      ({{ candidates.matrices|join:", " }}) with every rate and frequency type, using
+      IQ-TREE's shortcuts (it tries most rate types only on the best matrices).</p>
+  {% elif candidates %}
+    <p>ModelFinder will compare {{ candidates.models|length }} model{{ candidates.models|length|pluralize }}:
+      {{ candidates.models|join:", " }}.
+      {% if widened %}<br><span class="hint">IQ-TREE tests every combination of the ticked
+      matrices and rate/frequency types, which is more than the cells you ticked.</span>{% endif %}
+      {% if "R" in candidates.rates %}<br><span class="hint">With +R, ModelFinder also tries
+      different numbers of rate categories.</span>{% endif %}</p>
+  {% else %}
+    <p>ModelFinder will use IQ-TREE's default candidate models{% if "raxml" in params.tree_builders %},
+      without JTTDCMut (RAxML-NG doesn't have it){% endif %}: every matrix, with IQ-TREE's own
+      shortcuts for the rate and frequency types.</p>
+  {% endif %}
+{% endif %}
+{% if params.codon_modelfinder %}
+  {% if codon_candidates %}
+    <p>Codon ModelFinder will compare {{ codon_candidates.count }} codon model{{ codon_candidates.count|pluralize }}
+      ({{ codon_candidates.matrices|join:", " }} × {{ codon_candidates.freqs|join:", " }} ×
+      rates {{ codon_candidates.rates|join:", " }}).</p>
+  {% else %}
+    <p>Codon ModelFinder will use IQ-TREE's default codon candidates (MG, MGK, GY, ECMK07,
+      ECMS05 with its frequency and rate types).</p>
+  {% endif %}
+{% endif %}
+{% if params.codon_models %}
+  <p>Full tree search under codon model{{ params.codon_models|length|pluralize }} {{ params.codon_models|join:", " }}.</p>
+{% endif %}
+{% if params.fixed_models %}
+  <p>Full tree search under {% if params.models|length > 12 %}each of {{ params.models|length }} models{% else %}{{ params.models|join:", "|default:"no model (none ticked)" }}{% endif %}.</p>
+{% endif %}
+{% endif %}

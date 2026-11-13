@@ -1,0 +1,12 @@
+{% extends "phylobot/base.html" %}
+{% block title %}Mutational Path · {{ job.name|default:"Job" }} · PhyloBot{% endblock %}
+{% block content %}
+{% load static %}<script src="{% static 'phylobot/alignment.js' %}" defer></script><script src="{% static 'phylobot/path.js' %}" defer></script><script src="{% static 'phylobot/plots.js' %}" defer></script><script src="{% static 'phylobot/toc.js' %}" defer></script>
+{% include "phylobot/_path_back.html" %}
+<h1>Mutational Path</h1>
+{% include "phylobot/_path_viewer.html" %}
+{# The viewer is a GET form, so its POST buttons go through these (`form=`), one each. #}
+<form id="library-add-path" method="post" action="{% url 'library_add' job.id %}">{% csrf_token %}</form>
+<form id="path-save" method="post" action="{% url 'path_save' job.id %}">{% csrf_token %}</form>
+<form id="path-unsave" method="post">{% csrf_token %}</form>
+{% endblock %}

@@ -1,0 +1,45 @@
+{# How to read the Uncertainty page, in three steps (uncertainty_overview.explainer): the #}
+{# job's reconstructions, two picked and sampled, the average split by source. Colours #}
+{# are the light --viz values as attributes (dark.css remaps them). #}
+{% with e=explainer %}
+<figure class="plot uncertainty-explainer" data-tips data-filename="uncertainty.explainer"><div class="pp-tip" hidden></div>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 262" width="920" height="262" role="img"
+     font-family="system-ui, -apple-system, 'Segoe UI', sans-serif"
+     aria-label="How the page measures uncertainty: pick two of the job's reconstructions, sample a sequence from each, count the differences, and split the average by source">
+  {# 1: the job's reconstructions #}
+  <g transform="translate(4 0)">
+    <text x="0" y="16" font-size="14" font-weight="600" fill="#1d2330">1 · Many reconstructions</text>
+    <text font-size="12" fill="#5d6675"><tspan x="0" y="38">The job reconstructed every ancestor</tspan><tspan x="0" y="54"><tspan font-weight="600" fill="#1d2330">{{ e.cells }} ways</tspan>, one per combination of</tspan><tspan x="0" y="70">{{ e.design }}.</tspan></text>
+    <g transform="translate(0 86)">{% for x, y, picked in e.grid %}
+      <rect x="{{ x }}" y="{{ y }}" width="10" height="10" rx="2" {% if picked %}fill="#1d2330"{% else %}fill="#ffffff" stroke="#b3bac5"{% endif %}/>{% endfor %}
+    </g>
+  </g>
+  <path d="M 278 118 h 22 m -6 -5 l 6 5 l -6 5" fill="none" stroke="#b3bac5" stroke-width="2"/>
+  {# 2: two picked, one sequence sampled from each #}
+  <g transform="translate(316 0)">
+    <text x="0" y="16" font-size="14" font-weight="600" fill="#1d2330">2 · Imagine one pair</text>
+    <text font-size="12" fill="#5d6675"><tspan x="0" y="38">Pick any two of them and draw one</tspan><tspan x="0" y="54">sequence from each one's posterior</tspan><tspan x="0" y="70">probabilities. Here is one such pair:</tspan></text>
+    {# Letters placed one by one (16 px apart), so the highlights sit on them. #}
+      <rect x="48" y="95" width="16" height="42" rx="3" fill="#eda100" fill-opacity="0.3"/>
+      <rect x="144" y="95" width="16" height="42" rx="3" fill="#eda100" fill-opacity="0.3"/>
+      <rect x="176" y="95" width="16" height="42" rx="3" fill="#eda100" fill-opacity="0.3"/>
+      <text font-size="11" fill="#5d6675"><tspan x="0" y="110">first</tspan><tspan x="0" y="132">second</tspan></text>
+      <text y="110" font-size="15" fill="#1d2330" text-anchor="middle" font-family="ui-monospace, 'SF Mono', Menlo, Consolas, monospace"><tspan x="40">M</tspan><tspan x="56">K</tspan><tspan x="72">V</tspan><tspan x="88">L</tspan><tspan x="104">S</tspan><tspan x="120">A</tspan><tspan x="136">G</tspan><tspan x="152">I</tspan><tspan x="168">V</tspan><tspan x="184">L</tspan></text>
+      <text y="132" font-size="15" fill="#1d2330" text-anchor="middle" font-family="ui-monospace, 'SF Mono', Menlo, Consolas, monospace"><tspan x="40">M</tspan><tspan x="56">R</tspan><tspan x="72">V</tspan><tspan x="88">L</tspan><tspan x="104">S</tspan><tspan x="120">A</tspan><tspan x="136">G</tspan><tspan x="152">-</tspan><tspan x="168">V</tspan><tspan x="184">I</tspan></text>
+    <text x="32" y="160" font-size="12" fill="#1d2330"><tspan font-weight="600">3 positions differ</tspan> in this one pair</text>
+  </g>
+  <path d="M 588 118 h 22 m -6 -5 l 6 5 l -6 5" fill="none" stroke="#b3bac5" stroke-width="2"/>
+  {# 3: the average, split by where it comes from #}
+  <g transform="translate(626 0)">
+    <text x="0" y="16" font-size="14" font-weight="600" fill="#1d2330">3 · Every possible pair, averaged</text>
+    <text font-size="12" fill="#5d6675"><tspan x="0" y="38">Not by sampling: the page computes the</tspan><tspan x="0" y="54">exact average over every pair and every</tspan><tspan x="0" y="70">possible draw: a typical ancestor differs</tspan><tspan x="0" y="86">at <tspan font-weight="600" fill="#1d2330">{{ e.total }} positions</tspan>. Why?</tspan></text>
+    <g transform="translate(0 96)">{% for x, w, fill, label in e.bar %}
+      <rect x="{{ x }}" y="0" width="{{ w }}" height="20" fill="{{ fill }}" data-tip="{{ label }}"/>{% endfor %}
+      {% if e.posterior_end > 1 %}<path d="M 0 26 v 5 H {{ e.posterior_end }} v -5" fill="none" stroke="#5d6675"/>{% endif %}
+      {% if e.posterior_end < 249 %}<path d="M {{ e.posterior_end|add:1 }} 26 v 5 H 250 v -5" fill="none" stroke="#5d6675"/>{% endif %}
+    </g>
+    <text font-size="12" fill="#5d6675"><tspan x="0" y="148" font-weight="600" fill="#2a78d6">Posterior</tspan><tspan>: each reconstruction is unsure</tspan><tspan x="0" y="164">at some positions, so even two draws</tspan><tspan x="0" y="180">from one reconstruction can differ.</tspan><tspan x="0" y="202" font-weight="600" fill="#1d2330">Choices</tspan><tspan>: different alignments, trees,</tspan><tspan x="0" y="218">models and gap placements give</tspan><tspan x="0" y="234">different reconstructions:</tspan><tspan x="0" y="252" fill="#1d2330">{{ e.choices_label }}</tspan></text>
+  </g>
+</svg>
+</figure>
+{% endwith %}

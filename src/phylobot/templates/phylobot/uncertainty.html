@@ -1,0 +1,347 @@
+{% extends "phylobot/base.html" %}
+{% block title %}Uncertainty · {{ job.name|default:"Job" }} · PhyloBot{% endblock %}
+{% block content %}
+{% load static %}<script src="{% static 'phylobot/plots.js' %}" defer></script><script src="{% static 'phylobot/toc.js' %}" defer></script>
+<p class="hint"><a href="{% url 'job_detail' job.id %}">← {{ job.name|default:"Job" }}</a></p>
+<h1>Where the Ancestors' Uncertainty Comes From</h1>
+<p class="intro uncertainty-intro">How much would your ancestors change with another aligner,
+  tree, model or gap placement, compared with the uncertainty their own posterior
+  probabilities already admit?</p>
+
+<div class="viewer uncertainty sectioned">
+  <nav class="viewer-toc page-toc" data-toc aria-label="On this page">
+    <p class="viewer-toc-title">On this page</p>
+    <ol>
+      {% if summary %}<li><a href="#headline">At a Glance</a></li>
+      {% if recon_map %}<li><a href="#map">Map of the Reconstructions</a></li>{% endif %}
+      <li><a href="#ancestors">Each Ancestor</a></li>
+      {% if scatter %}<li><a href="#depth">Uncertainty with Depth</a></li>{% endif %}
+      {% if node %}<li><a href="#node">{{ node }}</a></li>{% endif %}{% endif %}
+      {% if can_run %}<li><a href="#settings">{% if run %}Compute Again{% else %}Compute{% endif %}</a></li>{% endif %}
+      {% if summary %}<li><a href="#explainer">How to Read This Page</a></li>{% endif %}
+      <li><a href="#method">How It Is Computed</a></li>
+    </ol>
+  </nav>
+  <div class="viewer-sections">
+{% if run %}
+  <section class="uncertainty-toolbar" id="view">
+  <form id="uncertainty" class="uncertainty-controls" method="get" action="{% url 'uncertainty' job.id %}">
+    {% if runs|length > 1 %}<label>Run
+      <select name="run" onchange="this.form.submit()">{% for r in runs %}
+        <option value="{{ r.id }}"{% if r.id == run.id %} selected{% endif %}>{{ r.created_at|date:"Y-m-d H:i" }} · {{ r.params.uncertainty_of.settings.weighting|default:"flat" }} weights{% if r.status != "succeeded" %} · {{ r.status }}{% endif %}</option>{% endfor %}
+      </select></label>{% else %}<input type="hidden" name="run" value="{{ run.id }}">{% endif %}
+    <label>Compare
+      <select name="mode" onchange="this.form.submit()">{% for key, label in modes %}
+        <option value="{{ key }}"{% if key == mode %} selected{% endif %}>{% if key == "posterior" %}Samples from the posteriors{% else %}{{ label }}{% endif %}</option>{% endfor %}
+      </select></label>
+    <button type="button" class="help-dot" popovertarget="help-compare" aria-label="About what is compared">?</button><span class="help-popover" popover id="help-compare"><strong>What is compared</strong><span><span><b>Samples from the posteriors</b>: a sequence drawn from each reconstruction, so the posterior's own uncertainty counts as well as the choices'.</span><span><b>Most probable sequences</b>: only each reconstruction's most probable states. The posterior's part is then zero, and everything left is the reconstructions disagreeing.</span></span></span>
+    <label>Bars in
+      <select name="scale" onchange="this.form.submit()">
+        <option value="residues"{% if scale == "residues" %} selected{% endif %}>Positions</option>
+        <option value="share"{% if scale == "share" %} selected{% endif %}>Share of the total</option>
+      </select></label>
+    {% if node %}<input type="hidden" name="node" value="{{ node }}">{% endif %}
+    <noscript><button class="primary">Show</button></noscript>
+  </form>
+  </section>
+
+  {% if run.status != "succeeded" %}
+  <section class="viewer-section">
+    <p>This run is <span class="status {{ run.status }}">{{ run.status }}</span>.
+      {% if run.status == "queued" or run.status == "running" %}It takes a minute or so; reload this page when it is done.{% endif %}
+      <a href="{% url 'job_detail' run.id %}">Its job page</a>.</p>
+  </section>
+  {% elif not summary %}
+  <section class="viewer-section"><p>This run's results could not be read.</p></section>
+  {% else %}
+
+  <section class="viewer-section uncertainty-glance" id="headline">
+    <h2 class="visually-hidden">At a Glance</h2>
+    <p class="glance-number"><strong>{{ glance.total }}</strong>
+      <span>of {{ glance.columns }} positions differ between two reconstructions of the same
+        ancestor, on average <button type="button" class="help-dot" popovertarget="help-glance" aria-label="About what this number is">?</button><span class="help-popover" popover id="help-glance"><strong>What this number is</strong><span><span>Take any two of an ancestor's reconstructions (one per combination and gap version) and {% if mode == 'map' %}the most probable sequence of each{% else %}a sequence drawn from each{% endif %}: this is the number of alignment positions at which they differ.</span><span>It is not one sampled pair but the exact average over {{ summary.nodes }} ancestor{{ summary.nodes|pluralize }}, every pair of {{ summary.cells|length }} reconstruction{{ summary.cells|length|pluralize }} ({{ summary.combinations }} combination{{ summary.combinations|pluralize }} with their gap versions) and every sequence their posteriors allow, on a frame of {{ summary.columns }} columns.</span><span>{% if not_varied %}Not varied in this job, so zero by construction: {% for f in not_varied %}{{ f.label|lower }}{% if not forloop.last %}, {% endif %}{% endfor %}. {% endif %}These numbers describe this job's choices, not aligners, trees or models in general. On a family where the aligners agree, every bar but the posterior is close to zero, as it should be.</span></span></span></span></p>
+    {% include "phylobot/_uncertainty_legend.html" %}
+    <figure class="plot" data-tips data-filename="uncertainty.{{ mode }}.job"><div class="pp-tip" hidden></div>
+      <div class="plot-tools">Download <button type="button" class="link" data-plot-download="png">PNG</button> · <button type="button" class="link" data-plot-download="svg">SVG</button></div>
+      {% include "phylobot/_uncertainty_bars.html" with chart=headline %}
+    </figure>
+    <ul class="glance-tiles">{% for t, fill, href in glance_tiles %}
+      <li class="glance-tile">
+        <span class="glance-label">{% if fill %}<svg width="11" height="11" aria-hidden="true"><rect width="11" height="11" rx="3" fill="{{ fill }}"/></svg> {% endif %}{{ t.label }}
+          <button type="button" class="help-dot" popovertarget="help-glance-{{ t.key }}" aria-label="About {{ t.label }}">?</button><span class="help-popover" popover id="help-glance-{{ t.key }}"><strong>{{ t.label }}</strong><span>{{ t.help }}</span></span></span>
+        <span class="glance-value">{% if href %}<a href="{{ href }}">{{ t.value }}</a>{% else %}{{ t.value }}{% endif %}</span>
+        <span class="glance-unit">{{ t.unit }}</span>
+      </li>{% endfor %}
+    </ul>
+    {% if point_estimates %}<p class="warning">{{ point_estimates|join:" and "|upper }} give point
+      estimates without posteriors, so with them in, the posterior's part is understated
+      and the choices' parts overstated.</p>{% endif %}
+    {% if takeaways %}<details class="uncertainty-fold uncertainty-meaning" id="meaning">
+      <summary>In words</summary>
+      <p class="uncertainty-lead">{{ sentence }}</p>
+      {% for t in takeaways %}<p>{{ t }}</p>{% endfor %}
+    </details>{% endif %}
+    <details class="uncertainty-fold" id="numbers">
+      <summary>The numbers</summary>
+      <table class="results uncertainty-numbers">
+        <thead><tr><th></th><th>Total</th>{% for key, label, colour in components %}<th>{{ label }}</th>{% endfor %}</tr></thead>
+        <tbody>{% for label, total, values in headline_rows %}
+          <tr><th scope="row">{{ label }}</th><td>{{ total|floatformat:2 }}</td>{% for v in values %}<td>{{ v|floatformat:2 }}</td>{% endfor %}</tr>{% endfor %}
+        </tbody>
+      </table>
+      <p class="hint">Expected positions at which two reconstructions differ.{% if mode == "map" %} Most
+        probable sequences only: the posterior's part is zero, and the rest is how far the
+        point estimates disagree.{% endif %}</p>
+    </details>
+  </section>
+
+  {% if recon_map %}
+  <details class="viewer-section" id="map" open>
+    <summary><h2>Map of the Reconstructions</h2></summary>
+    {% include "phylobot/_uncertainty_map.html" %}
+  </details>
+  {% endif %}
+
+  <details class="viewer-section" id="ancestors" open>
+    <summary><h2>Each Ancestor</h2></summary>
+    {% if pie_tree %}<details class="uncertainty-fold" id="tree"{% if node_table|length <= 40 %} open{% endif %}>
+      <summary>Show every ancestor on the tree</summary>
+      {% include "phylobot/_uncertainty_tree.html" %}
+    </details>{% endif %}
+    <details class="uncertainty-fold"{% if node_table|length <= 40 or sort == "total" %} open{% endif %}>
+      <summary>Show every ancestor as a bar ({{ node_table|length }})</summary>
+    <label class="uncertainty-order">Order
+      <select name="sort" form="uncertainty" data-submit-to="ancestors">
+        <option value="tree"{% if sort == "tree" %} selected{% endif %}>Tree order (root first)</option>
+        <option value="total"{% if sort == "total" %} selected{% endif %}>Most uncertain first</option>
+      </select></label>
+    <p class="hint">Click a bar for that ancestor's sites. <button type="button" class="help-dot" popovertarget="help-ancestor-bars" aria-label="About one bar per ancestor">?</button><span class="help-popover" popover id="help-ancestor-bars"><strong>One bar per ancestor</strong><span><span>One bar per ancestor of {{ summary.reference }} (the reference), matched in the other combinations {% if summary.by_clade %}by clade on the outgroup-rooted trees{% else %}by the subtrees that meet at it (no outgroup){% endif %}.</span><span><b>k/n</b>: the clade exists in only k of the n combinations' trees; the bar covers those k, and the absence is itself a sign of tree uncertainty.</span></span></span></p>
+    <figure class="plot uncertainty-bars" data-tips data-filename="uncertainty.{{ mode }}.ancestors"><div class="pp-tip" hidden></div>
+      <div class="plot-tools">Download <button type="button" class="link" data-plot-download="png">PNG</button> · <button type="button" class="link" data-plot-download="svg">SVG</button></div>
+      {% include "phylobot/_uncertainty_bars.html" with chart=nodes %}
+    </figure>
+    </details>
+    <p class="table-downloads">Download the table:
+      {% for label, url in ancestor_downloads %}<a href="{{ url }}">{{ label }}</a>{% if not forloop.last %} · {% endif %}{% endfor %}</p>
+    <details class="uncertainty-table">
+      <summary>As a table</summary>
+      <div class="sites-scroll"><table class="results">
+        <thead><tr><th>Ancestor</th><th>Present</th><th>Below</th><th>Total</th><th>Residue or gap</th><th>Which residue</th>{% for key, label, colour in components %}<th>{{ label }}</th>{% endfor %}</tr></thead>
+        <tbody>{% for r in node_table %}
+          <tr><th scope="row"><a href="{{ r.href }}">{{ r.node }}</a></th><td>{{ r.present }}/{{ r.of }}</td><td>{{ r.leaves }}</td>
+            <td>{{ r.total|floatformat:2 }}</td><td>{{ r.presence|floatformat:2 }}</td><td>{{ r.residue|floatformat:2 }}</td>
+            {% for key, value in r.values %}<td>{{ value|floatformat:2 }}</td>{% endfor %}</tr>{% endfor %}
+        </tbody>
+      </table></div>
+    </details>
+  </details>
+
+  {% if scatter %}
+  <details class="viewer-section" id="depth" open>
+    <summary><h2>Uncertainty with Depth</h2></summary>
+    {% include "phylobot/_uncertainty_depth.html" %}
+  </details>
+  {% endif %}
+
+  {% if node %}
+  <details class="viewer-section" id="node" open>
+    <summary><h2>{{ node }}, Site by Site <a class="hint" href="{{ close_url }}#ancestors">(close)</a></h2></summary>
+    <p class="hint">Per column of the reference alignment, the variance of the state (the
+      chance two reconstructions differ there, 0 to 0.95), split as the bars are; the
+      grey marks under the track are columns the alignments disagree about (the deeper, the
+      fewer residues they place together). <a href="{{ viewer_url }}">Open {{ node }} in the ancestor viewer →</a></p>
+    {% include "phylobot/_uncertainty_legend.html" %}
+    <div class="track-scroll">
+    <figure class="plot uncertainty-track" data-tips data-filename="uncertainty.{{ mode }}.{{ node }}.sites"><div class="pp-tip" hidden></div>
+      <div class="plot-tools">Download <button type="button" class="link" data-plot-download="png">PNG</button> · <button type="button" class="link" data-plot-download="svg">SVG</button></div>
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="-34 -4 {{ track.width|add:44 }} {{ track.height|add:22 }}"
+           width="{{ track.width|add:44 }}" height="{{ track.height|add:22 }}" role="img"
+           font-family="system-ui, -apple-system, 'Segoe UI', sans-serif"
+           aria-label="{{ node }}: the uncertainty of each column, split by source">
+        {% include "phylobot/_uncertainty_patterns.html" with prefix="tr" %}
+        <line x1="0" x2="{{ track.width }}" y1="100" y2="100" stroke="#d8dde5" stroke-width="1"/>
+        <line x1="0" x2="{{ track.width }}" y1="0" y2="0" stroke="#d8dde5" stroke-width="1" stroke-dasharray="2 3"/>
+        <text x="-4" y="4" text-anchor="end" font-size="10" fill="#5d6675">1</text>
+        <text x="-24" y="50" text-anchor="middle" font-size="10" fill="#5d6675" transform="rotate(-90 -24 50)">variance</text>
+        <text x="-4" y="103" text-anchor="end" font-size="10" fill="#5d6675">0</text>
+        {% for colour, d, title in track.paths %}<path fill="{{ colour }}" d="{{ d }}" data-tip="{{ title }}"/>{% endfor %}
+        <path fill="#b3bac5" d="{{ track.agreement }}" data-tip="Columns the alignments disagree about"/>
+        {% for x, label in track.ticks %}<text x="{{ x }}" y="{{ track.height|add:12 }}" text-anchor="middle" font-size="10" fill="#5d6675">{{ label }}</text>{% endfor %}
+      </svg>
+    </figure>
+    </div>
+
+    <h3>The sites that vary most between choices</h3>
+    <p class="table-downloads">Every site of {{ node }}, not only these:
+      {% for label, url in downloads %}<a href="{{ url }}">{{ label }}</a>{% if not forloop.last %} · {% endif %}{% endfor %}</p>
+    {% if sites %}
+    <div class="sites-scroll"><table class="results uncertainty-sites">
+      <thead><tr><th>Column</th><th>Variance<br><span class="unit">chance two differ</span></th><th>Posterior's part<br><span class="unit">of the variance</span></th><th>The choices' parts<br><span class="unit">of the variance</span></th><th>Reconstructions<br><span class="unit">each choice's, pooled</span></th></tr></thead>
+      <tbody>{% for s in sites %}
+        <tr><th scope="row"><a href="{{ s.viewer }}">{{ s.column }}</a>{% if s.agreement < 1 %}<br><span class="hint" title="How far the alignments agree on this column: the Jaccard index of the residues they place in it (1: the same)">agreement {{ s.agreement|floatformat:2 }}</span>{% endif %}</th>
+          <td>{{ s.total|floatformat:2 }}</td><td>{{ s.within|floatformat:2 }}</td>
+          <td>{% for label, colour, value in s.shares %}<span class="viz-pill s{{ colour }}"><span class="swatch" aria-hidden="true"></span>{{ label }} {{ value|floatformat:2 }}</span>{% if not forloop.last %} {% endif %}{% endfor %}</td>
+          <td class="says">{% for label, items in s.says %}<div><strong>{{ label }}:</strong> {{ items|join:" · " }}</div>{% endfor %}</td></tr>{% endfor %}
+      </tbody>
+    </table></div>
+    <p class="hint">The three numbers are in one unit: the variance of the state at that
+      column (over the 20 residues and the gap), which is the chance that two reconstructions
+      chosen at random differ there, from 0 to 0.95. The posterior's part and the choices'
+      parts add up to it; summed over the columns it is the bars' expected differing
+      positions. Reconstructions: each choice's reconstructions pooled, the most probable
+      state and its probability ("-" a gap); a probability well below 1 is that choice's own
+      uncertainty.</p>
+    {% else %}<p>No column of {{ node }} varies between the choices by more than 0.005.</p>{% endif %}
+
+    {% if heatmap %}
+    <h3>How far apart the reconstructions are</h3>
+    <label class="heat-palette">Colours
+      <select name="heat" form="uncertainty" onchange="this.form.submit()">{% for key, label in heat_palettes %}
+        <option value="{{ key }}"{% if key == heat %} selected{% endif %}>{{ label }}</option>{% endfor %}
+      </select></label>
+    <p class="hint">Expected positions at which a draw from one reconstruction and a draw
+      from the other differ, on the scale under the grid (hover a square for its number).
+      Columns are in the rows' order; the diagonal is each one's own posterior uncertainty.</p>
+    <div class="track-scroll">
+    <figure class="plot" data-tips data-filename="uncertainty.{{ mode }}.{{ node }}.pairs"><div class="pp-tip" hidden></div>
+      <div class="plot-tools">Download <button type="button" class="link" data-plot-download="png">PNG</button> · <button type="button" class="link" data-plot-download="svg">SVG</button></div>
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {{ heatmap.width }} {{ heatmap.height }}" width="{{ heatmap.width }}" height="{{ heatmap.height }}"
+           role="img" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif"
+           aria-label="Expected differences between every pair of reconstructions of {{ node }}">
+        {% for y, label in heatmap.labels %}<text x="{{ heatmap.left|add:-6 }}" y="{{ y }}" text-anchor="end" font-size="11" fill="#1d2330">{{ label }}</text>{% endfor %}
+        {% for x, y, colour, title in heatmap.cells %}<rect x="{{ x }}" y="{{ y }}" width="{{ heatmap.step|add:-2 }}" height="{{ heatmap.step|add:-2 }}" rx="2" fill="{{ colour }}" data-tip="{{ title }}"/>{% endfor %}
+        {# The colour key: 0 to this ancestor's largest distance, in the same palette. #}
+        <defs><linearGradient id="heat-key" x1="0" x2="1" y1="0" y2="0">{% for offset, colour in heatmap.gradient %}<stop offset="{{ offset }}%" stop-color="{{ colour }}"/>{% endfor %}</linearGradient></defs>
+        <rect x="{{ heatmap.left }}" y="{{ heatmap.legend_y }}" width="{{ heatmap.legend_width }}" height="10" rx="2" fill="url(#heat-key)"/>
+        {% for x, label in heatmap.ticks %}<line x1="{{ x }}" x2="{{ x }}" y1="{{ heatmap.legend_y|add:10 }}" y2="{{ heatmap.legend_y|add:14 }}" stroke="#5d6675" stroke-width="1"/>
+        <text x="{{ x }}" y="{{ heatmap.legend_y|add:26 }}" text-anchor="middle" font-size="10.5" fill="#5d6675">{{ label }}</text>{% endfor %}
+        <text x="{{ heatmap.left|add:-6 }}" y="{{ heatmap.legend_y|add:9 }}" text-anchor="end" font-size="11" fill="#1d2330">Expected differing positions</text>
+      </svg>
+    </figure>
+    </div>
+    {% endif %}
+  </details>
+  {% endif %}
+  {% endif %}
+{% else %}
+<section class="viewer-section">
+  <p>No uncertainty run on this job yet. Choose the settings below and press <em>Compute</em>:
+    it runs as a short job of its own and needs the job's {{ offered.combinations|length }}
+    combination{{ offered.combinations|length|pluralize }} with ancestors.</p>
+</section>
+{% endif %}
+
+{% if can_run %}
+<details class="viewer-section uncertainty-settings" id="settings"{% if not run %} open{% endif %}>
+  <summary><h2>{% if run %}Compute Again with Other Settings{% else %}Compute{% endif %}</h2></summary>
+  <form method="post" action="{% url 'uncertainty_run' job.id %}">{% csrf_token %}
+    <fieldset><legend>Weights</legend>
+      <label><input type="radio" name="weighting" value="flat"{% if form.weighting == "flat" %} checked{% endif %}>
+        Flat: every combination weighs the same</label>
+      <div class="option-line"><label><input type="radio" name="weighting" value="bic"{% if form.weighting == "bic" %} checked{% endif %}>
+        BIC: combinations weigh by their fit within each alignment</label>
+        <button type="button" class="help-dot" popovertarget="help-bic-weights" aria-label="About bIC weights">?</button><span class="help-popover" popover id="help-bic-weights"><strong>BIC weights</strong><span>Schwarz weights within each alignment (BIC compares fits of the same data only, so each alignment then weighs the same). When one model dominates, the model and tree parts shrink towards zero.</span></span></div>
+    </fieldset>
+    <fieldset><legend>Multipliers</legend>
+      <p class="hint">On top of the weights: 2 counts a level twice, 0 leaves it out.</p>
+      <div class="uncertainty-multipliers">{% for f in form.factors %}{% if f.levels %}
+        <div><strong>{{ f.label }}</strong>{% for lv in f.levels %}
+          <label>{{ lv.label }} <input type="number" name="{{ lv.name }}" value="{{ lv.value }}" min="0" max="1000" step="any"></label>{% endfor %}</div>{% endif %}{% endfor %}
+      </div>
+    </fieldset>
+    <fieldset><legend>Gap versions</legend>
+      {% for key, label, opt_in in form.version_choices %}
+      <label><input type="checkbox" name="versions" value="{{ key }}"{% if key in form.versions %} checked{% endif %}> {{ label }}{% if opt_in %} <span class="hint">{% if key == "original" %}(not a real alternative: every insertion seen in any sequence){% else %}(point estimates, no posteriors){% endif %}</span>{% endif %}</label>{% endfor %}
+      <p class="hint">None ticked: the masks the job ran.</p>
+    </fieldset>
+    <label>Reference
+      <select name="reference">{% for c in offered.combinations %}
+        <option value="{{ c.key }}"{% if c.key == form.reference %} selected{% endif %}>{{ c.label }}</option>{% endfor %}
+      </select></label>
+    <button type="button" class="help-dot" popovertarget="help-reference" aria-label="About reference">?</button><span class="help-popover" popover id="help-reference"><strong>Reference</strong><span>The combination whose alignment is the frame everything is counted on, and whose tree's nodes are the ancestors.</span></span>
+    <p><button class="primary">Compute</button></p>
+  </form>
+</details>
+{% endif %}
+
+{% if summary %}
+  <details class="viewer-section" id="explainer">
+    <summary><h2>How to Read This Page</h2></summary>
+    {% include "phylobot/_uncertainty_explainer.html" %}
+    {# A worked example (made-up numbers): how one column splits into the slices. #}
+    <details class="uncertainty-example">
+      <summary>A worked example: two columns of one ancestor</summary>
+      <p>Say a job ran two aligners, so each ancestor has two reconstructions, from MAFFT and
+        from MUSCLE, weighted equally.</p>
+      <table class="results uncertainty-example-table">
+        <thead><tr><th>Column</th><th class="label">MAFFT's reconstruction</th><th class="label">MUSCLE's reconstruction</th><th>Total</th><th>Posterior</th><th>Alignment</th></tr></thead>
+        <tbody>
+          <tr><th scope="row">120</th><td class="label">K 0.6, R 0.4</td><td class="label">K 1.0</td><td>0.32</td><td>0.24</td><td>0.08 <span class="hint">which residue</span></td></tr>
+          <tr><th scope="row">200</th><td class="label">L 1.0</td><td class="label">gap</td><td>0.50</td><td>0</td><td>0.50 <span class="hint">residue or gap</span></td></tr>
+        </tbody>
+      </table>
+      <p><strong>Column 120.</strong> MAFFT's reconstruction is itself unsure: two draws from it
+        differ with chance 1 − (0.6² + 0.4²) = 0.48. MUSCLE's is certain: 0. Their average,
+        <strong>0.24, is the posterior's part</strong> (blue): it would be there with one aligner
+        alone. Pooled, the two reconstructions give K 0.8, R 0.2, so two draws from the pool
+        differ with chance 1 − (0.8² + 0.2²) = 0.32; the rest, <strong>0.08, is the alignment's
+        part</strong> (solid red): the reconstructions lean to different residues.</p>
+      <p><strong>Column 200.</strong> Each reconstruction is certain, so the posterior's part
+        is 0. But MAFFT puts a residue there and MUSCLE a gap: pooled, half and half, so draws
+        differ with chance 0.5, all of it <strong>the alignment's, hatched</strong>: whether the
+        ancestor has a residue at this column at all.</p>
+      <p>An ancestor's pie adds up such numbers over all its columns (here 0.82: 0.24 blue,
+        0.08 solid red, 0.50 hatched red). With more choices (trees, models, gap placements)
+        the part between reconstructions is split among them, each by its Shapley value.
+        <em>Compare → Most probable sequences</em> keeps only the reconstructions' most probable
+        states: the posterior's part is then 0, and every slice is the reconstructions
+        disagreeing.</p>
+    </details>
+    <p class="hint">Steps 1 and 2 only say what the number means. Nothing is left to chance:
+      it is the exact average over every pair of reconstructions (by their weights) and every
+      sequence their posteriors could give, column by column, the value that repeating the
+      picks forever would settle on.
+      Bars are split the same way everywhere below, one colour per source.
+      Hatched parts are disagreement over whether a residue is there at all; solid parts,
+      over which residue. The choices' parts are Shapley values, so they add up exactly.</p>
+  </details>
+{% endif %}
+
+<details class="viewer-section method" id="method">
+  <summary><h2>How It Is Computed</h2></summary>
+  <p>At each column a reconstruction is a distribution over the 20 residues and the gap.
+    The chance that two independent draws differ, 1 − Σp², is the variance of the state
+    written as a one-hot vector; summed over columns it is the expected number of positions
+    at which two reconstructions differ. Pooled over the job's reconstructions (with the
+    weights above) it splits exactly into the mean of each reconstruction's own variance
+    (the posterior) and the variance between reconstructions. The two reconstructions are
+    picked independently, so now and then the same one is picked twice: that is what makes
+    the split exact (leaving those pairs out would inflate the choices' parts by n/(n − 1)
+    for n reconstructions), and it is not where the posterior's part comes from, since every
+    pair's samples carry their posteriors' uncertainty. The variance between reconstructions splits
+    over the choices by their Shapley values: each choice's contribution averaged over every
+    order in which the choices could be considered, so the parts add up whatever the
+    design's balance. Residue or gap (hatched) and which residue (solid) are decomposed
+    separately and add up to the whole.</p>
+</details>
+  </div>{# .viewer-sections #}
+</div>{# .viewer #}
+<script>
+  // Controls that live in a section (the map's, the tree's) submit the page's form and come
+  // back to that section.
+  document.addEventListener("change", (event) => {
+    const field = event.target.closest && event.target.closest("[data-submit-to]");
+    if (!field || !field.form) return;
+    field.form.action = field.form.action.split("#")[0] + "#" + field.dataset.submitTo;
+    field.form.submit();
+  });
+  // A link to a section folded away opens it first.
+  const reveal = () => {
+    const target = location.hash.length > 1 && document.getElementById(decodeURIComponent(location.hash.slice(1)));
+    for (let node = target; node; node = node.parentElement) if (node.tagName === "DETAILS") node.open = true;
+    if (target) target.scrollIntoView();
+  };
+  window.addEventListener("hashchange", reveal);
+  document.addEventListener("DOMContentLoaded", reveal);
+</script>
+{% endblock %}

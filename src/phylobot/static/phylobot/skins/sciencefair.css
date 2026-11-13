@@ -1,0 +1,152 @@
+/* Science Fair skin (phylobot.skins): Clean's layout (clean.css applies to it) as a project
+   pinned up in a school gym. A kraft-paper board under a scalloped bulletin-board border;
+   each card a sheet of construction paper, taped on (the tape is crooked, the paper is
+   not: tilted text is harder to read); headings in Patrick Hand, a neat hand lettering;
+   page titles under a stroke of highlighter; tables on ruled notebook paper; the main
+   action a blue ribbon with stitched edges. The home title is glitter glue (Caveat
+   Brush), and the job page gives a gold star (or a note from the teacher). Body text, fields and tables stay in the system face, dark ink
+   on light paper, and the glitter stops for readers who prefer reduced motion. */
+@font-face { font-family: "Patrick Hand"; font-style: normal; font-weight: 400; font-display: swap;
+  src: url("../fonts/patrick-hand-latin-400-normal.woff2") format("woff2"); }
+@font-face { font-family: "Caveat Brush"; font-style: normal; font-weight: 400; font-display: swap;
+  src: url("../fonts/caveat-brush-latin-400-normal.woff2") format("woff2"); }
+
+:root[data-skin="sciencefair"] {
+  --hand: "Patrick Hand", "Comic Sans MS", "Chalkboard SE", cursive;
+  --marker: "Caveat Brush", "Patrick Hand", cursive;
+  --page: #c8a57a;          /* kraft paper */
+  --bg: #fffdf6;            /* fields, tables: white paper */
+  --bar: #fffdf6;           /* the poster board */
+  --fg: #22180e;            /* pencil and marker */
+  --fg-2: #33261a;
+  --muted: #4f4234;         /* 7.5:1 on the lightest paper, 5:1 on the kraft */
+  --line: #c6d8ea;          /* notebook rules */
+  --edge: #b5a48c;
+  --accent: #1d4fa0;        /* ballpoint blue */
+  --accent-hover: #163f82;
+  --accent-soft: #e2ebf8;
+  --accent-ring: rgba(29, 79, 160, .25);
+  --link-line: rgba(29, 79, 160, .45);
+  --on-accent: #fff;
+  --subtle: #f4efe2;
+  --hover: #fffaf0;
+  --hover-edge: #8d7b62;
+  --row-hover: #fbf6e8;
+  --glass: transparent;
+  --track: #efe6d2;
+  --radius: 3px;
+  --radius-control: 6px;
+  --shadow: 0 1px 1px rgba(60, 40, 15, .18), 0 6px 14px -6px rgba(60, 40, 15, .35);
+  --title-rim: transparent;
+  --title-shadow: transparent;
+  --sky: #d3e8f8; --goldenrod: #f8e6a8; --mint: #d2efdf; --pink: #f8d9e2; --lilac: #e5ddf4;
+  --tape: rgba(255, 248, 214, .72);
+  --work-align: #3a7bd5; --work-modelfinder: #9cc8f0; --work-trees: #2e9d5b;
+  --work-ancestors: #e3742f; --work-codeml: #f3b27f; --work-setup: #b5a48c;
+
+  & body { background-color: var(--page);
+    background-image: radial-gradient(rgba(90, 60, 25, .09) 1px, transparent 1.4px),
+      radial-gradient(rgba(255, 245, 220, .12) 1px, transparent 1.4px);
+    background-size: 7px 7px, 11px 11px; background-position: 0 0, 3px 5px; }
+  & ::selection { background: #fff07a; color: var(--fg); }
+
+  /* The poster board along the top, trimmed with a scalloped bulletin-board border; the
+     page you are on circled in red marker. */
+  & header { background: var(--bar); border-bottom: 0; box-shadow: 0 3px 0 rgba(60, 40, 15, .12); }
+  & header::after { content: ""; position: absolute; left: 0; right: 0; bottom: -12px; height: 12px; pointer-events: none;
+    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='12'%3E%3Cpath d='M0 0a12 12 0 0 0 24 0z' fill='%23e94b3c'/%3E%3Cpath d='M24 0a12 12 0 0 0 24 0z' fill='%23f39c34'/%3E%3Cpath d='M48 0a12 12 0 0 0 24 0z' fill='%23f4d03f'/%3E%3Cpath d='M72 0a12 12 0 0 0 24 0z' fill='%233cb371'/%3E%3Cpath d='M96 0a12 12 0 0 0 24 0z' fill='%233a7bd5'/%3E%3C/svg%3E") repeat-x; }
+  & header .brand { font-family: var(--marker); font-size: 1.6rem; font-weight: 400; color: var(--fg); letter-spacing: .01em; }
+  & header nav :is(a, summary) { font-family: var(--hand); font-size: 1.12rem; font-weight: 400; color: var(--fg); padding: .1rem .55rem; }
+  & header nav :is(a, summary):hover { background: transparent; color: var(--accent); }
+  & header nav :is(a[aria-current="page"], summary.current) { background: transparent; color: var(--fg); box-shadow: none;
+    border: 2px solid #d63a2f; border-radius: 55% 45% 50% 48% / 60% 50% 55% 45%; transform: rotate(-1.5deg); }
+  & header .user { background: transparent; border: 1px dashed var(--edge); }
+  & main { padding-top: 2.75rem; }
+
+  /* Headings in hand lettering; page titles under a stroke of highlighter. */
+  & :is(h1, h2, h3, summary h2, details > summary strong) { font-family: var(--hand); font-weight: 400; letter-spacing: .01em; }
+  & h1 { font-size: 2.5rem; display: inline-block; padding: 0 .25em; margin-left: -.25em;
+    background: linear-gradient(100deg, transparent .3em, rgba(255, 236, 60, .75) .4em, rgba(255, 236, 60, .6) calc(100% - .3em), transparent);
+    background-size: 100% .55em; background-repeat: no-repeat; background-position: 0 85%; }
+  & h2 { font-size: 1.5rem; }
+  & h3 { font-size: 1.2rem; color: var(--fg-2); }
+  & a { color: var(--accent); }
+
+  /* Cards: sheets of construction paper, each colour in turn, taped to the board. */
+  & :is(section.step, section.results, details.inputs, details.stages, details.files, details.attempts,
+        details.libraries, .snippet, .path-section, .viewer, .about > section, section.alignment-list,
+        details.alignment-upload, .aln-save, .about-toc) {
+    position: relative; background: var(--sky); border: 0; box-shadow: var(--shadow); overflow: visible; }
+  & :is(section.step, .snippet, .about > section):nth-of-type(5n+2), & :is(details.stages, details.files) { background: var(--goldenrod); }
+  & :is(section.step, .snippet, .about > section):nth-of-type(5n+3), & section.results { background: var(--mint); }
+  & :is(section.step, .snippet, .about > section):nth-of-type(5n+4), & details.attempts { background: var(--pink); }
+  & :is(section.step, .snippet, .about > section):nth-of-type(5n), & details.libraries { background: var(--lilac); }
+  & :is(section.step, section.results, details.inputs, details.stages, details.files, details.attempts, details.libraries,
+        .snippet, .viewer, .about > section, section.alignment-list)::before {
+    content: ""; position: absolute; top: -9px; left: 50%; width: 92px; height: 20px; margin-left: -46px;
+    background: var(--tape); border: 1px solid rgba(160, 140, 90, .25); transform: rotate(-2.5deg); pointer-events: none; }
+  & :is(section.step, .snippet, .about > section):nth-of-type(even)::before { transform: rotate(3deg); left: 30%; }
+  & details:is(.stages, .files)::before { transform: rotate(2deg); left: 84%; }
+  & section.step > h2:first-child, & section.results > h2:first-child, & .about > section > h2:first-child { border-bottom: 2px dashed rgba(34, 24, 14, .25); }
+  & .step-number { background: var(--fg); color: #fff; font-family: var(--hand); font-size: 1.05rem; }
+  & .viewer .path-section { box-shadow: none; background: transparent; }
+  & .viewer .path-section::before { content: none; }
+  & .viewer-controls, & .review-actions, & .stage-graph { background: rgba(255, 253, 246, .65); border: 1px solid rgba(60, 40, 15, .15); }
+
+  /* Buttons: index cards; the main action a blue ribbon with stitched edges. */
+  & button:not(.link, .toggle, .icon-button, .chip-remove, .job-panel-close, .job-panel-tab, .sort, .help-dot, .picker-row, .fold-toggle),
+  & a.button, & .head-action, & input[type=file]::file-selector-button { background: var(--bg); border-color: var(--edge); }
+  & :is(button.primary, a.button, dialog .actions button.primary, .path-section button.trace:not(.secondary), .job-panel-foot button.primary) {
+    background: #1f56b3; border-color: #1f56b3; color: #fff; font-family: var(--hand); font-size: 1.15rem; font-weight: 400;
+    letter-spacing: .02em; border-radius: 3px; outline: 1.5px dashed rgba(255, 255, 255, .75); outline-offset: -5px;
+    box-shadow: 0 2px 0 #143d82, 0 4px 8px -3px rgba(20, 40, 90, .5); }
+  & :is(button.primary, a.button, dialog .actions button.primary, .path-section button.trace:not(.secondary)):hover {
+    background: #2462c8; border-color: #2462c8; }
+  & :is(button.primary, a.button, dialog .actions button.primary, .path-section button.trace):focus-visible {
+    outline: 1.5px dashed #fff; box-shadow: 0 0 0 3px #fff, 0 0 0 5px var(--fg); }
+  & .job-panel-tab { background: #1f56b3; }
+
+  /* Tables on ruled notebook paper, with the red margin line. */
+  & :is(table.results, table.grid, table.jobs, table.hits) { background: #fffdf6; border-color: var(--line);
+    box-shadow: inset 2.6rem 0 0 -2.5rem #e8a3a3, var(--shadow); }
+  & table.jobs { box-shadow: var(--shadow); }
+  & :is(table.jobs, table.hits) thead th, & table.results th { background: #fffdf6; color: var(--fg-2);
+    font-family: var(--hand); font-size: 1rem; text-transform: none; letter-spacing: .02em; font-weight: 400;
+    border-bottom: 2px solid #9fbfe0; }
+  & table.jobs tbody tr:hover td { background: #fff8d6; }
+
+  /* The job page: a gold star sticker, or a note from the teacher. */
+  & details.stages > summary .status { font-size: .85rem; position: relative; }
+  & details.stages > summary .status.succeeded { margin-right: 7.4rem; }
+  & details.stages > summary .status.failed { margin-right: 9.4rem; }
+  & details.stages > summary .status:is(.succeeded, .failed)::after { position: absolute; left: 100%; top: 50%; translate: 0 -50%; white-space: nowrap; }
+  & details.stages > summary .status.succeeded::after { content: "★ GREAT JOB!"; display: inline-block; margin-left: .7rem;
+    padding: .15rem .55rem; background: #f4c430; color: #5a3d00; border-radius: 999px; font-family: var(--hand); font-size: .95rem;
+    letter-spacing: .04em; box-shadow: 0 1px 2px rgba(0, 0, 0, .3); transform: rotate(-4deg); }
+  & details.stages > summary .status.failed::after { content: "See me after class."; margin-left: .7rem;
+    font-family: var(--hand); font-size: 1.1rem; color: #c0281f; transform: rotate(-2deg); display: inline-block; }
+
+  /* Home: the title in glitter glue, the photo taped on. */
+  & .title-page h1 { font-family: var(--marker); font-weight: 400; font-size: 5.6rem; letter-spacing: .01em; line-height: 1;
+    background-color: transparent; background-image:
+      radial-gradient(circle at 20% 30%, #fff 0 1.8px, transparent 2.3px),
+      radial-gradient(circle at 70% 60%, rgba(255, 255, 255, .9) 0 1.5px, transparent 2px),
+      radial-gradient(circle at 45% 80%, #fffbe0 0 1.6px, transparent 2.1px),
+      linear-gradient(110deg, #d62f8a, #8b3fd6 22%, #2f7fe0 40%, #22b07d 58%, #f2b705 76%, #e8461f);
+    background-size: 9px 9px, 13px 13px, 11px 11px, 200% 100%; background-position: 0 0, 0 0, 0 0, 0 0;
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+    filter: drop-shadow(0 2px 0 rgba(255, 255, 255, .9)) drop-shadow(0 3px 2px rgba(60, 40, 15, .35));
+    animation: fair-glitter 6s ease-in-out infinite alternate; }
+  & .title-page h1 .two { text-shadow: none; }
+  & .title-page .logo { background: #fff; padding: 12px 12px 30px; box-shadow: var(--shadow); transform: rotate(-2deg); }
+  & .title-page .slogan { font-family: var(--hand); font-weight: 400; font-size: 2.2rem; }
+  & .title-page .reference { background: var(--bg); padding: .5rem 1.25rem 1rem; box-shadow: var(--shadow); }
+
+  & .site-footer { color: var(--fg-2); border-top: 0; }
+}
+@keyframes fair-glitter {
+  to { background-position: 9px 5px, -13px 7px, 6px -11px, 100% 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  :root[data-skin="sciencefair"] .title-page h1 { animation: none; }
+}

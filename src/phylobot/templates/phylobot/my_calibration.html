@@ -1,0 +1,41 @@
+{% extends "phylobot/base.html" %}
+{% block title %}My Calibration · PhyloBot{% endblock %}
+{% block content %}
+<h1>My Calibration</h1>
+<p class="lede">The coefficients the ancestor viewer uses for your jobs when you choose
+  <em>Probabilities: Calibrated</em>. At each site the posterior probabilities are raised to
+  the power 1/T and renormalised, with ln T = intercept + the sum of coefficient × covariate
+  (T kept between {{ t_bounds.0|floatformat:"-1" }} and {{ t_bounds.1|floatformat:"-1" }}).
+  The order of the states never changes, so your ML ancestors are the same whatever you set.</p>
+<p class="hint">A blank field uses this site's default, which uses the built-in value unless
+  {% if can_edit_site %}you set one on <a href="{% url 'site_settings' %}#calibrated-posterior-probabilities">Settings</a>{% else %}the site's operator set one{% endif %}.
+  The built-in values are a global temperature fitted on a benchmark, with no covariate
+  terms. Set your own only if you have fitted them.
+  In effect now: <strong>{{ coefficients.source }}</strong>.</p>
+<form method="post" class="site-settings my-calibration">
+  {% csrf_token %}
+  {% if form.non_field_errors %}<div class="errors">{{ form.non_field_errors }}</div>{% endif %}
+  <section class="step">
+    <table class="settings-table">
+      <thead><tr><th>Term</th><th>Built-in</th><th>Site default</th><th>Yours</th><th>In effect</th></tr></thead>
+      <tbody>{% for r in rows %}
+        <tr>
+          <td><label for="{{ r.field.id_for_label }}">{{ r.label }}</label>
+            {% if r.meaning %}<span class="hint">{{ r.meaning }}</span>{% endif %}</td>
+          <td>{{ r.built_in|floatformat:"-3" }}</td>
+          <td>{% if r.site is None %}<span class="hint">built-in</span>{% else %}{{ r.site|floatformat:"-3" }}{% endif %}</td>
+          <td>{{ r.field }}{% for error in r.field.errors %}<span class="errors inline-error">{{ error }}</span>{% endfor %}</td>
+          <td class="in-effect"><strong>{{ r.in_effect|floatformat:"-3" }}</strong></td>
+        </tr>{% endfor %}
+      </tbody>
+    </table>
+  </section>
+  <p class="calibration-resets">
+    <button type="submit" class="primary" name="action" value="save">Save</button>
+    <button type="submit" name="action" value="default" formnovalidate>Reset to site defaults</button>
+    <button type="submit" name="action" value="none" formnovalidate>No effect (T = 1)</button>
+    <span class="hint">"No effect" sets every term to 0, so ln T = 0 and calibrated equals raw,
+      whatever the site's defaults become.</span>
+  </p>
+</form>
+{% endblock %}

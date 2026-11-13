@@ -1,0 +1,37 @@
+{# One esr_lengths.Scatter. Colours are SVG attributes (light values; dark.css remaps #}
+{# them on the page), and the key is inside the SVG, so downloads keep both. #}
+<figure class="plot esr-chart" data-filename="esr.{{ job.id|stringformat:'s'|slice:':8' }}.{{ c.key }}">
+  <div class="esr-head">
+    <h4>{{ title }}</h4>
+    <div class="plot-tools">Download <button type="button" class="link" data-plot-download="png">PNG</button> · <button type="button" class="link" data-plot-download="svg">SVG</button></div>
+  </div>
+  <p class="hint">{{ hint }}</p>
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {{ c.width }} {{ c.height }}" width="{{ c.width }}" height="{{ c.height }}"
+       font-family="system-ui, -apple-system, 'Segoe UI', sans-serif" role="img" aria-label="{{ title }} against pendant branch length">
+    <rect class="background" width="{{ c.width }}" height="{{ c.height }}" fill="#ffffff"/>
+    {% for t in c.y_ticks %}
+      <line x1="{{ c.left }}" x2="{{ c.right_edge }}" y1="{{ t.y|floatformat:1 }}" y2="{{ t.y|floatformat:1 }}" stroke="#d8dde5" stroke-width="1"/>
+      <text x="{{ c.left|add:-8 }}" y="{{ t.y|floatformat:1 }}" text-anchor="end" dominant-baseline="middle" font-size="13" fill="#5d6675">{{ t.label }}</text>
+    {% endfor %}
+    {% for t in c.x_ticks %}
+      <line x1="{{ t.x|floatformat:1 }}" x2="{{ t.x|floatformat:1 }}" y1="{{ c.bottom_edge }}" y2="{{ c.bottom_edge|add:4 }}" stroke="#5d6675" stroke-width="1"/>
+      <text x="{{ t.x|floatformat:1 }}" y="{{ c.bottom_edge|add:18 }}" text-anchor="middle" font-size="13" fill="#5d6675">{{ t.label }}</text>
+    {% endfor %}
+    <line x1="{{ c.left }}" x2="{{ c.right_edge }}" y1="{{ c.zero_y|floatformat:1 }}" y2="{{ c.zero_y|floatformat:1 }}" stroke="#5d6675" stroke-width="1" stroke-dasharray="4 4"/>
+    <text x="{{ c.x_middle }}" y="{{ c.height|add:-4 }}" text-anchor="middle" font-size="14" fill="#1d2330">Pendant branch length</text>
+    <text transform="translate(14 {{ c.y_middle }}) rotate(-90)" text-anchor="middle" font-size="14" fill="#1d2330">{{ c.y_label }}</text>
+    {% for s in c.series %}
+      {% for d in s.dots %}
+        <circle cx="{{ d.x }}" cy="{{ d.y }}" r="3.5" fill="{{ s.colour }}" fill-opacity="0.55" tabindex="0"><title>{{ s.level|upper }}, {{ d.title }}</title></circle>
+      {% endfor %}
+    {% endfor %}
+    {% for s in c.series %}{% if s.line %}
+      <path d="{{ s.line }}" fill="none" stroke="#ffffff" stroke-width="5" stroke-linejoin="round" stroke-linecap="round"/>
+      <path d="{{ s.line }}" fill="none" stroke="{{ s.colour }}" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+    {% endif %}{% endfor %}
+    {% if c.series|length > 1 %}{% for s in c.series %}
+      <rect x="{{ c.legend_x }}" y="{{ s.legend_y|add:-6 }}" width="12" height="12" rx="3" fill="{{ s.colour }}"/>
+      <text x="{{ c.legend_x|add:18 }}" y="{{ s.legend_y }}" dominant-baseline="middle" font-size="13" fill="#1d2330">{{ s.level|upper }}</text>
+    {% endfor %}{% endif %}
+  </svg>
+</figure>

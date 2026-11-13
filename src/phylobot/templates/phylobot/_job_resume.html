@@ -1,0 +1,15 @@
+{% comment %}Resume a failed job (views.resume_job, jobs.resume): its next attempt reuses the
+steps that finished, in the same work directory (only if the job ran with its own resume
+cache: Job.resume_cache, and the worker has not removed it since: Job.work_expired_at).{% endcomment %}
+<form class="job-resume" method="post" action="{% url 'resume_job' job.id %}">
+  {% csrf_token %}
+  <button type="submit" class="primary">Resume this job</button>
+  {% if job.resume_cache %}<span class="hint">Steps that finished{% if done %} ({{ done }} of {{ total }}){% endif %} are
+    reused and only the rest runs, as attempt {{ job.attempt|add:1 }} of this job. A step that
+    was part-way through starts again.</span>
+  {% elif job.work_expired_at %}<span class="hint">Its finished steps were removed from the
+    worker on {{ job.work_expired_at|date:"Y-m-d" }}, after the time failed jobs' work is kept
+    (Settings), so it starts again from the beginning, as attempt {{ job.attempt|add:1 }} of this job.</span>
+  {% else %}<span class="hint">This job ran before PhyloBot could resume jobs, so it starts
+    again from the beginning, as attempt {{ job.attempt|add:1 }} of this job.</span>{% endif %}
+</form>

@@ -1,0 +1,274 @@
+<recPhylo 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.recg.org ./recGeneTreeXML.xsd"
+	xmlns="http://www.recg.org">
+<spTree>
+<phylogeny>
+<clade>
+		<name>spn001</name>
+	<clade>
+			<name>Yarrowia_lipolytica</name>
+	</clade>
+	<clade>
+			<name>spn002</name>
+		<clade>
+				<name>spn003</name>
+			<clade>
+					<name>Saccharomyces_cerevisiae</name>
+			</clade>
+			<clade>
+					<name>spn004</name>
+				<clade>
+						<name>Kluyveromyces_lactis</name>
+				</clade>
+				<clade>
+						<name>Lachancea_waltii</name>
+				</clade>
+			</clade>
+		</clade>
+		<clade>
+				<name>spn005</name>
+			<clade>
+					<name>spn006</name>
+				<clade>
+						<name>Candida_albicans</name>
+				</clade>
+				<clade>
+						<name>Candida_parapsilosis</name>
+				</clade>
+			</clade>
+			<clade>
+					<name>Clavispora_lusitaniae</name>
+			</clade>
+		</clade>
+	</clade>
+</clade>
+</phylogeny>
+</spTree>
+<recGeneTree>
+<phylogeny rooted="true">
+<clade>
+	<name>NULL</name>
+	<eventsRec>
+		<speciation speciesLocation="spn001"/>
+	</eventsRec>
+	<clade>
+		<name>Yarrowia.lipolytica.IME2</name>
+		<eventsRec>
+			<leaf speciesLocation="Yarrowia_lipolytica"/>
+		</eventsRec>
+	</clade>
+	<clade>
+		<name>NULL</name>
+		<eventsRec>
+			<duplication speciesLocation="spn002"/>
+		</eventsRec>
+		<clade>
+			<name>NULL</name>
+			<eventsRec>
+				<duplication speciesLocation="spn002"/>
+			</eventsRec>
+			<clade>
+				<name>NULL</name>
+				<eventsRec>
+					<duplication speciesLocation="spn002"/>
+				</eventsRec>
+				<clade>
+					<name>NULL</name>
+					<eventsRec>
+						<speciation speciesLocation="spn002"/>
+					</eventsRec>
+					<clade>
+						<name>NULL</name>
+						<eventsRec>
+							<speciation speciesLocation="spn003"/>
+						</eventsRec>
+							<clade>
+							<name>loss</name>
+							<eventsRec>
+								<loss speciesLocation="Saccharomyces_cerevisiae"/>
+							</eventsRec>
+						</clade>
+						<clade>
+							<name>NULL</name>
+							<eventsRec>
+								<speciation speciesLocation="spn004"/>
+							</eventsRec>
+								<clade>
+								<name>loss</name>
+								<eventsRec>
+									<loss speciesLocation="Lachancea_waltii"/>
+								</eventsRec>
+							</clade>
+							<clade>
+								<name>Kluyveromyces.lactis.IME2</name>
+								<eventsRec>
+									<leaf speciesLocation="Kluyveromyces_lactis"/>
+								</eventsRec>
+							</clade>
+						</clade>
+					</clade>
+					<clade>
+						<name>NULL</name>
+						<eventsRec>
+							<speciation speciesLocation="spn005"/>
+						</eventsRec>
+							<clade>
+							<name>loss</name>
+							<eventsRec>
+								<loss speciesLocation="Clavispora_lusitaniae"/>
+							</eventsRec>
+						</clade>
+						<clade>
+							<name>NULL</name>
+							<eventsRec>
+								<speciation speciesLocation="spn006"/>
+							</eventsRec>
+								<clade>
+								<name>loss</name>
+								<eventsRec>
+									<loss speciesLocation="Candida_parapsilosis"/>
+								</eventsRec>
+							</clade>
+							<clade>
+								<name>Candida.albicans.IME2</name>
+								<eventsRec>
+									<leaf speciesLocation="Candida_albicans"/>
+								</eventsRec>
+							</clade>
+						</clade>
+					</clade>
+				</clade>
+				<clade>
+					<name>NULL</name>
+					<eventsRec>
+						<speciation speciesLocation="spn002"/>
+					</eventsRec>
+					<clade>
+						<name>NULL</name>
+						<eventsRec>
+							<speciation speciesLocation="spn003"/>
+						</eventsRec>
+							<clade>
+							<name>loss</name>
+							<eventsRec>
+								<loss speciesLocation="Saccharomyces_cerevisiae"/>
+							</eventsRec>
+						</clade>
+						<clade>
+							<name>NULL</name>
+							<eventsRec>
+								<speciation speciesLocation="spn004"/>
+							</eventsRec>
+								<clade>
+								<name>loss</name>
+								<eventsRec>
+									<loss speciesLocation="Kluyveromyces_lactis"/>
+								</eventsRec>
+							</clade>
+							<clade>
+								<name>Kluyveromyces.waltii.IME2</name>
+								<eventsRec>
+									<leaf speciesLocation="Lachancea_waltii"/>
+								</eventsRec>
+							</clade>
+						</clade>
+					</clade>
+					<clade>
+						<name>NULL</name>
+						<eventsRec>
+							<speciation speciesLocation="spn005"/>
+						</eventsRec>
+							<clade>
+							<name>loss</name>
+							<eventsRec>
+								<loss speciesLocation="Clavispora_lusitaniae"/>
+							</eventsRec>
+						</clade>
+						<clade>
+							<name>NULL</name>
+							<eventsRec>
+								<speciation speciesLocation="spn006"/>
+							</eventsRec>
+								<clade>
+								<name>loss</name>
+								<eventsRec>
+									<loss speciesLocation="Candida_albicans"/>
+								</eventsRec>
+							</clade>
+							<clade>
+								<name>Candida.parapsilosis.IME2</name>
+								<eventsRec>
+									<leaf speciesLocation="Candida_parapsilosis"/>
+								</eventsRec>
+							</clade>
+						</clade>
+					</clade>
+				</clade>
+			</clade>
+			<clade>
+				<name>NULL</name>
+				<eventsRec>
+					<speciation speciesLocation="spn002"/>
+				</eventsRec>
+					<clade>
+					<name>loss</name>
+					<eventsRec>
+						<loss speciesLocation="spn005"/>
+					</eventsRec>
+				</clade>
+				<clade>
+					<name>NULL</name>
+					<eventsRec>
+						<speciation speciesLocation="spn003"/>
+					</eventsRec>
+						<clade>
+						<name>loss</name>
+						<eventsRec>
+							<loss speciesLocation="spn004"/>
+						</eventsRec>
+					</clade>
+					<clade>
+						<name>Saccharomyces.cerevisiae.IME2</name>
+						<eventsRec>
+							<leaf speciesLocation="Saccharomyces_cerevisiae"/>
+						</eventsRec>
+					</clade>
+				</clade>
+			</clade>
+		</clade>
+		<clade>
+			<name>NULL</name>
+			<eventsRec>
+				<speciation speciesLocation="spn002"/>
+			</eventsRec>
+				<clade>
+				<name>loss</name>
+				<eventsRec>
+					<loss speciesLocation="spn003"/>
+				</eventsRec>
+			</clade>
+			<clade>
+				<name>NULL</name>
+				<eventsRec>
+					<speciation speciesLocation="spn005"/>
+				</eventsRec>
+					<clade>
+					<name>loss</name>
+					<eventsRec>
+						<loss speciesLocation="spn006"/>
+					</eventsRec>
+				</clade>
+				<clade>
+					<name>Candida.lusitaniae.IME2</name>
+					<eventsRec>
+						<leaf speciesLocation="Clavispora_lusitaniae"/>
+					</eventsRec>
+				</clade>
+			</clade>
+		</clade>
+	</clade>
+</clade>
+</phylogeny>
+</recGeneTree>
+</recPhylo>

@@ -1,0 +1,67 @@
+{# The ancestor in the job's other combinations (analog_views.comparison): a table with #}
+{# each one's identity to this ancestor, the library's alignment viewer across them all, #}
+{# and one button that adds them all to a library. Inside the ancestor viewer's GET #}
+{# form, so the layout menu and zoom ride in its address like every other control. #}
+{# A <details>, as the viewer's other sections are, so it collapses like them. #}
+{% if comparison %}{% with c=comparison %}
+<details class="analogs viewer-section" id="analogs" open>
+  <summary><h2>{{ node }} in the Other Combinations</h2></summary>
+  <p class="hint">{{ c.note }} Found in {{ c.found }} of the job's {{ c.others }} other
+    combination{{ c.others|pluralize }}, each compared in the same reconstruction:
+    {{ c.version_label }}. Identity is the residues two ancestors share over the longer one's
+    length; an ancestor from another alignment is placed on this one's columns through the
+    extant residues, as drawn below.</p>
+  <div class="sites-scroll">
+  <table class="analog-table">
+    <thead><tr><th>Combination</th><th>Node</th><th title="Rank by BIC among the combinations of its alignment">BIC rank</th>
+      <th class="num">Length</th><th class="num">Identity to {{ node }}</th></tr></thead>
+    <tbody>{% for r in c.rows %}
+      <tr id="{{ r.anchor }}"{% if r.this %} class="this"{% endif %}>
+        <td>{{ r.label }}</td>
+        <td>{% if r.this %}<strong>{{ r.node }}</strong> <span class="hint">(shown)</span>{% else %}<a href="{{ r.url }}">{{ r.node }}</a>{% if not r.alike %} <span class="pop-flag" title="Same clade, but the branching inside it differs from this tree">≈</span>{% endif %}{% endif %}</td>
+        <td>{{ r.rank|default:"–" }}</td>
+        <td class="num">{% if r.length is None %}<span class="hint">no {{ c.version_label }}</span>{% else %}{{ r.length }}{% endif %}</td>
+        <td class="num">{% if r.this %}–{% elif r.identity is None %}<span class="hint" title="Not the same sequences, so it cannot be placed on this ancestor's columns">n/a</span>{% else %}{{ r.identity|floatformat:1 }}%{% endif %}</td>
+      </tr>{% endfor %}
+    </tbody>
+  </table>
+  </div>
+  {% if c.missing %}<p class="hint">Not in {{ c.missing|join:"; " }}: {% if c.missing|length == 1 %}its tree lacks{% else %}their trees lack{% endif %} this {% if c.by_clade %}clade{% else %}node{% endif %}.</p>{% endif %}
+  {% if c.found %}<p class="library-actions">
+    {% include "phylobot/_library_add.html" with add_form="library-add-analogs" add_nodes=library_nodes add_label=c.add_label %}
+    <span class="hint">{{ node }} and every ancestor listed, in this reconstruction: the alignment and model uncertainty carried into the library's design.</span></p>{% endif %}
+
+  {% if c.frames %}
+  {% if c.layouts|length > 1 %}<div class="viewer-controls analog-controls">
+    <label>Lay out
+      <select name="{{ c.param }}">{% for key, label in c.layouts %}
+        <option value="{{ key }}"{% if key == c.layout %} selected{% endif %}>{{ label }}</option>{% endfor %}
+      </select></label>
+  </div>{% endif %}
+  {% for frame, data in c.frames %}
+  <div class="library-frame analog-frame">
+    <div class="aln-root">
+      <div class="frame-head">
+        <p class="overview-title">{{ frame.title }}</p>
+        <span class="aln-zoom zoom-inputs" role="group" aria-label="Zoom">
+          <span class="zoom-label" aria-hidden="true">Zoom</span>
+          <input type="hidden" name="zoom" value="{{ c.zoom }}">
+          <input type="range" class="zoom-slider" min="0" max="100" value="0" aria-label="Zoom">
+          <button type="button" class="zoom-fit">Fit</button>
+        </span>
+      </div>
+      {% if frame.note %}<p class="hint overview-note">{{ frame.note }}</p>{% endif %}
+      <div class="aln-wrap" data-viewer>
+        <canvas class="aln-canvas"></canvas>
+        <div class="aln-scroller"><div class="aln-sizer"></div></div>
+        <div class="aln-tip" hidden></div>
+      </div>
+      {{ data|json_script:frame.json_id }}
+    </div>
+  </div>
+  {% endfor %}
+  {% if has_posteriors %}<p class="hint">Coloured by posterior probability, in the table's colours;
+    outlined where an alternative state has probability {{ altall_threshold }} or more.</p>{% endif %}
+  {% endif %}
+</details>
+{% endwith %}{% endif %}

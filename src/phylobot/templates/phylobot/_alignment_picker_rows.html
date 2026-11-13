@@ -1,0 +1,12 @@
+{# Rows of the New Job page's alignment picker (alignment_editor_views.picker); the last #}
+{# row fetches the next page when it scrolls into view. #}
+{% for a in items %}
+<li><button type="button" class="picker-row" data-pick="{{ a.id }}" data-title="{{ a.title }}"
+     data-size="{{ a.sequences }} × {{ a.columns }}{% if a.seqtype == 'codon' %} codons{% endif %}">
+  <span class="picker-name">{% if a.job %}<span class="picker-job">{{ a.job.name|default:"Job" }}</span> · {{ a.name }}{% else %}{{ a.name }}{% endif %}{% if a.simulated %} <span class="badge simulated" title="Simulated data, not real sequences">simulated</span>{% endif %}</span>
+  <span class="hint">{{ a.sequences }} × {{ a.columns }}{% if a.seqtype == "codon" %} codons{% endif %}
+    · {{ a.ago }}</span>
+</button></li>{% empty %}{% if first %}
+<li class="hint picker-empty">{% if q %}No alignment matches “{{ q }}”.{% else %}No alignments yet: upload one on <a href="{% url 'my_alignments' %}">My alignments</a>, or run a job.{% endif %}</li>{% endif %}{% endfor %}
+{% if next_page %}<li class="hint picker-more" hx-get="{% url 'alignment_picker' %}?q={{ q|urlencode }}&amp;page={{ next_page }}"
+    hx-trigger="revealed" hx-swap="outerHTML">Loading older alignments…</li>{% endif %}

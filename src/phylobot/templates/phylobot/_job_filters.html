@@ -1,0 +1,82 @@
+{# My Jobs filters (phylobot.job_types.Filters): one GET form, so every filtered view has a URL. #}
+<form method="get" action="{% url 'my_jobs' %}" class="job-filters" id="job-filters">
+  {% for name, value in sort.params.items %}<input type="hidden" name="{{ name }}" value="{{ value }}">{% endfor %}
+  <div class="filter-bar">
+    <input type="search" name="q" value="{{ filters.q }}" placeholder="Search names or IDs"
+           aria-label="Search job names or IDs" autocomplete="off">
+    <button type="button" class="filter-toggle" aria-expanded="{{ filters.active|yesno:'true,false' }}"
+            aria-controls="filter-panel">Filters{% if filters.count %} <span class="filter-count">{{ filters.count }}</span>{% endif %}</button>
+    <button type="submit" class="visually-hidden" tabindex="-1">Apply</button>
+    <span class="filter-summary">{% if filters.active %}Showing {{ matching }} of {{ total }} job{{ total|pluralize }}
+      · <a href="{% url 'my_jobs' %}{{ sort.query }}">Clear filters</a>{% else %}{{ total }} job{{ total|pluralize }}{% endif %}</span>
+    {# A switch, off unless the reader turned it on (views.my_jobs remembers it in a cookie). #}
+    <a class="switch-link" href="?{{ group_query }}" role="switch" aria-checked="{{ grouped|yesno:'true,false' }}"
+       title="List each follow-up job (Uncertainty, measured properties, branch-site tests, ESR, extensions) under the job it was run on, folded until you open it"><span class="switch" aria-hidden="true"></span>Group follow-up jobs</a>
+  </div>
+  <div class="filter-panel" id="filter-panel"{% if not filters.active %} hidden{% endif %}>
+    <fieldset class="filter-types">
+      <legend>Type <span class="hint">(includes any)</span></legend>
+      {% for t in job_types %}<label class="filter-pill job-type {{ t.group }}" title="{{ t.description }}">
+        <input type="checkbox" name="type" value="{{ t.key }}"{% if t.key in filters.types %} checked{% endif %}>{{ t.label }}</label>{% endfor %}
+      <label class="filter-pill job-type homolog" title="Homolog searches at a remote service (Find homologs)">
+        <input type="checkbox" name="type" value="{{ homolog_type }}"{% if homolog_selected %} checked{% endif %}>{{ homolog_label }}</label>
+    </fieldset>
+    <fieldset>
+      <legend>Status</legend>
+      {% for s in statuses %}<label class="filter-pill status-{{ s }}">
+        <input type="checkbox" name="status" value="{{ s }}"{% if s in filters.statuses %} checked{% endif %}>{{ s }}</label>{% endfor %}
+    </fieldset>
+    <fieldset class="filter-selects">
+      <legend>Data</legend>
+      <select name="data" aria-label="Sequence type">
+        <option value="">Any sequences</option>
+        {% for key, label in data_choices.items %}<option value="{{ key }}"{% if filters.data == key %} selected{% endif %}>{{ label }}</option>{% endfor %}
+      </select>
+      <select name="origin" aria-label="Real or simulated">
+        <option value="">Real or simulated</option>
+        {% for key, label in origin_choices.items %}<option value="{{ key }}"{% if filters.origin == key %} selected{% endif %}>{{ label }}</option>{% endfor %}
+      </select>
+      {% if all_tags %}<select name="tag" aria-label="Tag">
+        <option value="">Any tag</option>
+        {% for name in all_tags %}<option value="{{ name }}"{% if filters.tag == name %} selected{% endif %}>#{{ name }}</option>{% endfor %}
+      </select>{% endif %}
+    </fieldset>
+    <fieldset class="filter-dates">
+      <legend>Submitted</legend>
+      <input type="date" name="submitted_from" value="{{ filters.submitted_from|date:'Y-m-d' }}" aria-label="Submitted on or after">
+      <span>to</span>
+      <input type="date" name="submitted_to" value="{{ filters.submitted_to|date:'Y-m-d' }}" aria-label="Submitted on or before">
+    </fieldset>
+    <fieldset class="filter-dates">
+      <legend>Finished</legend>
+      <input type="date" name="finished_from" value="{{ filters.finished_from|date:'Y-m-d' }}" aria-label="Finished on or after">
+      <span>to</span>
+      <input type="date" name="finished_to" value="{{ filters.finished_to|date:'Y-m-d' }}" aria-label="Finished on or before">
+    </fieldset>
+    <noscript><button type="submit">Apply</button></noscript>
+  </div>
+</form>
+<script>
+  (() => {
+    const form = document.getElementById("job-filters");
+    const toggle = form.querySelector(".filter-toggle");
+    const panel = document.getElementById("filter-panel");
+    toggle.addEventListener("click", () => {
+      panel.hidden = !panel.hidden;
+      toggle.setAttribute("aria-expanded", String(!panel.hidden));
+    });
+    // Apply as soon as a filter changes (the search box on Enter or leaving it); a date
+    // only once it is a whole one, since typing a year changes it digit by digit.
+    form.addEventListener("change", (event) => {
+      const el = event.target;
+      if (el.type === "date" && el.value && Number(el.value.slice(0, 4)) < 1900) return;
+      form.requestSubmit();
+    });
+    form.addEventListener("submit", () => {  // keep the URL short: drop empty fields
+      [...form.elements].forEach((el) => { if (el.name && !el.value) el.disabled = true; });
+    });
+    window.addEventListener("pageshow", () => {  // back to this page: fields usable again
+      [...form.elements].forEach((el) => { el.disabled = false; });
+    });
+  })();
+</script>

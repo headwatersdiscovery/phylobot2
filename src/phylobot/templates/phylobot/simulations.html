@@ -1,0 +1,193 @@
+{% extends "phylobot/base.html" %}
+{% load static %}
+{% block title %}Simulations · PhyloBot{% endblock %}
+{% block content %}
+<script src="{% static 'phylobot/simulations.js' %}" defer></script><script src="{% static 'phylobot/toc.js' %}" defer></script><script src="{% static 'phylobot/sort.js' %}" defer></script>
+<div class="toc-layout">
+<nav class="about-toc page-toc" data-toc aria-label="On this page">
+  <p class="about-toc-title">On this page</p>
+  <ol>
+    <li><a href="#simulation-form">New Simulation</a>
+      <ol>
+        <li><a href="#sim-name">Name and Seed</a></li>
+        <li><a href="#sim-tree">Tree</a></li>
+        <li><a href="#sim-root">Root Sequence</a></li>
+        <li><a href="#sim-model">Substitution Model</a></li>
+        <li><a href="#sim-indels">Insertions and Deletions</a></li>
+        <li><a href="#sim-replicates">Replicates</a></li>
+      </ol></li>
+    <li><a href="#my-simulations">My Simulations</a></li>
+  </ol>
+</nav>
+<div class="toc-main">
+<h1>Simulations</h1>
+<div class="sim-intro">
+  <p class="hint">Evolve sequences along a tree from a root sequence. The true ancestors are
+    known, so a reconstruction can be scored.
+    <button type="button" class="help-dot" popovertarget="help-simulations" aria-label="About simulations">?</button><span class="help-popover" popover id="help-simulations"><strong>Simulations</strong><span><span>Start from a root sequence, let it change along every branch of the tree, and see what the tips become. Run a job on the result and its ancestors can be checked against the truth.</span><span>Simulated with <a href="https://doi.org/10.1093/molbev/msac092" target="_blank" rel="noopener noreferrer">AliSim</a> (Ly-Trong et al. 2022).</span></span></span></p>
+  {% include "phylobot/_simulation_cartoon.html" %}
+</div>
+
+<form method="post" id="simulation-form" class="simulation-form" data-show-when-form>
+  {% csrf_token %}
+  {% if form.errors %}
+    <div class="errors">
+      {% for message in form.non_field_errors %}<p>{{ message }}</p>{% endfor %}
+      {% for field in form %}{% for message in field.errors %}
+        <p>{{ field.label }}: {{ message }}</p>
+      {% endfor %}{% endfor %}
+    </div>
+  {% endif %}
+
+  <section class="step" id="sim-name">
+    <h2><span class="step-number">1</span> Name and Seed</h2>
+    <p><label for="{{ form.name.id_for_label }}">{{ form.name.label }}</label> {{ form.name }}</p>
+    <p><label for="{{ form.seed.id_for_label }}">Random seed</label> {{ form.seed }}
+      <button type="button" class="help-dot" popovertarget="help-sim-seed" aria-label="About random seed">?</button><span class="help-popover" popover id="help-sim-seed"><strong>Random seed</strong><span>Replicate i uses seed + i − 1: the same settings and seed give the same sequences.</span></span></p>
+  </section>
+
+  <section class="step" data-stage="trees" id="sim-tree">
+    <h2><span class="step-number">2</span> Tree <button type="button" class="help-dot" popovertarget="help-sim-tree" aria-label="About the tree">?</button><span class="help-popover" popover id="help-sim-tree"><strong>The tree</strong><span><span><b>From a job</b>: the sequences evolve along that tree with its branch lengths (rooted on the outgroup if the job had one), so the true ancestors carry the job's node names.</span><span><b>Random</b>: a tree of the shape, size and branch lengths you choose.</span></span></span></h2>
+    <div class="choices">{% for radio in form.tree_source %}<label>{{ radio.tag }} {{ radio.choice_label }}</label>{% endfor %}</div>
+    <div data-show-when="tree_source=job">
+      <p class="chosen-job-line"><span class="field-label" id="sim-job-label">Job</span>
+        <input type="hidden" name="job" id="sim-job" value="{{ chosen_job.id|default:'' }}">
+        <span id="sim-job-chosen" class="chosen-job" aria-labelledby="sim-job-label">{% if chosen_job %}{{ chosen_job.name|default:"(unnamed)" }} · {{ chosen_job.created_at|date:"Y-m-d H:i" }}{% else %}<span class="hint">none chosen</span>{% endif %}</span>
+        <button type="button" data-open-job-picker{% if not has_jobs %} disabled{% endif %}>{% if chosen_job %}Change…{% else %}Choose a job…{% endif %}</button>
+        {% if not has_jobs %}<span class="hint">None yet: your finished jobs with trees appear here.</span>{% endif %}</p>
+      <div id="tree-options">{% include "phylobot/_simulation_tree_options.html" %}</div>
+    </div>
+    <div data-show-when="tree_source=random">
+      <p><label for="{{ form.shape.id_for_label }}">Shape</label> {{ form.shape }}
+        <span class="hint" id="shape-help">{% for key, text in shapes.items %}<span data-shape="{{ key }}">{{ text }}</span>{% endfor %}</span></p>
+      <p><label for="{{ form.taxa.id_for_label }}">Sequences</label> {{ form.taxa }}
+        <span class="hint">at most {{ limits.max_sequences }}</span></p>
+      <p>Branch lengths (substitutions per site): minimum {{ form.length_min }}
+        mean {{ form.length_mean }} maximum {{ form.length_max }}</p>
+      <p data-show-when="shape=bd">Birth rate {{ form.birth }} death rate {{ form.death }}</p>
+    </div>
+  </section>
+
+  <section class="step" data-stage="ancestors" id="sim-root">
+    <h2><span class="step-number">3</span> Root Sequence</h2>
+    <div class="choices">{% for radio in form.root_source %}<label>{{ radio.tag }} {{ radio.choice_label }}</label>{% endfor %}</div>
+    <p class="hint" data-show-when="root_source=ancestor">Choose the ancestor in step 2's
+      menu. Its most probable residues are used, with gaps where the job's gap placement put
+      them (removed).</p>
+    <p data-show-when="root_source=random"><label for="{{ form.root_length.id_for_label }}">Length</label>
+      {{ form.root_length }} <span class="hint">residues, drawn from the model's
+      frequencies; at most {{ limits.max_length }}</span></p>
+    <p data-show-when="root_source=paste">{{ form.root_text }}
+      <span class="hint">One protein sequence (a FASTA header is fine).</span></p>
+  </section>
+
+  <section class="step" data-stage="trees" id="sim-model">
+    <h2><span class="step-number">4</span> Substitution Model</h2>
+    <p><label for="{{ form.matrix.id_for_label }}">Matrix</label> {{ form.matrix }}
+      <label for="{{ form.rate.id_for_label }}">Rate variation</label> {{ form.rate }}</p>
+    <p data-show-when="rate=G4 rate=I+G4"><label for="{{ form.alpha.id_for_label }}">{{ form.alpha.label }}</label>
+      {{ form.alpha }} <span class="hint">smaller = more variation among sites (0.5 is
+      typical of proteins)</span></p>
+    <p data-show-when="rate=I+G4"><label for="{{ form.invariant.id_for_label }}">{{ form.invariant.label }}</label>
+      {{ form.invariant }}</p>
+  </section>
+
+  <section class="step" data-stage="alignments" id="sim-indels">
+    <h2><span class="step-number">5</span> Insertions and Deletions</h2>
+    <p><label>{{ form.indels }} {{ form.indels.label }}</label></p>
+    <div data-show-when="indels=on">
+      <p>Insertion rate {{ form.insertion_rate }} deletion rate {{ form.deletion_rate }}
+        <span class="hint">per substitution</span>
+        <button type="button" class="help-dot" popovertarget="help-sim-indel-rate" aria-label="About insertion and deletion rates">?</button><span class="help-popover" popover id="help-sim-indel-rate"><strong>Insertion and deletion rates</strong><span>Per substitution: 0.02 gives about 20% gaps, 0.03 about 30%, 0.08 about 50% on the golden datasets' tree.</span></span></p>
+      <p><label for="{{ form.indel_mean.id_for_label }}">{{ form.indel_mean.label }}</label>
+        {{ form.indel_mean }} <span class="hint">residues (geometric distribution)</span></p>
+    </div>
+  </section>
+
+  <section class="step" id="sim-replicates">
+    <h2><span class="step-number">6</span> Replicates</h2>
+    <p><label for="{{ form.replicates.id_for_label }}">Replicates</label> {{ form.replicates }}
+      <span class="hint">at most {{ max_replicates }}</span>
+      <button type="button" class="help-dot" popovertarget="help-sim-replicates" aria-label="About replicates">?</button><span class="help-popover" popover id="help-sim-replicates"><strong>Replicates</strong><span>Each is a separate alignment, tree and set of ancestors from the same settings.</span></span></p>
+  </section>
+
+  <p><button type="submit" class="primary">Simulate</button></p>
+</form>
+
+{# Outside the form: its search box is not a simulation setting. #}
+<dialog id="job-picker" class="alignment-picker" aria-labelledby="job-picker-title">
+  <div class="picker-head">
+    <h2 id="job-picker-title">Choose a Job</h2>
+    <button type="button" class="icon-button" data-close-job-picker aria-label="Close">×</button>
+  </div>
+  <input type="search" name="q" placeholder="Search by name or ID…" autocomplete="off"
+         aria-label="Search your jobs"
+         hx-get="{% url 'simulation_job_picker' %}" hx-trigger="input changed delay:200ms, search"
+         hx-target="#job-picker-list" hx-swap="innerHTML">
+  <ul id="job-picker-list" class="picker-list" aria-label="Your finished jobs with trees, newest first"></ul>
+  <p class="hint">Finished jobs with trees, newest first. Its trees and ancestors are then
+    offered below.</p>
+</dialog>
+<script>
+  (() => {
+    const picker = document.getElementById("job-picker");
+    const input = document.getElementById("sim-job");
+    const shown = document.getElementById("sim-job-chosen");
+    const list = document.getElementById("job-picker-list");
+    const markChosen = () => list.querySelectorAll("[data-pick]").forEach((row) =>
+      row.classList.toggle("chosen", row.dataset.pick === input.value));
+    document.addEventListener("click", (event) => {
+      if (event.target.closest("[data-open-job-picker]")) {
+        picker.showModal();
+        if (!list.children.length) {
+          htmx.ajax("GET", "{% url 'simulation_job_picker' %}", { target: list, swap: "innerHTML" });
+        }
+        picker.querySelector('input[type="search"]').focus();
+      } else if (event.target.closest("[data-close-job-picker]")) {
+        picker.close();
+      } else if (event.target === picker) {
+        picker.close();  // a click on the backdrop
+      }
+      const row = event.target.closest("#job-picker [data-pick]");
+      if (!row) return;
+      input.value = row.dataset.pick;
+      shown.textContent = row.dataset.label;
+      document.querySelector("[data-open-job-picker]").textContent = "Change…";
+      picker.close();
+      const url = "{% url 'simulation_tree_options' %}?job=" + encodeURIComponent(input.value);
+      htmx.ajax("GET", url, { target: "#tree-options", swap: "innerHTML" });
+    });
+    list.addEventListener("htmx:afterSwap", markChosen);
+    document.body.addEventListener("htmx:afterSettle", markChosen);
+  })();
+</script>
+
+<section class="my-simulations" id="my-simulations">
+  <h2>My Simulations</h2>
+  {% if simulations %}<p class="table-search-row"><span class="hint" data-table-search-count="simulations-table"></span>
+      <input type="search" class="table-search" data-table-search="simulations-table" placeholder="Search…" aria-label="Search My Simulations" autocomplete="off"></p>{% endif %}
+  {% if simulations %}
+    {% if simulations|length > 20 %}<div class="results-scroll" tabindex="0" aria-label="My Simulations: scroll for more rows">{% endif %}
+    <table class="results" id="simulations-table">
+      <thead><tr><th class="sortable label"><button type="button" class="sort">Name</button></th><th class="sortable label"><button type="button" class="sort">Status</button></th><th class="sortable"><button type="button" class="sort">Submitted</button></th><th class="sortable"><button type="button" class="sort">Replicates</button></th><th class="sortable label"><button type="button" class="sort">Tree</button></th></tr></thead>
+      <tbody>
+        {% for job in simulations %}
+          <tr>
+            <td class="label"><a href="{% url 'job_detail' job.id %}">{{ job.name|default:"(unnamed)" }}</a></td>
+            <td class="label"><span class="status {{ job.status }}">{{ job.status }}</span></td>
+            <td>{{ job.created_at|date:"Y-m-d H:i" }}</td>
+            <td>{{ job.params.spec.simulation.seeds|length }}</td>
+            <td class="label">{% if job.params.simulation_of.kind == "job" %}{{ job.params.simulation_of.label }}{% else %}random{% endif %}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% if simulations|length > 20 %}</div>
+    <p class="hint results-scroll-note">{{ simulations|length }} simulations: scroll the table for more.</p>{% endif %}
+  {% else %}
+    <p class="hint">None yet.</p>
+  {% endif %}
+</section>
+</div>{# .toc-main #}
+</div>{# .toc-layout #}
+{% endblock %}

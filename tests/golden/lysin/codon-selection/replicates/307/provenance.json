@@ -1,0 +1,68 @@
+{
+  "iqtree_version": "IQ-TREE version 3.1.3 for Linux x86 64-bit built Jul 26 2026",
+  "image": "quay.io/biocontainers/iqtree:3.1.3--h8471819_0",
+  "command": [
+    [
+      "iqtree3",
+      "--alisim",
+      "class0",
+      "-st",
+      "CODON1",
+      "-t",
+      "tree0.nwk",
+      "-m",
+      "GY{0.08519/1.5761}+F3X4{0.34149/0.22514/0.26352/0.16984/0.30553/0.1644/0.22393/0.30613/0.21154/0.24902/0.2596/0.27984}",
+      "--root-seq",
+      "root0.fasta,Haliotis_rufescens_lysin",
+      "--write-all",
+      "--out-format",
+      "fasta",
+      "--seed",
+      "3070"
+    ],
+    [
+      "iqtree3",
+      "--alisim",
+      "class1",
+      "-st",
+      "CODON1",
+      "-t",
+      "tree1.nwk",
+      "-m",
+      "GY{0.9112/1.5761}+F3X4{0.34149/0.22514/0.26352/0.16984/0.30553/0.1644/0.22393/0.30613/0.21154/0.24902/0.2596/0.27984}",
+      "--root-seq",
+      "root1.fasta,Haliotis_rufescens_lysin",
+      "--write-all",
+      "--out-format",
+      "fasta",
+      "--seed",
+      "3071"
+    ],
+    [
+      "iqtree3",
+      "--alisim",
+      "class2",
+      "-st",
+      "CODON1",
+      "-t",
+      "tree2.nwk",
+      "-m",
+      "GY{3.06543/1.5761}+F3X4{0.34149/0.22514/0.26352/0.16984/0.30553/0.1644/0.22393/0.30613/0.21154/0.24902/0.2596/0.27984}",
+      "--root-seq",
+      "root2.fasta,Haliotis_rufescens_lysin",
+      "--write-all",
+      "--out-format",
+      "fasta",
+      "--seed",
+      "3072"
+    ]
+  ],
+  "seed": 307,
+  "sha256": {
+    "input.fasta": "1e75341e077c235f98300775701ce2ca24a6705fe75da2fb688d89a5fe3eea9e",
+    "true_alignment.fasta": "1e75341e077c235f98300775701ce2ca24a6705fe75da2fb688d89a5fe3eea9e",
+    "true_ancestors.fasta": "1674dba1accd11d4fa4b02942a4caf140a3e86d8885993cd2899d5cc688d4637",
+    "true_tree.nwk": "25ca78c0134ca3cfd518f6ae4e071fcdcaf6908718aec5d3adb7220a1d2fabac",
+    "true_site_classes.tsv": "6478e511aa8c00e994f3d540b9d81ea949371ef571cedb8364a94ddf214fe402"
+  }
+}

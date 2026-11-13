@@ -1,0 +1,18 @@
+{% comment %}"Why it failed" (phylobot.diagnosis, views.failure): the likely cause in plain words,
+the step, what to do, and the tool's own last lines.{% endcomment %}
+<section class="job-failure {{ d.kind }}" aria-labelledby="failure-title">
+  <h2 id="failure-title">Why It Failed: {{ d.title|lower|capfirst }}</h2>
+  {% if d.step %}<p class="failure-step">Step: <strong>{{ d.step }}</strong>{% if d.inputs_ok %} · your input had passed its checks{% endif %}</p>{% endif %}
+  <p>{{ d.explanation }}</p>
+  {% if d.advice %}<p class="failure-advice"><strong>What to do:</strong> {{ d.advice }}</p>{% endif %}
+  {% if resumable %}{% include "phylobot/_job_resume.html" %}
+  {% elif d.rerun and not job.params.branch_site and not job.params.simulate %}<p><a class="button" href="{% url 'submit' %}?from={{ job.id }}">Duplicate and run again</a></p>{% endif %}
+  {% if d.quoted %}
+    <details class="failure-quote">
+      <summary>What {% if d.step %}the step{% else %}the pipeline{% endif %} printed (last lines)</summary>
+      <pre>{% for line in d.quoted %}{{ line }}
+{% endfor %}</pre>
+    </details>
+  {% endif %}
+  {% if not d.generic %}<p class="hint">PhyloBot’s own message: {{ job.error }}</p>{% endif %}
+</section>

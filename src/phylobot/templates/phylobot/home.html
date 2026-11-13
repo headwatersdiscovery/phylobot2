@@ -1,0 +1,63 @@
+{% extends "phylobot/base.html" %}
+{% load static %}
+{% block title %}PhyloBot 2{% endblock %}
+{% block head %}<script src="{% static 'phylobot/retro95.js' %}" defer></script>{% endblock %}
+{% block backdrop %}{% include "phylobot/_backdrop.html" with clear=".title-page .logo" %}{% endblock %}
+{% block content %}
+{# The home page of a running PhyloBot (phylobot.home_views): ways in, the latest work, and #}
+{# the pages last open. Installing it is phylobot.com's subject (website/), not this page's. #}
+<section class="title-page home">
+  <div class="title">
+    {# The PhyloBot '95 skin's homepage furniture; site.css hides .retro-only elsewhere. #}
+    <p class="retro-only retro-marquee" aria-hidden="true"><span>Welcome to PhyloBot 2</span></p>
+    <p class="retro-only retro-construction" aria-hidden="true"><span>🚧 UNDER CONSTRUCTION 🚧</span></p>
+    <h1>PhyloBot <span class="two">2</span></h1>
+    <img class="logo" src="{% static 'phylobot/phylobot-logo_new.png' %}" width="350" height="236"
+         alt="PhyloBot, a friendly robot with a phylogenetic tree in one hand, the other making a peace sign">
+    <p class="slogan">Every protein has a past.</p>
+    {% if not work %}<p class="intro">Find homologs, build trees, reconstruct ancestors, and send them to the
+      bench. Built for AI protein designers, gene therapy engineers, &amp; evolutionary biologists</p>{% endif %}
+    <p class="actions"><a class="button" href="{% url 'submit' %}">Start a New Job</a>
+      <a class="head-action" href="{% url 'homologs' %}">Find Homologs</a></p>
+    <p class="retro-only retro-counter">You have run<span class="digits">{{ job_count|stringformat:"06d" }}</span>jobs on this homepage!</p>
+  </div>
+  {% if request.COOKIES.phylobot_helper != "dismissed" %}
+  <aside class="retro-only retro-helper" data-retro-helper aria-label="Helper">
+    <div class="bubble">
+      <p>It looks like you're reconstructing an ancestor! Would you like help?</p>
+      <button type="button" data-retro-dismiss>Don't show this again</button>
+    </div>
+    <img src="{% static 'phylobot/phylobot-logo_new.png' %}" width="350" height="236" alt="">
+  </aside>
+  {% endif %}
+
+  <div class="home-panels">
+    {# Filled by recent.js from what this browser remembers; absent until there is something. #}
+    <section class="snippet home-panel" data-recent-pages data-alive-url="{% url 'home_alive' %}" hidden>
+      <h2>Jump Back In</h2>
+      <p class="hint">The result pages you last had open, as you left them.</p>
+      <ol class="recent-pages"></ol>
+      <p class="panel-foot"><button type="button" class="link" data-recent-clear>Clear this list</button></p>
+    </section>
+    {% include "phylobot/_home_work.html" %}
+  </div>
+
+  <section class="snippet home-starts">
+    <h2>Start From What You Have</h2>
+    <ul>
+      <li><a href="{% url 'submit' %}"><b>A Set of Sequences</b>
+        <span>Paste or upload protein or coding-DNA sequences; choose aligners, trees and models; get ancestors.</span></a></li>
+      <li><a href="{% url 'homologs' %}"><b>One Protein</b>
+        <span>Search for its homologs by BLAST, review the hits, and send the ones you keep to a job.</span></a></li>
+      <li><a href="{% url 'my_alignments' %}"><b>An Alignment</b>
+        <span>Upload your own, edit it if you need to, and start a job from it.</span></a></li>
+      <li><a href="{% url 'simulations' %}"><b>A Question About Accuracy</b>
+        <span>Evolve sequences on a known tree, then check what a job recovers.</span></a></li>
+    </ul>
+  </section>
+
+  <p class="home-foot"><a href="{% url 'about' %}">About PhyloBot 2</a> · <a href="{% url 'about' %}#reference">How to Cite</a> ·
+    <a href="{% url 'about' %}#methods">Included Methods</a> · <a href="https://phylobot.com">phylobot.com</a> ·
+    <a href="https://github.com/headwatersdiscovery/phylobot2">GitHub</a></p>
+</section>
+{% endblock %}

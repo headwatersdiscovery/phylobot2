@@ -1,0 +1,25 @@
+{# Copy / Move: choose the libraries (library.js fills in the title and the inputs' kind: #}
+{# several may be ticked for a copy, one for a move). #}
+<dialog id="library-move" aria-labelledby="library-move-title">
+  <form method="dialog">
+    <h2 id="library-move-title" class="library-move-title"></h2>
+    <p class="library-move-hint hint"></p>
+    <input type="search" class="library-choice-search" placeholder="Find a library"
+           aria-label="Find a library">
+    <div class="library-choices" role="group" aria-label="Libraries from this job">
+      {% for other in others %}<label class="check"><input type="checkbox" value="{{ other.id }}">
+        <span>{{ other.name }} <span class="hint">{{ other.code }} · {{ other.targets|length }} ancestor{{ other.targets|length|pluralize }}</span></span></label>
+      {% endfor %}
+      <label class="check"><input type="checkbox" value="new"> <span>a new library</span></label>
+    </div>
+    {% if elsewhere %}
+    <p class="hint">Only this job's libraries are listed. Your other libraries ({{ elsewhere }}) belong
+      to other jobs, whose results these ancestors are not part of.</p>
+    {% endif %}
+    <p class="library-move-error error"></p>
+    <p class="actions">
+      <button value="cancel">Cancel</button>
+      <button class="primary library-move-go" value="go"></button>
+    </p>
+  </form>
+</dialog>

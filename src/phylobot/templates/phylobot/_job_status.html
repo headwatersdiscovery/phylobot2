@@ -1,0 +1,179 @@
+{% load phylobot_extras %}<div id="job-status"
+     {% if not finished %}hx-get="{% url 'job_status' job.id %}" hx-trigger="every 5s" hx-swap="outerHTML"{% endif %}>
+  {% comment %}Open while the job runs, closed once it has finished; job_detail.html keeps
+    the reader's own choice across the HTMX refreshes.{% endcomment %}
+  <details class="stages" id="job-stages"{% if not finished %} open{% endif %}>
+    <summary>
+      <span class="status {{ job.status }}">{{ job.status }}</span>
+      {% if job.attempt > 1 %}<span class="sep">·</span> attempt {{ job.attempt }}{% endif %}
+      {% if elapsed %}<span class="sep">·</span> elapsed {{ elapsed }}{% endif %}
+      {% if eta and job.status == "running" %}<span class="sep">·</span> remaining: {{ eta }}{% endif %}
+      {% if total %}<span class="sep">·</span>
+        <progress max="{{ total }}" value="{{ done }}"></progress>
+        {{ done }} of {{ total }} steps{% endif %}
+      {% if job.status == "queued" %}<span class="sep">·</span> waiting for a free worker{% endif %}
+      {% if job.work_units %}<span class="sep">·</span>
+        <span title="Work estimated when the job was submitted; one unit is about a CPU-minute on the reference machine">{{ job.work_units|floatformat:1 }} work units</span>{% if job.cpu_seconds %},
+        {{ job.cpu_seconds|duration }} CPU time used{% endif %}{% endif %}
+    </summary>
+    {% include "phylobot/_job_stages.html" with g=stages %}
+    {% if extendable %}{# Extend (phylobot.extend): what this finished job could do next #}
+    <p class="stages-extend">
+      <a class="button" href="{% url 'submit' %}?extend={{ job.id }}">
+        {% include "phylobot/_icon.html" with name="extend" size=16 %} Extend…</a>
+      <span class="hint">A new job that keeps these results and adds {{ extend_label }}.
+        This job stays as it is.</span></p>
+    {% endif %}
+    {% if plan %}{# what the job was set to do (forms.describe), folded away with the steps #}
+    <p class="job-plan">{% for step in plan %}{% if forloop.first %}{{ step|capfirst }}{% else %}{{ step }}{% endif %}{% if not forloop.last %} → {% endif %}{% endfor %}.</p>{% endif %}
+  </details>
+
+  {% if not finished %}{% include "phylobot/_job_stop.html" %}{% endif %}
+  {% if failure %}{% include "phylobot/_job_failure.html" with d=failure %}
+  {% elif job.error %}<p class="errors">{{ job.error }}</p>{% endif %}
+  {% if resumable and not failure %}{% include "phylobot/_job_resume.html" %}{% endif %}
+  {% if attempts %}{% include "phylobot/_job_attempts.html" %}{% endif %}
+
+  {% if branch_site_of %}{% include "phylobot/_branch_site_result.html" %}{% endif %}
+  {% if simulation %}{% include "phylobot/_simulation_result.html" %}{% endif %}
+  {% if esr_run %}{% include "phylobot/_esr_result.html" %}{% endif %}
+
+
+  {% load static %}
+
+  {% if alignment_results %}
+    {% comment %}Results and each alignment fold away (fold.js): the heading is a button, so
+      the skins' first-heading styles still apply; without the script all stays open.{% endcomment %}
+    <section class="results" id="results">
+      <h2><button type="button" class="fold-toggle" aria-expanded="true" aria-controls="results-body">Results</button></h2>
+      <div class="fold-body" id="results-body">
+      {% with stage=summary.stop_after|default:"ancestors" %}
+      <div class="viewer-grid">
+        {# One card is marked as the place to begin: the #}
+        {# tree where there is one (its nodes lead to the ancestors), else the alignments. #}
+        <a class="viewer-card{% if stage == "alignments" %} start{% endif %}" href="{% url 'alignment_viewer' job.id %}">
+          {% if stage == "alignments" %}<span class="viewer-start">Start here</span>{% endif %}
+          <img src="{% static 'phylobot/alingment_icon.png' %}" alt="" class="viewer-icon">
+          <span class="viewer-title">Alignment Viewer →</span>
+        </a>
+        {% if stage == "alignments" %}
+        <div class="viewer-card disabled">
+          <img src="{% static 'phylobot/treeviewer_icon.png' %}" alt="" class="viewer-icon">
+          <span class="viewer-title">Tree Viewer →</span>
+          <span class="viewer-hint">This job stopped after the alignments: no trees{% if extendable %}.
+            <a href="{% url 'submit' %}?extend={{ job.id }}">Extend it</a> to infer them{% endif %}</span>
+        </div>
+        {% else %}
+        <a class="viewer-card start" href="{% url 'tree_viewer' job.id %}">
+          <span class="viewer-start">Start here</span>
+          <img src="{% static 'phylobot/treeviewer_icon.png' %}" alt="" class="viewer-icon">
+          <span class="viewer-title">Tree Viewer →</span>
+        </a>
+        {% endif %}
+        {% if stage == "ancestors" %}
+        <a class="viewer-card" href="{% url 'ancestor_viewer' job.id %}">
+          <img src="{% static 'phylobot/ancestorviewer_icon.png' %}" alt="" class="viewer-icon">
+          <span class="viewer-title">Ancestor Viewer →</span>
+        </a>
+        <a class="viewer-card" href="{% url 'uncertainty' job.id %}">
+          <svg class="viewer-icon uncertainty-icon" viewBox="0 0 56 56" aria-hidden="true">
+            <rect x="6" y="10" width="20" height="9" rx="2" fill="#2a78d6"/><rect x="28" y="10" width="14" height="9" rx="2" fill="#eb6834"/><rect x="44" y="10" width="6" height="9" rx="2" fill="#1baf7a"/>
+            <rect x="6" y="24" width="26" height="9" rx="2" fill="#2a78d6"/><rect x="34" y="24" width="8" height="9" rx="2" fill="#eb6834"/>
+            <rect x="6" y="38" width="16" height="9" rx="2" fill="#2a78d6"/><rect x="24" y="38" width="18" height="9" rx="2" fill="#eb6834"/><rect x="44" y="38" width="5" height="9" rx="2" fill="#e87ba4"/>
+          </svg>
+          <span class="viewer-title">Uncertainty →</span>
+        </a>
+        {% else %}
+        <div class="viewer-card disabled">
+          <img src="{% static 'phylobot/ancestorviewer_icon.png' %}" alt="" class="viewer-icon">
+          <span class="viewer-title">Ancestor Viewer →</span>
+          <span class="viewer-hint">This job stopped after the {{ stage }}: no ancestral reconstruction</span>
+        </div>
+        {% endif %}
+      </div>
+      <h3 id="alignments-overview">Alignments</h3>
+      <table class="results alignments">
+        <thead><tr><th>Alignment</th><th>Columns</th><th>Sequences</th><th>Gaps</th><th>File</th></tr></thead>
+        <tbody>
+          {% for result in alignment_results %}{% if result.first %}
+            <tr>
+              <td class="label">{% if stage == "alignments" %}{{ result.label }}{% else %}<a href="#{{ result.anchor }}">{{ result.label }}</a>{% endif %}</td>
+              <td>{{ result.stats.columns|default:"–" }}</td>
+              <td>{{ result.stats.sequences|default:"–" }}</td>
+              <td>{% if result.stats %}{{ result.stats.gap_percent|floatformat:1 }}%{% else %}–{% endif %}</td>
+              <td class="label"><a href="{% url 'alignment_viewer' job.id %}?aligner={{ result.aligner|urlencode }}">view</a> ·
+                <a href="{{ result.alignment_href }}">alignment.fasta</a>{% if result.codon_href %}
+                · <a href="{{ result.codon_href }}">alignment.cds.fasta</a> <span class="hint">(codons;
+                <a href="{% url 'alignment_viewer' job.id %}?aligner={{ result.aligner|urlencode }}&amp;states=codons">view</a>)</span>{% endif %}</td>
+            </tr>
+          {% endif %}{% endfor %}
+        </tbody>
+      </table>
+      {% include "phylobot/_indel_thumbnails.html" %}
+
+      {% if stage != "alignments" %}
+      {% if not outgroup %}
+        <p class="hint">No outgroup was given, so trees are unrooted{% if stage == "ancestors" %}
+          (Fitch gap placement used each tree's top node as its root){% endif %}.</p>
+      {% endif %}
+      {% for result in alignment_results %}{% if result.table.rows %}
+        <div class="alignment-result" id="{{ result.anchor }}">
+          <h3><button type="button" class="fold-toggle" aria-expanded="true" aria-controls="{{ result.anchor }}-body">{{ result.table.title }}</button></h3>
+          <div class="fold-body" id="{{ result.anchor }}-body">
+          <p class="alignment-stats">{% if result.stats %}{{ result.stats.columns }} columns ·
+            {{ result.stats.sequences }} sequences ·
+            {{ result.stats.gap_percent|floatformat:1 }}% gaps · {% endif %}<a href="{% url 'alignment_viewer' job.id %}?aligner={{ result.aligner|urlencode }}{% if result.data == "codon" %}&amp;states=codons{% endif %}">view</a> ·
+            <a href="{{ result.alignment_href }}">alignment.fasta</a>{% if result.codon_href %}
+            · <a href="{{ result.codon_href }}">alignment.cds.fasta</a>{% endif %}</p>
+          {% if result.comparison %}<p>{{ result.comparison }}</p>{% endif %}
+          <div class="table-head">
+            <p class="hint">{{ result.table.subtitle }}</p>
+            {% if result.table.export_rows and job.status == "succeeded" %}<p class="table-downloads">
+              {% include "phylobot/_icon.html" with name="download" size=14 %}
+              <a href="{% url 'results_export' job.id result.anchor 'csv' %}" title="This table as CSV: statistics unrounded, one row per combination">CSV</a> ·
+              <a href="{% url 'results_export' job.id result.anchor 'xlsx' %}" title="This table as an Excel workbook: statistics unrounded, one row per combination">Excel</a></p>{% endif %}
+          </div>
+          {% include "phylobot/_results_table.html" with table=result.table show_title=False %}
+          {% for paml in result.codeml %}
+            <div class="codeml-result">
+              <h4>{{ paml.table.title }}</h4>
+              <p class="hint">{{ paml.table.subtitle }}</p>
+              {% include "phylobot/_results_table.html" with table=paml.table show_title=False %}
+              {% if paml.tests or paml.sites %}
+                <p><strong>Positive selection</strong></p>
+                <ul class="selection">{% for line in paml.tests %}<li>{{ line }}</li>{% endfor %}
+                  {% for line in paml.sites %}<li>{{ line }}</li>{% endfor %}</ul>
+              {% endif %}
+            </div>
+          {% endfor %}
+          {% for table in result.modelfinder %}
+            <details class="candidates">
+              <summary>{{ table.title }} ({{ table.total }} model{{ table.total|pluralize }})</summary>
+              {% include "phylobot/_results_table.html" with show_title=True %}
+            </details>
+          {% endfor %}
+          </div>
+        </div>
+      {% endif %}{% endfor %}
+      {% endif %}
+      {% endwith %}
+      </div>
+    </section>
+  {% endif %}
+
+  {% if indexing %}
+    <p class="hint">Listing this job's files; they appear here within a few minutes.</p>
+  {% elif file_count %}
+    <details class="files" id="files">
+    <summary><h2>All Files</h2> <span class="hint">({{ file_count|floatformat:"0g" }}{% if files.folders %}, {{ files.total_size|filesizeformat }}{% endif %})</span></summary>
+    {% include "phylobot/_file_tables.html" with listing=files %}
+    </details>
+  {% endif %}
+
+  {% if refresh %}{% include "phylobot/_job_toc_live.html" with oob=True %}{% endif %}
+
+  {% if log_tail and not finished %}
+    <h2 id="log">Pipeline Log (Latest)</h2>
+    <pre class="log">{{ log_tail }}</pre>
+  {% endif %}
+</div>

@@ -1,0 +1,21 @@
+{% load phylobot_extras %}{% comment %}A folder of a job's results (filelist.FolderListing): its subfolders, with counts
+and sizes, when it holds too many files to list, then its files in tables. Used by the job
+page's "All files" and the folder pages (job_folder).{% endcomment %}
+{% if listing.folders %}
+  <table class="files folders">
+    <tbody>{% for f in listing.folders %}
+      <tr><td class="file"><a href="{% url 'job_folder' job.id f.path %}">{{ f.name }}/</a></td>
+        <td class="hint">{% if f.combinations > 1 %}{{ f.combinations }} combinations, {% endif %}{{ f.files|floatformat:"0g" }} file{{ f.files|pluralize }}, {{ f.size|filesizeformat }}</td></tr>{% endfor %}
+    </tbody>
+  </table>
+{% endif %}
+{% for table in listing.tables %}
+  <h3>{{ table.title }}</h3>
+  <table class="files">
+    <tbody>{% for key, name, description in table.rows %}
+      <tr><td class="file"><a href="{% url 'job_file' job.id key %}">{{ name }}</a>{% if name == "alignment.fasta" or name == "alignment.cds.fasta" %}
+        · <a href="{% url 'alignment_viewer' job.id %}?aligner={{ key|aligner_of|urlencode }}{% if name == "alignment.cds.fasta" %}&amp;states=codons{% endif %}">view</a>{% endif %}</td>
+        <td class="hint">{{ description }}</td></tr>{% endfor %}
+    </tbody>
+  </table>
+{% endfor %}

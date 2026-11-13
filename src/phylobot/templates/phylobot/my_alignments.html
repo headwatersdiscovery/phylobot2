@@ -1,0 +1,116 @@
+{% extends "phylobot/base.html" %}
+{% block title %}My Alignments · PhyloBot{% endblock %}
+{% block content %}
+{% load static %}<script src="{% static 'phylobot/rename.js' %}" defer></script><script src="{% static 'phylobot/fold.js' %}" defer></script><script src="{% static 'phylobot/toc.js' %}" defer></script>
+<div class="toc-layout">
+<nav class="about-toc page-toc" data-toc aria-label="On this page">
+  <p class="about-toc-title">On this page</p>
+  <ol>
+    <li><a href="#upload">Upload an Alignment</a></li>
+    <li><a href="#saved">Saved Alignments</a></li>
+    <li><a href="#from-jobs">From Your Jobs</a></li>
+  </ol>
+</nav>
+<div class="toc-main">
+<h1>My Alignments</h1>
+<details class="alignment-upload" id="upload"{% if form.errors or not saved and not jobs %} open{% endif %}>
+  <summary><h2>Upload an Alignment</h2></summary>
+  <form method="post" enctype="multipart/form-data" action="{% url 'alignment_upload' %}" id="upload-form">
+    {% csrf_token %}
+    {% if form.non_field_errors %}<div class="errors">{{ form.non_field_errors }}</div>{% endif %}
+    <p class="upload-file"><label for="{{ form.file.id_for_label }}">{{ form.file.label }}</label> {{ form.file }}</p>
+    <p class="upload-text"><label for="{{ form.text.id_for_label }}">{{ form.text.label }}</label>{{ form.text }}</p>
+    <fieldset class="seqtype-choice"><legend>{{ form.seqtype.label }}</legend>
+      {% for choice in form.seqtype %}<label>{{ choice.tag }} {{ choice.choice_label }}</label>{% endfor %}
+    </fieldset>
+    <p><label for="{{ form.genetic_code.id_for_label }}">{{ form.genetic_code.label }}</label> {{ form.genetic_code }}</p>
+    <p><label for="{{ form.name.id_for_label }}">{{ form.name.label }}</label> {{ form.name }}
+      <span class="hint">default: the file's name</span></p>
+    <div id="upload-check" class="upload-check" aria-live="polite"
+         hx-post="{% url 'alignment_upload_check' %}" hx-encoding="multipart/form-data" hx-include="#upload-form"
+         hx-target="this" hx-swap="innerHTML"
+         hx-trigger="change[target.name=='file' || target.name=='seqtype' || target.name=='genetic_code' || target.name=='duplicates'] from:#upload-form delay:200ms, input[target.name=='text'] from:#upload-form delay:600ms"></div>
+    <p><button type="submit" class="primary">Open in the editor</button></p>
+  </form>
+</details>
+
+<section class="alignment-list" id="saved">
+  <h2><button type="button" class="fold-toggle" aria-expanded="true" aria-controls="saved-body">Saved Alignments</button></h2>
+  <div class="fold-body" id="saved-body">
+  {% if saved %}
+  <table class="jobs alignments">
+    <thead><tr><th>Name</th><th>From</th><th class="num">Sequences</th><th class="num">Columns</th>
+      <th>Saved</th><th></th></tr></thead>
+    <tbody>{% for a in saved %}
+      <tr>
+        <td class="editable-title">
+          <span class="title-view"><a href="{% url 'alignment_editor' a.id %}">{{ a.name }}</a>{% if a.simulated %} <span class="badge simulated" title="Simulated data, not real sequences">simulated</span>{% endif %}
+            <button type="button" class="icon-button" data-rename aria-label="Rename {{ a.name }}" title="Rename">
+              {% include "phylobot/_icon.html" with name="pencil" size=18 %}</button></span>
+          <form class="title-edit" hidden method="post" action="{% url 'alignment_rename' a.id %}">
+            {% csrf_token %}
+            <input name="name" value="{{ a.name }}" maxlength="100" required aria-label="Name" autocomplete="off">
+            <button type="submit" class="primary">Save</button>
+            <button type="button" class="link" data-rename-cancel>Cancel</button>
+          </form>
+        </td>
+        <td class="from">{% if a.origin == "upload" %}Uploaded{% if a.filename %} <span class="hint">{{ a.filename }}</span>{% endif %}
+          {% elif a.derived_from %}{% if a.edits.duplicate %}Copied{% else %}Edited{% endif %} from {% if a.derived_from.deleted_at or a.derived_from.job.deleted_at %}{{ a.derived_from.title }} <span class="hint">(deleted)</span>{% else %}<a href="{% url 'alignment_editor' a.derived_from.id %}">{{ a.derived_from.title }}</a>{% endif %}
+          {% else %}Edited{% endif %}</td>
+        <td class="num">{{ a.sequences }}</td>
+        <td class="num">{{ a.columns }}{% if a.seqtype == "codon" %} <span class="hint">codons</span>{% endif %}</td>
+        <td class="date">{{ a.created_at|date:"Y-m-d H:i" }}</td>
+        <td class="row-actions">
+          {% include "phylobot/_alignment_row_icons.html" %}
+          <form method="post" action="{% url 'alignment_duplicate' a.id %}">{% csrf_token %}
+            <button type="submit" class="icon-button" title="Duplicate" aria-label="Duplicate {{ a.name }}">
+              {% include "phylobot/_icon.html" with name="copy" size=20 %}</button></form>
+          <button type="button" class="icon-button danger" title="Delete" aria-label="Delete {{ a.name }}"
+                  data-delete-alignment data-name="{{ a.name }}"
+                  data-action="{% url 'alignment_delete' a.id %}">
+            {% include "phylobot/_icon.html" with name="trash" size=20 %}</button>
+        </td>
+      </tr>{% endfor %}
+    </tbody>
+  </table>
+  <p class="hint">{{ saved|length }} of at most {{ max_saved }} saved alignments.</p>
+  {% else %}
+  <p class="empty hint">None yet. Upload an alignment above, or open one of your jobs'
+    alignments below in the editor and save it.</p>
+  {% endif %}
+  </div>
+</section>
+
+<section class="alignment-list" id="from-jobs" hx-get="{% url 'my_alignments_jobs' %}" hx-trigger="load"
+         hx-swap="outerHTML">
+  <h2><button type="button" class="fold-toggle" aria-expanded="true" aria-controls="from-jobs-body">From Your Jobs</button></h2>
+  <div class="fold-body" id="from-jobs-body">
+  <p class="hint loading">Loading your jobs' alignments…</p>
+  </div>
+</section>
+</div>{# .toc-main #}
+</div>{# .toc-layout #}
+
+<form id="delete-alignment-form" method="post" hidden>{% csrf_token %}</form>
+{% include "phylobot/_delete_dialog.html" %}
+<script>
+  document.addEventListener("click", (event) => {
+    const button = event.target.closest("[data-delete-alignment]");
+    if (!button) return;
+    confirmDelete([{ name: button.dataset.name, status: "" }], () => {
+      const form = document.getElementById("delete-alignment-form");
+      form.action = button.dataset.action;
+      form.submit();
+    }, "alignment");
+  });
+</script>
+<script>
+  // "Cancel this upload" (_alignment_upload_check.html): forget the chosen file and text.
+  document.addEventListener("click", (event) => {
+    if (!event.target.closest("[data-upload-cancel]")) return;
+    const form = document.getElementById("upload-form");
+    form.reset();
+    document.getElementById("upload-check").innerHTML = "";
+  });
+</script>
+{% endblock %}

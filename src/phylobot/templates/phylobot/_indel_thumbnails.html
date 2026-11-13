@@ -1,0 +1,12 @@
+{# A row of indel-length histograms under the alignments' summary: the same axes on every job. #}
+{% if indel_thumbnails %}
+<h4 id="indel-lengths">Indel lengths</h4>
+<div class="indel-row">{% for c in indel_thumbnails %}
+  <figure class="plot indel-thumb" data-tips>
+    <figcaption><a href="{% url 'alignment_viewer' job.id %}?aligner={{ c.measured.aligner|urlencode }}#indels">{{ c.measured.label }}</a>
+      <span>{% if c.measured.lengths.events %}{{ c.measured.lengths.events }} · mean {{ c.measured.lengths.mean|floatformat:1 }}{% if not c.measured.combination %} · no tree{% endif %}{% else %}no indels{% endif %}</span></figcaption>
+    {% include "phylobot/_indel_histogram.html" with small=True %}
+    <div class="pp-tip" hidden></div>
+  </figure>{% endfor %}
+</div>
+{% endif %}

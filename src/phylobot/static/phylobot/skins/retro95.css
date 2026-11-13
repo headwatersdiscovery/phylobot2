@@ -1,0 +1,218 @@
+/* PhyloBot '95 skin (phylobot.skins): a mid-nineties desktop. Clean's layout (clean.css
+   applies to it) restyled as windows on a teal desktop: every page is a window with a
+   navy title bar, cards are bevelled panels whose first heading is a title bar, buttons
+   are raised grey bevels that press in, fields and tables are sunken white wells, the top
+   bar is a taskbar, and code is a black command prompt. The home page is a homepage of
+   the era: a starfield, a marquee, an under-construction sign, rainbow lettering, a hit
+   counter (the reader's own jobs) and a helpful robot who can be told to go away
+   (retro95.js; the cookie keeps it away). Everything you read for work is black on grey
+   or white, and moving things stop for readers who prefer reduced motion. */
+:root[data-skin="retro95"] {
+  --page: #008080;          /* the desktop */
+  --bg: #c0c0c0;            /* window grey: cards and panels */
+  --bar: #c0c0c0;
+  --fg: #000;
+  --fg-2: #000;
+  --muted: #3c3c3c;         /* 6.1:1 on the grey */
+  --line: #808080;
+  --edge: #808080;
+  --accent: #000080;
+  --accent-hover: #0000a8;
+  --accent-soft: #dcdcf0;
+  --accent-ring: transparent;
+  --link-line: currentColor;
+  --on-accent: #fff;
+  --subtle: #d4d0c8;
+  --hover: #c0c0c0;
+  --hover-edge: #808080;
+  --row-hover: #e8e8f4;
+  --glass: transparent;
+  --track: #fff;
+  --radius: 0;
+  --radius-control: 0;
+  --shadow: none;
+  --title-rim: transparent;
+  --title-shadow: transparent;
+  --neutral-bg: #fff; --neutral-fg: #000;
+  --running-bg: #000080; --running-fg: #fff;
+  --ok-bg: #d6f0d6; --ok-fg: #005000;
+  --bad-bg: #f6d6d6; --bad-fg: #900000;
+  --danger: #900000; --danger-edge: #900000; --danger-soft: #e8d0d0; --danger-fill: #a00000;
+  --work-align: #0000a8; --work-modelfinder: #00a8a8; --work-trees: #008000;
+  --work-ancestors: #a800a8; --work-codeml: #e070e0; --work-setup: #808080;
+  --ui: Tahoma, Verdana, "Segoe UI", Geneva, sans-serif;
+  --raised: inset -1px -1px #0a0a0a, inset 1px 1px #fff, inset -2px -2px #808080, inset 2px 2px #dfdfdf;
+  --sunken: inset -1px -1px #fff, inset 1px 1px #808080, inset -2px -2px #dfdfdf, inset 2px 2px #0a0a0a;
+  --titlebar: linear-gradient(90deg, #000080, #1084d0);
+  --titlebuttons: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='52' height='14'%3E%3Crect x='0' y='0' width='16' height='14' fill='%23c0c0c0'/%3E%3Cpath d='M0.5 13V.5H15' stroke='%23fff' fill='none'/%3E%3Cpath d='M0 13.5h16M15.5 0v14' stroke='%230a0a0a' fill='none'/%3E%3Cpath d='M1 12.5h14M14.5 1v12' stroke='%23808080' fill='none'/%3E%3Crect x='4' y='9' width='6' height='2' fill='%23000'/%3E%3Crect x='16' y='0' width='16' height='14' fill='%23c0c0c0'/%3E%3Cpath d='M16.5 13V.5H31' stroke='%23fff' fill='none'/%3E%3Cpath d='M16 13.5h16M31.5 0v14' stroke='%230a0a0a' fill='none'/%3E%3Cpath d='M17 12.5h14M30.5 1v12' stroke='%23808080' fill='none'/%3E%3Crect x='19.5' y='2.5' width='8' height='7' fill='none' stroke='%23000'/%3E%3Crect x='19' y='2' width='9' height='2' fill='%23000'/%3E%3Crect x='36' y='0' width='16' height='14' fill='%23c0c0c0'/%3E%3Cpath d='M36.5 13V.5H51' stroke='%23fff' fill='none'/%3E%3Cpath d='M36 13.5h16M51.5 0v14' stroke='%230a0a0a' fill='none'/%3E%3Cpath d='M37 12.5h14M50.5 1v12' stroke='%23808080' fill='none'/%3E%3Cpath d='M40 3l7 7M47 3l-7 7' stroke='%23000' stroke-width='1.6'/%3E%3C/svg%3E");
+  accent-color: #000080;
+
+  & body { font-family: var(--ui); font-size: 14px; -webkit-font-smoothing: auto; }
+  & :is(input, select, button, a.button) { font-family: inherit; }
+  & ::selection { background: #000080; color: #fff; }
+  & a { color: #0000ee; }
+  & a:visited { color: #551a8b; }
+  & h1 { font-family: "Times New Roman", Times, serif; font-weight: 700; font-size: 2.1rem; letter-spacing: 0; }
+  & h2 { font-weight: 700; }
+  & :is(code, pre) { font-family: "Courier New", Courier, monospace; }
+  & :focus-visible { outline: 1px dotted #000 !important; outline-offset: 2px; }
+
+  /* The taskbar: grey, raised, the site's name as the start button, each page a task;
+     the current one pressed in, with the dithered face of an active task. */
+  & header { background: var(--bar); border-bottom: 0; padding: 3px 4px; gap: 4px 8px;
+    box-shadow: inset 0 1px #dfdfdf, inset 0 2px #fff, 0 1px #0a0a0a; }
+  & header .brand { display: inline-flex; align-items: center; gap: 5px; font-weight: 700; font-size: 14px;
+    color: #000; padding: 3px 8px 3px 5px; box-shadow: var(--raised); margin-right: 2px; letter-spacing: 0; }
+  & header .brand::before { content: ""; width: 20px; height: 16px; flex: none;
+    background: url("../phylobot-logo_new.png") center / contain no-repeat; }
+  & header nav { gap: 3px; }
+  & header nav :is(a, summary) { color: #000; font-size: 13px; font-weight: 400; border-radius: 0; padding: 3px 9px;
+    box-shadow: var(--raised); background: var(--bg); text-decoration: none; transition: none; }
+  & header nav :is(a, summary):hover { background: var(--bg); color: #000; }
+  & header nav :is(a, summary):active { box-shadow: var(--sunken); }
+  & header nav :is(a[aria-current="page"], summary.current) { box-shadow: var(--sunken); font-weight: 700; color: #000;
+    background: repeating-conic-gradient(#fff 0 25%, #d4d0c8 0 50%) 0 0 / 2px 2px; }
+  & header .skin-picker { font-size: 12px; }
+  & header .user { box-shadow: var(--sunken); border-radius: 0; background: var(--bg); padding: 3px 10px;
+    font-size: 12px; color: #000; }
+
+  /* Every page is a window on the desktop. */
+  & main { background: var(--bg); box-shadow: var(--raised), 2px 2px 0 rgba(0, 0, 0, .25);
+    margin: 1.25rem auto 2rem; padding: 3px 1.5rem 2rem; }
+  & main::before { content: "PhyloBot 2"; display: block; margin: 0 calc(-1.5rem + 3px) 1.25rem; padding: 3px 62px 3px 6px;
+    color: #fff; font-weight: 700; font-size: 13px; background: var(--titlebuttons) right 3px center / 52px 14px no-repeat, var(--titlebar); }
+
+  /* Cards: raised panels, their first heading a title bar of its own. */
+  & :is(section.step, section.results, .snippet, .about > section, section.alignment-list, .path-section, .viewer, .aln-save,
+        details.inputs, details.stages, details.files, details.attempts, details.libraries, details.alignment-upload, .about-toc) {
+    background: var(--bg); border: 0; border-radius: 0; box-shadow: var(--raised); }
+  & :is(section.step, section.results, .snippet, .about > section) { padding: 3px 1.25rem 1rem; }
+  & :is(section.step, section.results, .snippet, .about > section) > h2:first-child {
+    margin: 0 calc(-1.25rem + 3px) 1rem; padding: 3px 62px 3px 6px; border: 0; color: #fff; font-size: 13px;
+    background: var(--titlebuttons) right 3px center / 52px 14px no-repeat, var(--titlebar); }
+  & :is(section.step, section.results, .snippet, .about > section) > h2:first-child a { color: #fff; }
+  & h2.with-defaults .use-defaults { color: #fff; }
+  & .step-number { width: 1.25rem; height: 1.25rem; border-radius: 0; background: var(--bg); color: #000;
+    box-shadow: var(--raised); font-size: 11px; }
+  & .viewer .path-section, & .alignment-result { box-shadow: none; border-top: 2px groove #fff; }
+  & .viewer .path-section.viewer-fold { border-top: 0; border-bottom: 2px groove #fff; padding-bottom: .6rem; margin-bottom: .8rem; }
+  & .viewer-controls, & .review-actions, & .stage-graph { background: var(--bg); border: 2px groove #fff; border-radius: 0; }
+
+  /* Buttons: raised bevels that press in; the main action carries the default button's
+     black frame. */
+  & button:not(.link, .toggle, .icon-button, .chip-remove, .job-panel-close, .job-panel-tab, .sort, .help-dot, .picker-row, .fold-toggle),
+  & a.button, & .head-action, & input[type=file]::file-selector-button {
+    background: var(--bg); color: #000; border: 0; border-radius: 0; box-shadow: var(--raised);
+    font-size: 13px; font-weight: 400; padding: 4px 14px; text-transform: none; letter-spacing: 0; transition: none; }
+  & button:not(.link, .toggle, .icon-button, .chip-remove, .job-panel-close, .job-panel-tab, .sort, .help-dot, .picker-row, .fold-toggle):hover,
+  & a.button:hover, & .head-action:hover, & input[type=file]::file-selector-button:hover { background: var(--bg); }
+  & button:not(.link, .toggle, .icon-button, .chip-remove, .job-panel-close, .job-panel-tab, .sort, .help-dot, .picker-row, .fold-toggle):active,
+  & a.button:active, & .head-action:active { box-shadow: var(--sunken); }
+  & :is(button.primary, a.button, dialog .actions button.primary, .path-section button.trace, .job-panel-foot button.primary) {
+    background: var(--bg); color: #000; font-weight: 700; outline: 1px solid #000; outline-offset: -1px; }
+  & :is(button.primary, a.button, dialog .actions button.primary, .path-section button.trace):hover { background: var(--bg); }
+  & a.button, & a.button:visited { color: #000; text-decoration: none; }
+  & button.danger-outline { color: var(--danger); }
+  & dialog .actions button.danger { background: var(--bg); color: var(--danger); }
+  & button:disabled { color: #808080; text-shadow: 1px 1px #fff; }
+  & .job-panel-tab { background: #000080; border-radius: 0; }
+
+  /* Fields and tables: sunken white wells. */
+  & input:is([type=text], [type=number], [type=email], [type=password], [type=search], [type=date], :not([type])),
+  & select, & textarea { background-color: #fff; color: #000; border: 0; border-radius: 0; box-shadow: var(--sunken); padding: 4px 6px; }
+  & select { padding-right: 1.8rem; }
+  & :is(input, select, textarea):focus { box-shadow: var(--sunken); outline: 1px dotted #000; outline-offset: -4px; }
+  & :is(table.results, table.grid, table.jobs, table.hits) { background: #fff; border: 0; border-radius: 0;
+    box-shadow: var(--sunken); padding: 2px; }
+  & :is(table.jobs, table.hits) thead th, & table.results th { background: var(--bg); color: #000; font-weight: 400;
+    font-size: 12px; text-transform: none; letter-spacing: 0; box-shadow: var(--raised); }
+  & table.jobs tbody tr:hover td { background: var(--row-hover); }
+  & .deleted .scroll { box-shadow: var(--sunken); border: 0; }
+  & :is(.sites-scroll, .path-scroll) { border: 0; box-shadow: var(--sunken); }
+  & .status, & .chip { border-radius: 0; border: 1px solid #000; }
+  & .status.running { background: #000080; color: #fff; }
+  & .message { border-radius: 0; box-shadow: var(--raised); }
+
+  /* Progress: the chunky blue blocks of a file copy. */
+  & progress { height: 18px; border-radius: 0; background: #fff; box-shadow: var(--sunken); padding: 3px; }
+  & progress::-webkit-progress-bar { background: #fff; border-radius: 0; }
+  & progress::-webkit-progress-value { border-radius: 0;
+    background: repeating-linear-gradient(90deg, #000080 0 9px, transparent 9px 11px); }
+  & progress::-moz-progress-bar { border-radius: 0; background: repeating-linear-gradient(90deg, #000080 0 9px, transparent 9px 11px); }
+
+  /* Code: a black command prompt. */
+  & pre { background: #000; color: #c0c0c0; border: 0; border-radius: 0; box-shadow: var(--sunken); }
+  & code { background: #fff; border-radius: 0; }
+  & pre code { background: none; color: inherit; }
+
+  & dialog { background: var(--bg); border: 0; border-radius: 0; box-shadow: var(--raised), 3px 3px 0 rgba(0, 0, 0, .35); }
+  & dialog::backdrop { background: rgba(0, 0, 0, .25); }
+
+  /* Footer: white on the desktop, with the advice of the age. */
+  & .site-footer { color: #fff; border-top: 0; }
+  & .site-footer::after { content: "Best viewed in Netscape Navigator at 800 × 600"; flex-basis: 100%; text-align: center;
+    font-style: italic; opacity: .9; }
+
+  /* The home page: no window, just a homepage on a starfield. */
+  & body:has(.title-page) { background-color: #000;
+    background-image: radial-gradient(1px 1px at 20px 30px, #fff 50%, transparent 51%),
+      radial-gradient(1px 1px at 90px 120px, #fff 50%, transparent 51%),
+      radial-gradient(1.5px 1.5px at 150px 60px, #ffffa0 50%, transparent 51%),
+      radial-gradient(1px 1px at 210px 170px, #fff 50%, transparent 51%),
+      radial-gradient(1px 1px at 60px 200px, #a0c0ff 50%, transparent 51%),
+      radial-gradient(1.5px 1.5px at 240px 20px, #fff 50%, transparent 51%);
+    background-size: 260px 230px; }
+  & main:has(.title-page) { background: transparent; box-shadow: none; color: #fff; }
+  & main:has(.title-page)::before { content: none; }
+  & .title-page :is(.slogan, .intro, .reference) { color: #fff; }
+  & .title-page .reference h2 { color: #ffff00; }
+  & .title-page :is(.intro, .reference, .actions, .home-foot) a:not(.button, .head-action) { color: #00ffff; }
+  & .title-page :is(.intro, .reference, .actions, .home-foot) a:not(.button, .head-action):visited { color: #ff80ff; }
+  & .title-page .home-foot { color: #c0c0c0; }
+  & .title-page .slogan { font-family: "Comic Sans MS", "Comic Neue", "Chalkboard SE", cursive; color: #ffff00; }
+  & .title-page .snippet, & .title-page .head-action { color: #000; }
+  & .title-page h1 { font-family: Impact, "Arial Black", "Helvetica Neue", sans-serif; font-weight: 900; font-style: italic;
+    font-size: 4.6rem; letter-spacing: .02em; display: inline-block; padding: 0 .15em;
+    background: linear-gradient(180deg, #ff0000, #ff9900 25%, #ffff00 45%, #00dd00 62%, #0099ff 80%, #9900ff);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+    filter: drop-shadow(3px 3px 0 #303090) drop-shadow(2px 2px 0 #101050);
+    transform: perspective(500px) rotateX(18deg) skewX(-6deg); }
+  & .title-page h1 .two { text-shadow: none; }
+  & .title-page .logo { filter: drop-shadow(0 0 1px #fff) drop-shadow(0 0 1px #fff); }
+
+  /* The home page's furniture, drawn only in this skin (site.css hides .retro-only). */
+  & .retro-only { display: block; }
+  & .retro-marquee { overflow: hidden; white-space: nowrap; width: 100%; margin: 0;
+    font-family: "Comic Sans MS", "Comic Neue", "Chalkboard SE", cursive; font-size: 1.3rem; font-weight: 700; color: #00ff00; }
+  & .retro-marquee span { display: inline-block; padding-left: 100%; animation: retro-marquee 14s linear infinite; }
+  & .retro-marquee:hover span { animation-play-state: paused; }
+  & .retro-construction { margin: .25rem auto 0; padding: .3rem 1.2rem; width: fit-content; font-weight: 700; color: #000;
+    font-family: "Arial Black", Impact, sans-serif; letter-spacing: .05em;
+    background: repeating-linear-gradient(45deg, #ffd800 0 14px, #111 14px 28px); }
+  & .retro-construction span { background: #ffd800; padding: .1rem .6rem; animation: retro-blink 1s step-end 5; }
+  & .retro-counter { margin: 0; font-size: .9rem; color: #c0c0c0; }
+  & .retro-counter .digits { display: inline-block; margin: 0 .3em; padding: 1px 3px; background: #000; color: #00ff00;
+    font-family: "Courier New", monospace; font-weight: 700; letter-spacing: .25em; border: 2px inset #808080; }
+
+  /* The helpful robot, bottom right, until told otherwise. */
+  & .retro-helper { position: fixed; right: 18px; bottom: 18px; z-index: 20; width: 250px;
+    display: flex; flex-direction: column; align-items: flex-end; gap: 6px; animation: retro-pop .5s ease-out; }
+  & .retro-helper[hidden] { display: none; }
+  & .retro-helper .bubble { background: #ffffe1; color: #000; border: 1px solid #000; padding: .6rem .7rem; font-size: 13px;
+    position: relative; box-shadow: 2px 2px 0 rgba(0, 0, 0, .4); }
+  & .retro-helper .bubble::after { content: ""; position: absolute; right: 34px; bottom: -9px; width: 14px; height: 14px;
+    background: #ffffe1; border-right: 1px solid #000; border-bottom: 1px solid #000; transform: rotate(45deg); }
+  & .retro-helper .bubble p { margin: 0 0 .5rem; }
+  & .retro-helper .bubble button { font-size: 12px; padding: 3px 10px; }
+  & .retro-helper img { width: 86px; height: auto; margin-right: 8px; filter: drop-shadow(0 0 1px #fff) drop-shadow(0 0 1px #fff); }
+}
+@keyframes retro-marquee { from { transform: translateX(0); } to { transform: translateX(-100%); } }
+@keyframes retro-blink { 50% { visibility: hidden; } }
+@keyframes retro-pop { from { transform: translateY(30px); opacity: 0; } to { transform: none; opacity: 1; } }
+/* On a phone the helper would sit on the page itself. */
+@media (max-width: 700px) { :root[data-skin="retro95"] .retro-helper { display: none; } }
+@media (prefers-reduced-motion: reduce) {
+  :root[data-skin="retro95"] :is(.retro-marquee span, .retro-construction span, .retro-helper) { animation: none; }
+  :root[data-skin="retro95"] .retro-marquee span { padding-left: 0; }
+  :root[data-skin="retro95"] .retro-marquee { text-align: center; }
+}

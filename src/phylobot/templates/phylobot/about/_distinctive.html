@@ -1,0 +1,49 @@
+{# About: what is distinctive. Its heading is the page's. Shared with phylobot.com (website/); in-page links only. #}
+<p>As far as we can tell from the literature and the tools we know of (see
+  <a href="#related">Related work</a>), the combination below is not available elsewhere.
+  Several individual pieces are done well by other tools, and we say so there.</p>
+<ol class="distinctive">
+  <li><b>Robustness across alignments, trees and models, by design.</b> An ancestor is an
+    estimate that depends on the alignment, the tree and the substitution model behind it.
+    PhyloBot 2 runs every combination you choose — up to four aligners (MAFFT, MUSCLE 5,
+    Clustal Omega, PRANK) and your own alignments; tree searches by IQ-TREE and RAxML-NG and
+    your own trees; any set of fixed models and a ModelFinder search — as separate, fully
+    traceable analyses. It ranks the models within each alignment by BIC, with AIC/AICc/BIC
+    weights, and presents the ancestors of each combination side by side, so you can see
+    which conclusions hold across reasonable choices and which do not.</li>
+  <li><b>A choice of gap-placement methods, each validated.</b> Maximum-likelihood ASR places
+    a residue at every alignment column, so raw ancestors are much longer than any real
+    protein. PhyloBot 2 keeps the unmasked reconstruction and adds a version for each method
+    you choose: parsimony by shared presence, Fitch parsimony, maximum likelihood on the
+    gap/residue pattern (with per-site gap probabilities), and the indel-aware
+    reconstructions of PRANK and GRASP. Each method is scored against simulated protein
+    families with known ancestors that include insertions and deletions, averaged over
+    replicates, and the defaults were chosen from those results.</li>
+  <li><b>Correctness checked against known answers.</b> The pipeline is tested continuously
+    on simulated datasets whose true ancestors are known. The tests also rerun each dataset
+    with the true alignment and/or true tree supplied, to separate error from alignment,
+    from tree inference, and from the reconstruction itself. Thresholds on these tests guard
+    every change to the pipeline.</li>
+  <li><b>Mutational paths between ancestors.</b> Pick any ancestor and any of its descendants
+    (another ancestor or an extant sequence), and PhyloBot 2 traces the path between them.
+    It lists the substitutions, gains, and losses on each branch; shows every sequence along
+    the path with each residue's posterior probability, outlining what changed on each
+    branch; lets you add extant sequences for comparison; and exports it all to Excel.
+    Exploring these trajectories was the feature the original PhyloBot introduced, and we
+    have not found it elsewhere for protein ancestors.</li>
+  <li><b>Ancestors you can inspect.</b> The ancestor viewer shows one ancestral node site by
+    site, with its full posterior distribution at each site, plots of how well supported the
+    node is and where it is uncertain, and extant sequences alongside. The tree viewer shows
+    each tree with clickable ancestral nodes and branch support, with branch lengths that can
+    be adjusted so very short and very long branches stay readable. Colour palettes, line
+    styles and page skins can be changed for accessibility, and plots and tables download as
+    PNG, SVG and Excel.</li>
+  <li><b>Homologs you choose yourself.</b> Starting from a single protein, a BLAST search at
+    EBI (UniRef90) or NCBI returns hits that you filter and review — with histograms of
+    coverage and identity, and hand-picked additions or removals — before they become a
+    job. Which sequences go in stays your decision.</li>
+  <li><b>Runs where you are.</b> The same pipeline runs from the command line with only
+    Docker, as a local web app (no accounts; nothing leaves your machine unless you choose a
+    homolog search, which asks first), or as a hosted service. Every tool is pinned to an
+    exact version for reproducibility.</li>
+</ol>

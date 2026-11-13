@@ -1,0 +1,88 @@
+/* Abyss skin (phylobot.skins): Lagoon after dark. Builds on Clean's layout and Dark's
+   remapping of figure and table colours (clean.css and dark.css both apply to it); loaded
+   after them, so these tokens win. A deep sea-black page, pale sea-foam text, aqua for
+   links and actions with a faint bioluminescent glow on the main ones, the surface seen
+   from below under the top bar, and a coral "2". Headings and the site name in Lexend (designed for easy
+   reading; static/phylobot/fonts), text in the system face. Text and links meet WCAG AA. */
+@font-face { font-family: "Lexend"; font-style: normal; font-weight: 400; font-display: swap;
+  src: url("../fonts/lexend-latin-400-normal.woff2") format("woff2"); }
+@font-face { font-family: "Lexend"; font-style: normal; font-weight: 500; font-display: swap;
+  src: url("../fonts/lexend-latin-500-normal.woff2") format("woff2"); }
+@font-face { font-family: "Lexend"; font-style: normal; font-weight: 600; font-display: swap;
+  src: url("../fonts/lexend-latin-600-normal.woff2") format("woff2"); }
+
+:root[data-skin="abyss"] {
+  --display: "Lexend", system-ui, sans-serif;
+  --page: #06161b;          /* the deep */
+  --bg: #0b2128;            /* cards */
+  --bar: #041116;
+  --fg: #d3eaec;            /* sea foam */
+  --fg-2: #b2d3d6;
+  --muted: #83a8ac;         /* 6:1 on the cards */
+  --line: #14343c;
+  --edge: #1d4550;
+  --accent: #4fd6cc;        /* bioluminescent aqua */
+  --accent-hover: #80e6de;
+  --accent-soft: rgba(79, 214, 204, .12);
+  --accent-ring: rgba(79, 214, 204, .32);
+  --on-accent: #03201e;
+  --link-line: rgba(79, 214, 204, .4);
+  --coral: #ff8a6b;
+  --surf: #2fa9c4;
+  --title-rim: transparent;
+  --title-shadow: transparent;
+  --subtle: #0f2a32;
+  --hover: #10303a;
+  --hover-edge: #2f6977;
+  --row-hover: #0e2a32;
+  --glass: rgba(79, 214, 204, .07);
+  --track: #15363f;
+  --shadow: 0 1px 2px rgba(0, 0, 0, .3), 0 4px 16px rgba(0, 10, 14, .3);
+  --viz-grid: #17363e;
+  --neutral-bg: #143039; --neutral-fg: #a9c9cc;
+  --running-bg: rgba(79, 214, 204, .14); --running-fg: #8ee8e1;
+  --select-arrow: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%2383a8ac' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");
+  --work-align: #2fa9c4; --work-modelfinder: #7fd1c4; --work-trees: #4fd6cc;
+  --work-ancestors: #ff9f7f; --work-codeml: #e8b89c; --work-setup: #3b5c63;
+
+  & ::selection { background: rgba(79, 214, 204, .3); color: #effafa; }
+  & :is(h1, h2, header .brand, .step-number) { font-family: var(--display); }
+  & h1 { font-weight: 600; letter-spacing: -.015em; }
+  & h2 { font-weight: 500; letter-spacing: -.005em; }
+
+  /* Top bar: the surface seen from the deep, a line of light brightest in the middle and
+     fading at the edges, with a soft glow falling below it. */
+  & header { border-bottom: 0; }
+  & header::after { content: ""; position: absolute; left: 0; right: 0; bottom: -1px; height: 1px; pointer-events: none;
+    background: linear-gradient(90deg, transparent, rgba(79, 214, 204, .5) 12%, #9ff3ec 45%, #a8e0fa 60%, rgba(79, 214, 204, .5) 88%, transparent);
+    box-shadow: 0 1px 12px 1px rgba(79, 214, 204, .45), 0 0 3px rgba(127, 230, 222, .6); }
+  & header .brand { color: var(--accent); font-weight: 600; }
+  & header nav :is(a[aria-current="page"], summary.current) { color: var(--accent); background: var(--accent-soft); box-shadow: none; }
+
+  /* Main actions glow faintly, like something alive down there. */
+  & :is(button.primary, a.button, dialog .actions button.primary, .job-panel-foot button.primary) {
+    box-shadow: 0 0 14px rgba(79, 214, 204, .28); }
+  & section.step .step-number { background: var(--accent-soft); color: var(--accent); box-shadow: 0 0 0 1px rgba(79, 214, 204, .35); }
+  & .stage-graph .stage.running .box { fill: var(--accent-soft); stroke: var(--accent); }
+  & .stage-graph .stage.running :is(.state, .dot) { fill: var(--accent); }
+  & :is(details.stages, .snippet) { border-top: 2px solid rgba(79, 214, 204, .55); }
+  & .job-panel-head { position: relative; }
+  & .job-panel-head::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 2px;
+    background: linear-gradient(90deg, var(--surf), var(--accent)); }
+
+  /* Home: the title rising from deep blue to aqua, the "2" in glowing coral; the robot
+     outlined in a soft aqua halo so its ink lines show on the dark. */
+  & .title-page h1 { display: inline-block; background: linear-gradient(90deg, #5fb4e0, var(--accent) 60%, #9af0e6);
+    -webkit-background-clip: text; background-clip: text; color: transparent; }
+  & .title-page h1 .two { color: var(--coral); text-shadow: 0 0 .35em rgba(255, 138, 107, .45); }
+  & .title-page .logo { filter: drop-shadow(0 0 1px rgba(211, 234, 236, .95)) drop-shadow(0 0 1px rgba(211, 234, 236, .55))
+    drop-shadow(0 0 18px rgba(79, 214, 204, .18)); }
+}
+
+/* The landing and About pages' backdrop (backdrop.js): structures adrift in the deep like
+   plankton, in pale aqua, blue and sea foam (light tints: dark ones turn to mud here). */
+:root[data-skin="abyss"] .backdrop {
+  --backdrop-colors: #74e3d9, #7cc6f0, #b0f0dc, #5fd0c6;
+  --backdrop-count: 10;
+  --backdrop-alpha: .4;
+}

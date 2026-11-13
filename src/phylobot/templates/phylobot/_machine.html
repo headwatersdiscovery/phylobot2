@@ -1,0 +1,36 @@
+{# The Settings page's "This machine" (views.machine_panel; phylobot.machine). #}
+<div class="machine-panel" data-machine>
+  <h3>This machine</h3>
+  {% if m.found %}
+    <p class="hint">The worker on <code>{{ m.found.host }}</code> last looked
+      {{ m.found.detected_at|timesince }} ago: <strong>{{ m.found.cpus }} CPU{{ m.found.cpus|pluralize }}</strong>
+      for pipeline steps{% if m.found.isolated %} (isolated, so left out: {{ m.found.isolated }}){% endif %}
+      and <strong>{{ m.found.memory_bytes|filesizeformat }}</strong> of memory, as Docker reports
+      them.{% if m.found.note %} {{ m.found.note }}.{% endif %} It looks again whenever a job starts.</p>
+  {% else %}
+    <p class="hint">No worker has reported this machine yet: it does when it starts, and
+      whenever a job starts.</p>
+  {% endif %}
+  <table class="results machine-share">
+    <tbody>
+      <tr><th class="label">CPUs</th><td>{{ m.totals.cpus|default:"–" }}</td><td class="label hint">{{ m.totals.cpus_source }}</td></tr>
+      <tr><th class="label">Memory</th><td>{% if m.totals.memory_bytes %}{{ m.totals.memory_bytes|filesizeformat }}{% else %}–{% endif %}</td><td class="label hint">{{ m.totals.memory_source }}</td></tr>
+      <tr><th class="label">Left for everything else</th><td>{{ m.totals.reserved_bytes|filesizeformat }}</td><td class="label hint">{{ m.totals.reserved_source }}</td></tr>
+      <tr><th class="label">Reserved by each step</th><td>{{ m.totals.task_bytes|filesizeformat }}</td><td class="label hint">{{ m.totals.task_source }}</td></tr>
+      <tr><th class="label">Jobs that can run at once</th><td>{{ m.slots }}</td>
+        <td class="label hint">{% if local_mode %}the smaller of jobs the worker runs at once and jobs running at once per user{% else %}jobs the worker runs at once{% endif %}</td></tr>
+      {% if m.share %}
+        <tr><th class="label">Each job gets</th>
+          <td><strong>{{ m.share.cpus }} CPU{{ m.share.cpus|pluralize }}, {{ m.share.memory_bytes|filesizeformat }}</strong></td>
+          <td class="label hint">up to {{ m.share.tasks_at_once }} step{{ m.share.tasks_at_once|pluralize }} at once
+            ({{ m.task_memory|filesizeformat }} reserved by each; {{ m.head_memory|filesizeformat }} per job for Nextflow itself)</td></tr>
+      {% endif %}
+    </tbody>
+  </table>
+  {% if m.share.warning %}<p class="errors">{{ m.share.warning }}</p>{% endif %}
+  <p class="hint">Nextflow plans by what steps reserve, not what they use, and on its own
+    assumes the whole machine is its own; so each job is told its share when it starts. A
+    step killed for running out of memory is retried once with twice as much, within its
+    job's share. Values set in the table above override <code>.env</code>, which overrides what
+    is detected.</p>
+</div>

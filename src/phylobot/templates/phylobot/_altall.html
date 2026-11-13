@@ -1,0 +1,43 @@
+{# The AltAll control and what the threshold does, inside the Support section: the #}
+{# slider cuts the alternatives, so it belongs beside the probabilities it cuts. #}
+{# Emits grid items into .support-grid — controls left, histogram right — so the two #}
+{# histograms sit in the same column width and so at the same scale. #}
+{# The slider carries no name: the number field is what the form submits, so the #}
+{# control still works without JavaScript. ancestors.js keeps the two in step, recounts, #}
+{# and moves the threshold marks on both plots as the slider travels. #}
+{% if altall_available %}
+<div class="altall altall-controls" id="altall">
+  <label class="altall-label"><span>AltAll threshold <button type="button" class="help-dot" popovertarget="help-altall-threshold" aria-label="About altAll threshold">?</button><span class="help-popover" popover id="help-altall-threshold"><strong>AltAll threshold</strong><span><span>AltAll switches every {{ altall_unit }} whose next-most-probable state reaches this probability — the standard robustness control: a result that holds for both the ML ancestor and AltAll does not rest on the uncertain {{ altall_unit }}s.</span><span>The dashed line marks the threshold on both plots: on the histogram of the next-most-probable state, the {{ altall_unit }}s to its right are the ones AltAll switches; on the trace, it is the level the second-best state must reach.</span></span></span></span>
+    <span class="altall-row">
+      <input type="range" class="altall-slider" value="{{ altall_threshold }}"
+             min="{{ altall_min }}" max="{{ altall_max }}" step="0.01" aria-label="AltAll threshold slider">
+      <input type="number" name="altall" value="{{ altall_threshold }}"
+             min="{{ altall_min }}" max="{{ altall_max }}" step="0.01">
+    </span></label>
+  {# Directly under the slider and large, so the number the slider is *for* is the thing #}
+  {# that visibly moves as it travels. #}
+  <p class="altall-count" data-unit="{{ altall_unit }}" data-total="{{ length }}">
+    <strong>{{ altall_count }}</strong>
+    ambiguous {{ altall_unit }}{{ altall_count|pluralize }} of {{ length }}</p>
+  {{ altall_pps|json_script:"altall-pps" }}
+</div>
+{% if altall_plot %}{% with f=altall_plot.frame %}
+<figure class="plot histogram altall-histogram" data-filename="{{ file_stem }}.altall">
+  <div class="plot-tools">Download <button type="button" class="link" data-plot-download="png">PNG</button> · <button type="button" class="link" data-plot-download="svg">SVG</button></div>
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {{ f.width }} {{ f.height }}" width="{{ f.width }}" height="{{ f.height }}"
+       font-family="system-ui, -apple-system, 'Segoe UI', sans-serif" role="img"
+       data-left="{{ f.left }}" data-width="{{ f.plot_width }}"
+       aria-label="Histogram: proportion of {{ node }}'s {{ altall_unit }}s by the probability of the next-most-probable state, with the AltAll threshold marked">
+    <rect class="background" width="{{ f.width }}" height="{{ f.height }}" fill="#ffffff"/>
+    {% for y, label in f.y_ticks %}<line x1="{{ f.left }}" x2="{{ f.right }}" y1="{{ y }}" y2="{{ y }}" stroke="#d8dde5" stroke-width="1"/>
+    <text x="{{ f.left|add:'-6' }}" y="{{ y }}" text-anchor="end" dominant-baseline="middle" font-size="13" fill="#5d6675">{{ label }}</text>{% endfor %}
+    {% for bar in altall_plot.bars %}<rect x="{{ bar.x }}" y="{{ bar.y }}" width="{{ bar.width }}" height="{{ bar.height }}" fill="{{ bar.fill }}">
+      <title>{{ bar.label }}: {{ bar.proportion|floatformat:3 }} of {{ altall_plot.sites }} {{ altall_unit }}s with an alternative</title></rect>{% endfor %}
+    {% for x, label in altall_plot.ticks %}<text x="{{ x }}" y="{{ f.bottom|add:'16' }}" text-anchor="middle" font-size="13" fill="#5d6675">{{ label }}</text>{% endfor %}
+    <line class="altall-mark" x1="0" x2="0" y1="{{ f.top }}" y2="{{ f.bottom }}" stroke="#c0392b" stroke-width="2" stroke-dasharray="4 3"/>
+    <text x="{{ f.center }}" y="{{ f.height|add:'-4' }}" text-anchor="middle" font-size="14" fill="#1d2330">Probability of the next-most-probable state</text>
+    <text transform="translate(12 {{ f.middle }}) rotate(-90)" text-anchor="middle" font-size="14" fill="#1d2330">Proportion of {{ altall_unit }}s</text>
+  </svg>
+</figure>
+{% endwith %}{% endif %}
+{% endif %}

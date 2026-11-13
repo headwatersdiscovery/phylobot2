@@ -1,0 +1,33 @@
+{
+  "iqtree_version": "IQ-TREE version 3.1.3 for Linux x86 64-bit built Jul 26 2026",
+  "image": "quay.io/biocontainers/iqtree:3.1.3--h8471819_0",
+  "command": [
+    "iqtree3",
+    "--alisim",
+    "sim",
+    "-st",
+    "CODON1",
+    "-t",
+    "tree.nwk",
+    "-m",
+    "GY{1.0172,1.6247}+F3X4{0.34149/0.22514/0.26352/0.16984/0.30553/0.16440/0.22393/0.30613/0.21154/0.24902/0.25960/0.27984}+G4{1.0997}",
+    "--root-seq",
+    "root.fasta,Haliotis_rufescens_lysin",
+    "--write-all",
+    "--out-format",
+    "fasta",
+    "--seed",
+    "318",
+    "--indel",
+    "0.03,0.03",
+    "--indel-size",
+    "GEO{2},GEO{2}"
+  ],
+  "seed": 318,
+  "sha256": {
+    "input.fasta": "7440a3d3d02079d5d08b8d55189e5f07d89054d81eef9965e969490ae8a222df",
+    "true_alignment.fasta": "62e676e23db5c686abee367bceebe47e9001d8ea44460e3663980d4ea4eac3a7",
+    "true_ancestors.fasta": "b334f6fe8b0156f1f702d8d2a636a36e4bcb8f2242d6b6be989972aafca3ce23",
+    "true_tree.nwk": "3420972a2654d42e4f0d79dd53eb434b46ab836d05429fb63deaaf8bcbe811dd"
+  }
+}

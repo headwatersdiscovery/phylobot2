@@ -1,0 +1,17 @@
+{# The job's ancestral libraries (phylobot.library_views): shortlists of ancestors to order. #}
+<details class="libraries" id="libraries"{% if libraries %} open{% endif %}>
+  <summary><h2>Ancestral Libraries</h2>{% if libraries %} <span class="hint">({{ libraries|length }})</span>{% endif %}</summary>
+  {% if libraries %}
+  <ul class="library-list">{% for lib in libraries %}
+    <li><a href="{% url 'library_page' job.id lib.id %}">{{ lib.name }}</a>
+      <span class="hint">{{ lib.code }} · {{ lib.targets|length }} ancestor{{ lib.targets|length|pluralize }} · changed {{ lib.updated_at|date:"Y-m-d H:i" }}{% if forloop.first %} · current{% endif %}</span></li>{% endfor %}
+  </ul>
+  {% else %}
+  <p class="hint">A library turns ancestors into a shortlist of candidate sequences to order:
+    each ML ancestor, its AltAll control, and the variants that cover the uncertainty.
+    Add ancestors from the <a href="{% url 'tree_viewer' job.id %}">tree viewer</a> or the
+    <a href="{% url 'ancestor_viewer' job.id %}">ancestor viewer</a>; the first one starts a library.</p>
+  {% endif %}
+  <form method="post" action="{% url 'library_new' job.id %}">{% csrf_token %}
+    <button type="submit">New library</button></form>
+</details>

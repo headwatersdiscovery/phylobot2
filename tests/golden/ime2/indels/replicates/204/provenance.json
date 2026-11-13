@@ -1,0 +1,31 @@
+{
+  "iqtree_version": "IQ-TREE version 3.1.3 for Linux x86 64-bit built Jul 26 2026",
+  "image": "quay.io/biocontainers/iqtree:3.1.3--h8471819_0",
+  "command": [
+    "iqtree3",
+    "--alisim",
+    "sim",
+    "-t",
+    "tree.nwk",
+    "-m",
+    "LG+G4{0.747}",
+    "--root-seq",
+    "root.fasta,Scer_IME2_kinase_domain",
+    "--write-all",
+    "--out-format",
+    "fasta",
+    "--seed",
+    "204",
+    "--indel",
+    "0.03,0.03",
+    "--indel-size",
+    "GEO{3},GEO{3}"
+  ],
+  "seed": 204,
+  "sha256": {
+    "input.fasta": "c2aacbb5d03e5261258b59f64dde371935707b4107677459d930837223200d0b",
+    "true_alignment.fasta": "30fa0b29284a358d4108d6445a8597bc392e7f029bbc886674e727ff23736cd8",
+    "true_ancestors.fasta": "6a3ea282d2ea65c3fa3cfaf8e16081e79a7b1c3ecda398a502e4da794c6f0239",
+    "true_tree.nwk": "905d8a6a3b0b25938c927bfdfb7d64bc8025cbcc9d6b4f0221d0f69572f5ada7"
+  }
+}

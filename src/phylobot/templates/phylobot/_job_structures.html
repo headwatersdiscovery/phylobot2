@@ -1,0 +1,15 @@
+{# The job's attached structures (phylobot.structure_views): its ancestors drawn on them. #}
+<details class="libraries" id="structures"{% if structures %} open{% endif %}>
+  <summary><h2>Structures</h2>{% if structures %} <span class="hint">({{ structures|length }})</span>{% endif %}</summary>
+  {% if structures %}
+  <ul class="library-list">{% for s in structures %}
+    <li><a href="{% url 'structure_viewer' job.id %}?structure={{ s.id }}">{{ s.label }}</a>
+      <span class="hint">{{ s.title|truncatechars:90 }}</span></li>{% endfor %}
+  </ul>
+  {% else %}
+  <p class="hint">See an ancestor on a protein structure: coloured by its residues, by how sure each
+    one is, or by what changed between two ancestors. Attach a PDB entry, an AlphaFold model or
+    your own file.</p>
+  {% endif %}
+  <p><a class="button" href="{% url 'structure_viewer' job.id %}">{% if structures %}Open the structure page{% else %}Attach a structure{% endif %}</a></p>
+</details>

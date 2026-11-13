@@ -1,0 +1,5 @@
+<div id="sequences-field">
+  <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+  {{ field }}
+</div>
+{% if oob %}{% include "phylobot/_outgroup.html" %}{% include "phylobot/_sequence_check.html" %}{% endif %}

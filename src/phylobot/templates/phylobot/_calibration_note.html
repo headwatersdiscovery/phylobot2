@@ -1,0 +1,28 @@
+{# The ancestor viewer's calibrated probabilities (phylobot.calibration): what changed, #}
+{# T over this ancestor's sites, and whose coefficients made it. #}
+{% with s=calibration.summary c=calibration.coefficients %}
+<div class="calibration-note" data-calibration>
+  <p class="hint"><strong>Calibrated probabilities.</strong> At each site IQ-TREE's
+    probabilities are raised to the power 1/T and renormalised, with T from the site's
+    branch lengths, rate, entropy and gaps. T above 1 spreads confidence to the
+    alternatives, below 1 concentrates it. The order of the states never changes, so the
+    ML sequence is the same as with raw probabilities; the tiles, support plots, AltAll
+    and the downloads use the calibrated values. Other combinations below stay raw.
+    {% if s %}Over its {{ s.sites }} residues T runs from {{ s.low|floatformat:2 }} to
+    {{ s.high|floatformat:2 }} (median {{ s.median|floatformat:2 }}).{% endif %}</p>
+  <p class="hint">Coefficients: {{ c.source }}
+    (<a href="{% url 'my_calibration' %}">set your own</a>{% if user.username == "local" or user.is_staff %},
+    or <a href="{% url 'site_settings' %}#calibrated-posterior-probabilities">the site's defaults</a>{% endif %}).
+    {% if c.identity %}<strong>They are all 0, so T is 1 everywhere and calibrated equals
+    raw.</strong>{% endif %}
+    {% if not c.fitted %}Until they are fitted on a benchmark, treat calibrated values
+    as a preview, not a correction.{% endif %}
+    A shared link shows the coefficients in force when it is opened.</p>
+  <details class="calibration-formula">
+    <summary>The formula</summary>
+    <p class="hint">ln T = {{ c.intercept|floatformat:"-3" }}{% for cov in covariates %}{% for k, b in c.betas.items %}{% if k == cov.key %} + {{ b|floatformat:"-3" }} × {{ cov.label|lower }}{% endif %}{% endfor %}{% endfor %},
+      with T kept between {{ t_bounds.0|floatformat:"-1" }} and {{ t_bounds.1|floatformat:"-1" }}. Each covariate is 0 at a reference site; their
+      definitions are on <a href="{% url 'my_calibration' %}">My calibration</a>.</p>
+  </details>
+</div>
+{% endwith %}

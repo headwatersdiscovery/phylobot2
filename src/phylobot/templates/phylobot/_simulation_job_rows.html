@@ -1,0 +1,14 @@
+{# Rows of the Simulations page's job picker (simulation_views.job_picker); the last row #}
+{# fetches the next page when it scrolls into view. #}
+{% for job, types in rows %}
+<li><button type="button" class="picker-row" data-pick="{{ job.id }}"
+     data-label="{{ job.name|default:'(unnamed)' }} · {{ job.created_at|date:'Y-m-d H:i' }}">
+  <span class="picker-name">{{ job.name|default:"(unnamed)" }} <span class="hint">{{ job.id|stringformat:"s"|slice:":8" }}</span>{% if job.params.simulated %}
+    <span class="badge simulated" title="Simulated data, not real sequences">simulated</span>{% endif %}</span>
+  <span class="picker-meta">{% include "phylobot/_job_types.html" with static=True %}
+    <span class="hint">{{ job.created_at|date:"Y-m-d H:i" }}{% if job.params.seqtype == "codon" %} · coding DNA{% endif %}</span>
+    {% for tag in job.tags.all %}<span class="chip muted">#{{ tag.name }}</span>{% endfor %}</span>
+</button></li>{% empty %}{% if first %}
+<li class="hint picker-empty">{% if q %}No finished job with trees matches “{{ q }}”.{% else %}None yet: your finished jobs with trees appear here.{% endif %}</li>{% endif %}{% endfor %}
+{% if next_page %}<li class="hint picker-more" hx-get="{% url 'simulation_job_picker' %}?q={{ q|urlencode }}&amp;page={{ next_page }}"
+    hx-trigger="revealed" hx-swap="outerHTML">Loading older jobs…</li>{% endif %}

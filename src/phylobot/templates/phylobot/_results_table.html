@@ -1,0 +1,20 @@
+{% if show_title %}<p class="hint">{{ table.subtitle }}</p>{% endif %}
+{% if table.scrolls %}<div class="results-scroll" tabindex="0" aria-label="{{ table.title }}: scroll for more rows">{% endif %}<table class="results">
+  <thead><tr>{% for column in table.columns %}{% if column in table.sortable %}<th class="sortable"{% if column == "Rank" %} aria-sort="ascending"{% endif %}><button type="button" class="sort">{{ column }}</button></th>{% else %}<th>{{ column }}</th>{% endif %}{% endfor %}</tr></thead>
+  <tbody>
+    {% for row in table.rows %}
+      <tr>{% for cell in row %}{% include "phylobot/_results_cell.html" %}{% endfor %}</tr>
+    {% endfor %}
+  </tbody>
+  {% if table.hidden_rows %}
+    <tbody class="more" hidden>
+      {% for row in table.hidden_rows %}
+        <tr>{% for cell in row %}{% include "phylobot/_results_cell.html" %}{% endfor %}</tr>
+      {% endfor %}
+    </tbody>
+  {% endif %}
+</table>{% if table.scrolls %}</div>
+  <p class="hint results-scroll-note">{{ table.rows|length }} rows: scroll the table for more.</p>{% endif %}
+{% if table.hidden_rows %}
+  <p><button type="button" class="link" onclick="this.parentElement.previousElementSibling.querySelector('tbody.more').hidden = false; this.remove();">Show all {{ table.total }} models</button></p>
+{% endif %}

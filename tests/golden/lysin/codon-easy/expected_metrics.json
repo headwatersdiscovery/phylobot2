@@ -1,0 +1,31 @@
+{
+  "_note": "Approved by the project owner 2026-10-02 from the first run (23/24 nodes; protein identity mean 0.970, min 0.903 IQ-TREE / 0.910 codeml; codon identity mean 0.956, min 0.858 / 0.851).",
+  "MAFFT alignment, true tree · iqtree": {
+    "min_nodes_compared": 23,
+    "min_mean_identity": 0.93,
+    "min_identity": 0.85,
+    "min_mean_codon_identity": 0.92,
+    "min_codon_identity": 0.8
+  },
+  "MAFFT alignment, true tree · codeml_M0": {
+    "min_nodes_compared": 23,
+    "min_mean_identity": 0.93,
+    "min_identity": 0.85,
+    "min_mean_codon_identity": 0.92,
+    "min_codon_identity": 0.8
+  },
+  "true alignment + tree · iqtree": {
+    "min_nodes_compared": 23,
+    "min_mean_identity": 0.93,
+    "min_identity": 0.85,
+    "min_mean_codon_identity": 0.92,
+    "min_codon_identity": 0.8
+  },
+  "true alignment + tree · codeml_M0": {
+    "min_nodes_compared": 23,
+    "min_mean_identity": 0.93,
+    "min_identity": 0.85,
+    "min_mean_codon_identity": 0.92,
+    "min_codon_identity": 0.8
+  }
+}

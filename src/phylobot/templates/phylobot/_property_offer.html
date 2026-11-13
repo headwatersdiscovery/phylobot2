@@ -1,0 +1,117 @@
+{# Everything this ancestor's properties can be made to do, in one list (owner, #}
+{# 2026-10-21): measuring one it lacks and recomputing one it has were two separate #}
+{# affordances in two places, and neither read as clickable. Now every registry #}
+{# property is a row with its action on the right, and both open the same dialog. #}
+{# #}
+{# The point of offering the missing ones is not "run what you skipped": the registry #}
+{# grows, and a job finished before a property existed could otherwise never have it. #}
+{# #}
+{# The dialog's controls belong to the page-level POST form through form=, since the #}
+{# viewer itself is a GET form and forms cannot nest; property_measure.js opens it for #}
+{# the row that was clicked, keeps its changes from reaching the viewer's HTMX trigger, #}
+{# and rescales the estimate. Without the script the rows fall back to a plain #}
+{# checklist inside the viewer's form, which still works. #}
+<div class="property-offer" data-property-offer>
+  <h3>Measure or recompute properties</h3>
+  <p class="hint">PhyloBot's list of properties grows, so a job can be given one that did
+    not exist when it ran — the ancestors do not change, and there is nothing to re-run
+    but the measurement. One that has been measured can be drawn again with a new seed,
+    which is how to see how much of a number is sampling noise.</p>
+  {% for run in property_offer.pending %}
+  <p class="offer-pending">A properties run is {{ run.status }}:
+    <a href="{% url 'job_detail' run.id %}">{{ run.name|default:"see the job" }}</a>.
+    Its numbers appear here when it finishes.</p>
+  {% endfor %}
+  <input type="hidden" name="{{ property_offer.field }}" value="">
+  <ul class="property-checklist">
+    {% for row in property_offer.rows %}
+    <li class="{% if row.done %}done{% endif %}">
+      {# The no-script fallback, hidden by property_measure.js, which shows the button #}
+      {# beside it instead. Both carry the same key, so the run is the same either way. #}
+      <label data-offer-fallback>
+        <input type="checkbox" name="{{ property_offer.field }}" value="{{ row.key }}"
+               {% if row.done %}checked disabled{% elif row.key in property_offer.chosen %}checked{% endif %}>
+        <span class="name">{{ row.label }}{% if row.units %} <span class="units">({{ row.units }})</span>{% endif %}</span>
+        <span class="cost">{% if row.done %}already measured{% else %}Estimated {{ row.cost_text }}{% endif %}</span>
+      </label>
+      <button type="button" class="offer-open" hidden
+              data-offer-key="{{ row.key }}" data-offer-label="{{ row.label }}"
+              data-offer-unit-cost="{{ row.unit_cost|floatformat:'6' }}"
+              data-offer-redraw="{% if row.done %}on{% endif %}"
+              aria-haspopup="dialog">
+        <span class="name">{{ row.label }}{% if row.units %} <span class="units">({{ row.units }})</span>{% endif %}</span>
+        <span class="cost">{% if row.done %}{{ row.measured_draws }} draws{% else %}Estimated {{ row.cost_text }}{% endif %}</span>
+        <span class="offer-action">{% if row.done %}Recompute{% else %}Measure{% endif %} →</span>
+      </button>
+      <p class="note">{{ row.note }}</p>
+    </li>
+    {% endfor %}
+  </ul>
+  {# Only meaningful without the script: with it, the dialog carries these. #}
+  <div class="offer-plain" data-offer-fallback>
+    <label class="offer-draws">Draws per ancestor
+      <input type="number" name="draws" value="{{ property_offer.draws }}"
+             min="{{ property_offer.min_draws }}" max="{{ property_offer.max_draws }}" step="1"
+             form="properties-measure">
+      <span class="hint">More draws narrow the credible interval and cost proportionally.</span></label>
+    <label class="offer-scope">Measure on
+      <select name="{{ property_offer.scope_field }}">{% for key, label, count in property_offer.scopes %}
+        <option value="{{ key }}"{% if key == property_offer.scope %} selected{% endif %}>{{ label }} ({{ count }})</option>{% endfor %}
+      </select></label>
+    {% if property_offer.chosen %}
+    <p class="offer-total">
+      <strong>{{ property_offer.chosen|length }}</strong>
+      propert{{ property_offer.chosen|length|pluralize:"y,ies" }} ×
+      <strong>{{ property_offer.targets }}</strong>
+      ancestor{{ property_offer.targets|pluralize }} at {{ property_offer.draws }} draws:
+      estimated <strong>{{ property_offer.cost }}</strong> of compute.
+    </p>
+    <p class="offer-actions">
+      <input type="hidden" name="combination" value="{{ combination }}" form="properties-measure">
+      <input type="hidden" name="node" value="{{ node }}" form="properties-measure">
+      <input type="hidden" name="gaps" value="{{ version }}" form="properties-measure">
+      <input type="hidden" name="{{ property_offer.scope_field }}" value="{{ property_offer.scope }}" form="properties-measure">
+      {% for key in property_offer.chosen %}<input type="hidden" name="{{ property_offer.field }}" value="{{ key }}" form="properties-measure">{% endfor %}
+      <button type="submit" class="primary" form="properties-measure">Launch</button>
+    </p>
+    {% endif %}
+  </div>
+</div>
+
+{# One dialog for whichever row was clicked, in either mode: its key and its redraw #}
+{# flag, the draws and the scope, and the estimate rescaled in the browser. #}
+<dialog id="measure-dialog" class="measure-dialog" aria-labelledby="measure-title">
+  <h2 id="measure-title"><span data-measure-verb>Measure</span>
+    <span data-measure-label>this property</span></h2>
+  <p class="hint" data-measure-note>Queues a job of its own, with its own record and its
+    own results; the ancestors are not reconstructed again, so nothing about this job
+    changes.</p>
+  <p class="hint" data-redraw-note hidden>Draws from the same posteriors again with a new
+    seed{% if property_redraw %} ({{ property_redraw.seed }}){% endif %}: a property
+    posterior is a sample, so the numbers will move a little. The new numbers replace the
+    ones shown; the run that produced those keeps its own record.</p>
+  <input type="hidden" name="combination" value="{{ combination }}" form="properties-measure">
+  <input type="hidden" name="node" value="{{ node }}" form="properties-measure">
+  <input type="hidden" name="gaps" value="{{ version }}" form="properties-measure">
+  <input type="hidden" name="{{ property_offer.field }}" value="" form="properties-measure"
+         data-measure-key>
+  {# Empty unless the row was already measured, which is what moves the seed on. #}
+  <input type="hidden" name="redraw" value="" form="properties-measure" data-measure-redraw>
+  <label class="measure-draws">Draws per ancestor
+    <input type="number" name="draws" value="{{ property_offer.draws }}"
+           min="{{ property_offer.min_draws }}" max="{{ property_offer.max_draws }}" step="1"
+           form="properties-measure" data-measure-draws>
+    <span class="hint">More draws narrow the credible interval and cost proportionally.</span></label>
+  <label class="measure-scope">Measure on
+    <select name="{{ property_offer.scope_field }}" form="properties-measure" data-measure-scope>
+      {% for key, label, count in property_offer.scopes %}
+      <option value="{{ key }}"{% if key == property_offer.scope %} selected{% endif %}
+              data-targets="{{ count }}">{{ label }} ({{ count }})</option>{% endfor %}
+    </select></label>
+  <p class="measure-total" data-measure-estimate>Estimated <strong data-measure-cost>—</strong>
+    of compute (<span data-measure-targets>{{ property_offer.targets }}</span> ancestors).</p>
+  <p class="actions">
+    <button type="button" data-close-dialog>Cancel</button>
+    <button type="submit" class="primary" form="properties-measure">Launch</button>
+  </p>
+</dialog>

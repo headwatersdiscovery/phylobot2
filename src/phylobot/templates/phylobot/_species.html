@@ -1,0 +1,118 @@
+{% comment %}The reconciliation block's species table (views.species_context, species_web). The
+consent boxes live here, shown only when they apply; they start unticked and keep the
+state the form posted, since this part is redrawn on every change.{% endcomment %}
+<div id="species-table" class="species-table" aria-live="polite">
+{% if species is None %}
+{% elif species.state == "no sequences" %}
+  <p class="hint">Enter or upload sequences above to see their species.</p>
+{% else %}{% with found=species acc=species_accessions total=species_rows|length %}
+
+  {# 1. Where things stand, in one line. #}
+  {% if found.state == "ready" %}
+    <p class="species-summary ok">All {{ total }} sequences have a species ({{ found.species }}
+      species{% if found.polytomies %}; {{ found.polytomies }} unresolved node{{ found.polytomies|pluralize }}
+      in the species tree, resolved when the job runs{% endif %}). Species tree:
+      {% if species_upload %}yours{% else %}the Open Tree of Life{% if found.provenance.synth_id %} ({{ found.provenance.synth_id }}){% endif %}{% endif %}.{% if species_guesses %}
+      {{ species_guesses }} of them {{ species_guesses|pluralize:"is a guess,are guesses" }}: check {{ species_guesses|pluralize:"it,them" }} below.{% endif %}</p>
+  {% elif found.state == "needs consent" %}
+    <p class="species-summary pending">Species found for {{ species_named }} of {{ total }}
+      sequences. {% if species_pending %}Fill in the rest below, then tick{% else %}Tick{% endif %}
+      “Get the species tree” to finish, or use your own species tree (Advanced).</p>
+  {% elif found.state == "failed" %}
+    <p class="species-summary warn">Not possible yet: {{ found.error }}.</p>
+  {% elif not species_pending %}
+    <p class="species-summary warn">Not possible: {{ found.skipped }}.</p>
+  {% else %}
+    <p class="species-summary warn">{{ species_pending }} of {{ total }}
+      sequence{{ total|pluralize }} still need{{ species_pending|pluralize:"s," }} a species (listed
+      first). Type a species or taxid, or leave them: the job then runs without reconciliation.</p>
+  {% endif %}
+
+  {# 2. Asking permission, only for what applies. #}
+  <div class="species-consents">
+    {% if acc.pending %}
+      <label class="consent-line"><input type="checkbox" name="accession_consent"{% if species_consents.accessions %} checked{% endif %}>
+        Look up {{ acc.pending|length }} accession number{{ acc.pending|length|pluralize }} at NCBI,
+        UniProt or Ensembl <span class="hint">· sends only the accession numbers</span></label>
+      {% if acc.error %}<span class="hint warn-text consent-result">{{ acc.error }}</span>{% elif acc.asked %}<span class="hint consent-result">Found {{ acc.found|length }} of {{ acc.pending|length }}.</span>{% endif %}
+    {% endif %}
+    {% if not species_upload %}
+      <label class="consent-line"><input type="checkbox" name="species_consent"{% if species_consents.opentree %} checked{% endif %}>
+        Get the species tree from the Open Tree of Life <span class="hint">· sends only the species names</span></label>
+    {% endif %}
+    {% if acc.pending or not species_upload %}
+    <details class="what-is-sent"><summary>What is sent, and to whom?</summary>
+      <p class="hint">Nothing leaves this machine until you tick a box. <strong>Open Tree of
+        Life</strong> (api.opentreeoflife.org) receives the species names and taxids in this
+        table, and returns the species tree. <strong>NCBI</strong>
+        (eutils.ncbi.nlm.nih.gov), <strong>UniProt</strong> (rest.uniprot.org) and
+        <strong>Ensembl</strong> (rest.ensembl.org) receive the accession numbers in your
+        sequence names, and return each one's species. Sequences are never sent. Each
+        service's terms apply. Species codes in UniProt names (IME2_YEAST), gene ids of model
+        organisms and names like Homo_sapiens are read here, without asking anyone.</p>
+    </details>
+    {% endif %}
+  </div>
+
+  {# 3. One click for many rows. #}
+  {% for offer in species_offers %}
+    <p class="species-offer-line">
+      <button type="button" class="species-offer" data-query="{{ offer.query }}"
+              data-taxid="{{ offer.taxid|default_if_none:'' }}" data-rows="{{ offer.rows|join:'&#10;' }}">Apply</button>
+      <em>{{ offer.query|default:offer.taxid }}</em> (as for {{ offer.source }}) to
+      {{ offer.rows|length }} other sequence{{ offer.rows|length|pluralize }} named {{ offer.prefix }}…</p>
+  {% endfor %}
+
+  {# 4. The table: open while anything needs the user. #}
+  <details class="species-rows"{% if species_pending or species_guesses or found.state != "ready" %} open{% endif %}>
+    <summary>{% if found.state == "ready" and not species_guesses %}Show the {{ total }} sequences and their species{% else %}Sequences and their species{% endif %}</summary>
+    <div class="species-scroll">
+      <table class="species">
+        <thead><tr><th scope="col">Sequence</th><th scope="col">Species</th>
+          <th scope="col">Taxid</th><th scope="col">From</th><th scope="col">Result</th></tr></thead>
+        <tbody>
+        {% for item in species_rows %}{% with row=item.row %}
+          <tr class="{% if item.needs and found.state != 'needs consent' %}pending{% elif item.needs %}empty{% endif %}{% if item.guess %} guess{% endif %}">
+            <th scope="row" class="seq">{{ row.sequence }}<input type="hidden" name="species_for" value="{{ row.sequence }}"><input type="hidden" name="species_shown" value="{{ item.shown }}"></th>
+            <td><input type="text" name="species_query" value="{{ row.query }}" maxlength="200"
+                       placeholder="species, or e.g. human" aria-label="Species of {{ row.sequence }}" spellcheck="false"></td>
+            <td><input type="text" name="species_taxid" value="{{ row.taxid|default_if_none:'' }}" maxlength="10"
+                       inputmode="numeric" class="taxid" aria-label="NCBI taxid of {{ row.sequence }}"></td>
+            <td class="from">{{ item.source }}</td>
+            <td class="note">{% if item.choices %}<select class="species-choice" aria-label="Choose the species of {{ row.sequence }}">
+                <option value="">Choose a species…</option>
+                {% for name, genomes in item.choices %}<option value="{{ name }}">{{ name }} ({{ genomes }} genome{{ genomes|pluralize }})</option>{% endfor %}
+              </select>{% elif found.state == "needs consent" %}{% if row.query or row.taxid %}<span class="hint">found</span>{% endif %}{% elif row.status == "ok" %}{{ row.species }}{% else %}<span class="status">{{ row.status }}</span>{% if item.parent %}
+                <button type="button" class="link species-offer" data-rows="{{ row.sequence }}" data-query="{{ item.parent.0 }}" data-taxid="">Use the {{ item.parent.1|default:"taxon" }} it belongs to, {{ item.parent.0 }}</button>{% endif %}{% endif %}
+              {% if row.note %}<span class="hint">{{ row.note }}</span>{% endif %}</td>
+          </tr>
+        {% endwith %}{% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <p class="hint">Type a species name (a common name works: “human”, “zebrafish”), an NCBI
+      taxid, or <code>ott</code> and an Open Tree id. The table checks again when you leave the cell.</p>
+  </details>
+
+  {# 5. The species tree, collapsed. #}
+  {% if species_drawing %}{% with d=species_drawing %}
+  <details class="species-tree">
+    <summary>Species tree ({{ d.leaves|length }} species{% if found.polytomies %}, {{ found.polytomies }} unresolved node{{ found.polytomies|pluralize }}{% endif %})</summary>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {{ d.width }} {{ d.height }}"
+         font-family="system-ui, -apple-system, 'Segoe UI', sans-serif" role="img"
+         aria-label="Species tree, {{ d.leaves|length }} species">
+      <rect width="{{ d.width }}" height="{{ d.height }}" fill="#ffffff"/>
+      {% for c in d.connectors %}<line x1="{{ c.x }}" x2="{{ c.x }}" y1="{{ c.y1 }}" y2="{{ c.y2 }}" stroke="#1d2330" stroke-width="1.6"/>
+      {% endfor %}{% for b in d.branches %}<line x1="{{ b.x1 }}" x2="{{ b.x2 }}" y1="{{ b.y }}" y2="{{ b.y }}" stroke="#1d2330" stroke-width="1.6"/>
+      {% endfor %}{% for n in d.nodes %}{% if n.name %}<text x="{{ n.x|add:-6 }}" y="{{ n.y|add:-6 }}" text-anchor="end" font-size="11" fill="#5d6675">{{ n.name }}</text>{% endif %}
+      {% endfor %}{% for leaf in d.leaves %}<text x="{{ leaf.x|add:6 }}" y="{{ leaf.y }}" dominant-baseline="middle" font-size="13" font-style="italic" fill="#1d2330">{{ leaf.name }}</text>
+      {% endfor %}
+    </svg>
+    <p class="hint">{% if found.polytomies %}A node with more than two branches is unresolved:
+      GeneRax needs every node resolved, so the job resolves them as chosen under Advanced. {% endif %}{% if not species_upload %}From
+      the Open Tree of Life{% if found.provenance.synth_id %} synthesis {{ found.provenance.synth_id }}{% endif %}
+      (CC0). Cite: {{ species_citations.2 }}; {{ species_citations.3 }}{% endif %}</p>
+  </details>
+  {% endwith %}{% endif %}
+{% endwith %}{% endif %}
+</div>

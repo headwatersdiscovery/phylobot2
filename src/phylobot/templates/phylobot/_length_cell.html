@@ -1,0 +1,4 @@
+{# A length, flagged when it is outside the extant range (library_glyphs.ExtantRange.check): #}
+{# red when longer, blue when shorter, with the reason on hover or focus (CSS only). #}
+{% if warning %}<span class="length-flag {% if warning.beyond > 0 %}long{% else %}short{% endif %}" tabindex="0"
+  aria-describedby="{{ tip_id }}">{{ length }}&nbsp;(!)<span class="flag-tip" role="tooltip" id="{{ tip_id }}">{{ warning.text }}</span></span>{% else %}{{ length }}{% endif %}

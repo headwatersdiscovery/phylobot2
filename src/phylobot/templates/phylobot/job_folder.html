@@ -1,0 +1,9 @@
+{% extends "phylobot/base.html" %}
+{% block title %}{{ folder }} · {{ job.name|default:"Job" }} · PhyloBot{% endblock %}
+{% block content %}
+<p class="hint"><a href="{% url 'job_detail' job.id %}">← {{ job.name|default:"Job" }}</a></p>
+<h1>Files</h1>
+<p class="breadcrumbs">{% for name, path in crumbs %}{% if not forloop.last %}{% if path %}<a href="{% url 'job_folder' job.id path %}">{{ name }}</a>{% else %}<a href="{% url 'job_detail' job.id %}">{{ name }}</a>{% endif %} / {% else %}<strong>{{ name }}</strong>{% endif %}{% endfor %}
+  <span class="hint">({{ listing.total_files|floatformat:"0g" }} file{{ listing.total_files|pluralize }}, {{ listing.total_size|filesizeformat }})</span></p>
+{% include "phylobot/_file_tables.html" %}
+{% endblock %}

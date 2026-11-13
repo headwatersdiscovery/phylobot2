@@ -1,0 +1,11 @@
+{
+  "attempts": 1,
+  "origin": 0.2,
+  "genes": 40,
+  "species": 20,
+  "species_without_genes": 0,
+  "duplications": 1,
+  "duplications_visible": 1,
+  "losses": 0,
+  "speciations_visible": 38
+}

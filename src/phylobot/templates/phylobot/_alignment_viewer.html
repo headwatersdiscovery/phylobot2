@@ -1,0 +1,85 @@
+{# The alignment viewer: one GET form (as the ancestor and tree viewers); alignment.js #}
+{# draws the grid and tracks in a canvas from the JSON below (alignment_views). #}
+{% if ready %}
+{% if htmx %}{% include "phylobot/_alignment_viewer_actions.html" with oob=True %}{% endif %}
+<form id="alignment-viewer" class="viewer" method="get" action="{% url 'alignment_viewer' job.id %}"
+      hx-get="{% url 'alignment_viewer' job.id %}" hx-trigger="change, submit" hx-target="this"
+      hx-swap="outerHTML" hx-push-url="true">
+  {% if sources|length < 2 %}<input type="hidden" name="aligner" value="{{ source.key }}">{% endif %}
+  {% if sources|length > 1 or source.codon and source.amino or tree_sources %}
+  <section class="viewer-fold">
+    <h2><button type="button" class="fold-toggle" aria-expanded="true" aria-controls="select-alignment-body">Select Alignment</button></h2>
+    <div class="fold-body" id="select-alignment-body">
+  <div class="viewer-controls">
+    {% if has_ancestors %}<label class="check aln-show-ancestors"><input type="checkbox" name="ancestors" value="on"{% if show_ancestors %} checked{% endif %}> Show ancestors</label>{% endif %}
+    {% if sources|length > 1 %}<label>Alignment
+      <select name="aligner">{% for key, label in sources %}
+        <option value="{{ key }}"{% if key == source.key %} selected{% endif %}>{{ label }}</option>{% endfor %}
+      </select></label>{% endif %}
+    {% if source.codon and source.amino %}<label>Show
+      <select name="states">
+        <option value="amino"{% if states == "amino" %} selected{% endif %}>Amino acids</option>
+        <option value="codons"{% if states == "codons" %} selected{% endif %}>Codons</option>
+      </select></label>{% endif %}
+    {% if tree_sources %}<label>Row order
+      <select name="order">
+        <option value="alignment"{% if order == "alignment" %} selected{% endif %}>As in the alignment</option>
+        <option value="tree"{% if order == "tree" %} selected{% endif %}>By the tree</option>
+      </select></label>
+    {% comment %}Tree and model choose the ancestors shown, and the tree that orders the rows:
+    offered when either is in use.{% endcomment %}
+    {% if show_ancestors or order == "tree" or not has_ancestors %}<label>Tree
+      <select name="tree_source">{% for key, label in tree_sources %}
+        <option value="{{ key }}"{% if key == tree_source %} selected{% endif %}>{{ label }}</option>{% endfor %}
+      </select></label>
+    <label>Model
+      <select name="combination">{% for key, label in models %}
+        <option value="{{ key }}"{% if key == combination %} selected{% endif %}>{{ label }}</option>{% endfor %}
+      </select></label>{% else %}<input type="hidden" name="tree_source" value="{{ tree_source }}"><input type="hidden" name="combination" value="{{ combination }}">{% endif %}
+    {% if show_ancestors %}<label>Gaps in ancestors
+      <select name="gaps">{% for key, label in versions %}
+        <option value="{{ key }}"{% if key == version %} selected{% endif %}>{{ label }}</option>{% endfor %}
+      </select></label>{% endif %}{% endif %}
+  </div>
+    </div>
+  </section>{% endif %}
+  {# Display: one row of controls over the alignment they change (the tracks chosen, on a #}
+  {# second), in a section that folds away to give the alignment the room. #}
+  <section class="viewer-fold">
+    <h2><button type="button" class="fold-toggle" aria-expanded="true" aria-controls="display-options-body">Display Options</button></h2>
+    <div class="fold-body" id="display-options-body">
+  <div class="aln-toolbar" role="group" aria-label="Display options">
+  {% include "phylobot/_aln_display_controls.html" %}
+  {% include "phylobot/_aln_tracks_editor.html" %}
+  </div>
+    </div>
+  </section>
+
+  <p class="aln-summary">{{ sequences }} sequences × {{ columns }} columns{% if states == "codons" %} (codons){% endif %}{% if show_ancestors %},
+    plus ancestors ({{ version }}){% endif %}{% if tree_url %} · <a href="{{ tree_url }}">tree viewer</a>{% endif %}
+    · Download: <a href="{{ export_url }}&amp;export=fasta">FASTA</a> ·
+    <a href="{{ export_url }}&amp;export=clustal">Clustal</a> ·
+    <a href="{{ export_url }}&amp;export=tracks">every track (TSV)</a> ·
+    <a href="#" class="aln-png" data-stem="{{ file_stem }}">this view (PNG)</a>{% if indel_chart %}
+    · <a href="#indels">indel lengths</a>{% endif %}
+    <button type="button" class="help-dot" popovertarget="help-alignment" aria-label="About the alignment viewer">?</button><span class="help-popover" popover id="help-alignment"><strong>Using the viewer</strong><span><span>Hover a residue or a track for details{% if data.ancestorViewer %}; click a column to open it in the ancestor viewer{% if show_ancestors %} (an ancestor's row opens that node){% endif %}{% endif %}.</span><span>The strip above the alignment is the whole of it: drag its box, or click anywhere on it, to move.</span><span>Tracks are computed from the extant sequences.</span></span></span></p>
+  {% if codon_ancestors_missing %}<p class="hint">This reconstruction has no coding ancestors
+    (amino-acid models): switch to amino acids to see its ancestors as rows.</p>{% endif %}
+  {% if legend %}<p class="legend-tiles aln-legend">{% for label, colour in legend %}<span{% if colour != "transparent" %} style="background: {{ colour }}"{% endif %}>{{ label }}</span>{% endfor %}</p>{% endif %}
+  {# The whole alignment in a strip (alignment.js draws it and shows it only when the view #}
+  {# does not hold everything); the box is the part in view, dragged to move around. #}
+  <div class="aln-overview" hidden title="The whole alignment. The box is the part in view: drag it, or click anywhere, to move.">
+    <canvas></canvas><div class="aln-overview-window"></div>
+  </div>
+  <div class="aln-wrap" data-viewer>
+    <canvas class="aln-canvas"></canvas>
+    <div class="aln-scroller"><div class="aln-sizer"></div></div>
+    <div class="aln-tip" hidden></div>
+  </div>
+  {{ data|json_script:"aln-data" }}
+  {% include "phylobot/_indel_chart.html" %}
+</form>
+{% else %}
+<div id="alignment-viewer"><p>No alignment to show: {% if job.status == "succeeded" %}this job
+  published no alignment{% else %}the job has not finished successfully{% endif %}.</p></div>
+{% endif %}

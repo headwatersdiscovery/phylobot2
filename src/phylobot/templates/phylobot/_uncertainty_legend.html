@@ -1,0 +1,4 @@
+<ul class="viz-legend uncertainty-legend">{% for label, colour in legend %}
+  <li><svg width="13" height="13" aria-hidden="true"><rect width="13" height="13" rx="3" fill="{{ colour }}"/></svg>{{ label }}</li>{% endfor %}
+  <li><svg width="26" height="13" aria-hidden="true">{% include "phylobot/_uncertainty_patterns.html" with prefix="lg" %}<rect width="12" height="13" rx="3" fill="#5d6675"/><rect x="14" width="12" height="13" rx="3" fill="url(#lg-hatch-1)"/></svg>solid: which residue · hatched: residue or gap</li>
+</ul>

@@ -1,0 +1,13 @@
+{% load static %}
+<dialog id="confirm-delete" aria-labelledby="confirm-title">
+  <form method="dialog">
+    <h2 id="confirm-title"></h2>
+    <p id="confirm-body"></p>
+    <p id="confirm-running" class="warning" hidden></p>
+    <p class="actions">
+      <button value="cancel" autofocus>Cancel</button>
+      <button value="confirm" class="danger" id="confirm-action">Delete</button>
+    </p>
+  </form>
+</dialog>
+<script src="{% static 'phylobot/delete.js' %}"></script>

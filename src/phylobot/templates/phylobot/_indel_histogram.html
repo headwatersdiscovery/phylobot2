@@ -1,0 +1,19 @@
+{# One indel-length histogram (indel_views.chart): a thumbnail or the viewer's chart. #}
+{# Colours are SVG attributes, so the viewer's downloads (plots.js) look as shown; dark.css remaps them. #}
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {{ c.width }} {{ c.height }}"
+     font-family="system-ui, -apple-system, 'Segoe UI', sans-serif" role="img"
+     aria-label="Histogram of indel lengths for {{ c.measured.label }}: {{ c.measured.lengths.events }} indels, mean {{ c.measured.lengths.mean|floatformat:1 }}">
+  <rect class="background" width="{{ c.width }}" height="{{ c.height }}" fill="#ffffff"/>
+  {% for y, text in c.y_ticks %}<line x1="{{ c.left }}" x2="{{ c.right }}" y1="{{ y }}" y2="{{ y }}" stroke="#d8dde5" stroke-width="1"/>
+  <text x="{{ c.left|add:'-4' }}" y="{{ y }}" text-anchor="end" dominant-baseline="middle" font-size="{{ small|yesno:'10,12' }}" fill="#5d6675">{{ text }}</text>{% endfor %}
+  <line x1="{{ c.left }}" x2="{{ c.right }}" y1="{{ c.bottom }}" y2="{{ c.bottom }}" stroke="#b3bac5" stroke-width="1"/>
+  {% for b in c.bars %}<rect x="{{ b.x }}" y="{{ b.y }}" width="{{ b.width }}" height="{{ b.height }}" rx="1" fill="{% if b.longer %}#b3bac5{% else %}#2a78d6{% endif %}" data-tip="{{ b.title }}"/>{% endfor %}
+  {% for x, text in c.x_ticks %}<text x="{{ x }}" y="{{ c.bottom|add:'13' }}" text-anchor="middle" font-size="{{ small|yesno:'10,12' }}" fill="#5d6675">{{ text }}</text>{% endfor %}
+  {% if not small %}
+  <text x="{{ c.center }}" y="{{ c.height|add:'-8' }}" text-anchor="middle" font-size="13" fill="#1d2330">Indel length (residues)</text>
+  {% if c.expected %}<polyline points="{{ c.expected }}" fill="none" stroke="#eb6834" stroke-width="2" stroke-dasharray="5 4"/>
+  <line x1="{{ c.right|add:'-204' }}" x2="{{ c.right|add:'-176' }}" y1="14" y2="14" stroke="#eb6834" stroke-width="2" stroke-dasharray="5 4"/>
+  <text x="{{ c.right|add:'-170' }}" y="14" dominant-baseline="middle" font-size="12" fill="#5d6675">Geometric of the same mean</text>{% endif %}
+  <text x="{{ c.left }}" y="14" dominant-baseline="middle" font-size="14" font-weight="bold" fill="#1d2330">{{ c.measured.label }}</text>
+  {% endif %}
+</svg>

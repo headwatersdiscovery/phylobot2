@@ -1,0 +1,23 @@
+{% extends "phylobot/base.html" %}
+{% block title %}Tree · {{ job.name|default:"Job" }} · PhyloBot{% endblock %}
+{% block content %}
+{% load static %}<script src="{% static 'phylobot/ancestors.js' %}" defer></script><script src="{% static 'phylobot/plots.js' %}" defer></script><script src="{% static 'phylobot/tree.js' %}" defer></script><script src="{% static 'phylobot/path_pick.js' %}" defer></script><script src="{% static 'phylobot/fold.js' %}" defer></script><script src="{% static 'phylobot/tree_overview.js' %}" defer></script>
+<p class="hint"><a href="{% url 'job_detail' job.id %}">← {{ job.name|default:"Job" }}</a></p>
+<h1>Tree Viewer</h1>
+{% include "phylobot/_tree_viewer.html" %}
+{# The branch-site panel's button (inside the viewer's GET form) submits this form. #}
+<form id="branch-site-form" method="post" action="{% url 'branch_site_submit' job.id %}">{% csrf_token %}</form>
+{# Naming an ancestor from its popover (tree.js fills the fields, from the popover). #}
+<form id="tree-ancestor-name" method="post" action="{% url 'ancestor_name' job.id %}">{% csrf_token %}
+  <input type="hidden" name="node"><input type="hidden" name="combination"><input type="hidden" name="aligner">
+  <input type="hidden" name="ancestor_name"><input type="hidden" name="remove"><input type="hidden" name="return_to">
+</form>
+{# Collapsing, restyling or expanding a clade from its popover (tree.js fills the fields). #}
+<form id="tree-clade-collapse" method="post" action="{% url 'collapse_clade' job.id %}">{% csrf_token %}
+  <input type="hidden" name="node"><input type="hidden" name="combination"><input type="hidden" name="aligner">
+  <input type="hidden" name="action"><input type="hidden" name="label"><input type="hidden" name="fill">
+  <input type="hidden" name="border_colour"><input type="hidden" name="border_width"><input type="hidden" name="return_to">
+</form>
+{# Likewise "Add to library" (_library_add.html): one form per button. #}
+<form id="library-add-node" method="post" action="{% url 'library_add' job.id %}">{% csrf_token %}</form>
+{% endblock %}

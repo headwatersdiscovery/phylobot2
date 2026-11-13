@@ -1,0 +1,92 @@
+{% extends "phylobot/base.html" %}
+{% block title %}My Libraries · PhyloBot{% endblock %}
+{% block content %}
+<h1>My Libraries</h1>
+
+{% if cards or filtered %}
+<form class="library-filters" method="get">
+  <label>Show
+    <select name="state" onchange="this.form.submit()">
+      <option value="">any state</option>
+      {% for key, label in state_choices %}
+      <option value="{{ key }}"{% if state == key %} selected{% endif %}>{{ label }}</option>
+      {% endfor %}
+    </select>
+  </label>
+  <label>Tagged
+    <input name="tag" value="{{ tag }}" placeholder="#tag" list="tag-suggestions" autocomplete="off">
+  </label>
+  <datalist id="tag-suggestions">{% for name in all_tags %}<option value="{{ name }}">{% endfor %}</datalist>
+  {% if job_id %}<input type="hidden" name="job" value="{{ job_id }}">{% endif %}
+  <button type="submit">Filter</button>
+  {% if filtered %}<a class="clear" href="{% url 'my_libraries' %}">Clear</a>{% endif %}
+  <span class="hint">{{ total }} librar{{ total|pluralize:"y,ies" }}{% if tag %} tagged #{{ tag }}{% endif %}</span>
+</form>
+{% endif %}
+
+{% if cards %}
+<ul class="library-cards">
+  {% for card in cards %}
+  <li class="library-card" data-state="{{ card.state }}">
+    <div class="card-head">
+      <h2><a href="{% url 'library_page' card.library.job_id card.library.id %}">{{ card.library.name }}</a></h2>
+      <code class="code">{{ card.library.code }}</code>
+      <span class="badge {{ card.state }}">{{ card.state_label }}</span>
+    </div>
+    <p class="counts">
+      {{ card.targets }} ancestor{{ card.targets|pluralize }}
+      {% if card.members %}· {{ card.members }} members last exported{% endif %}
+      · changed {{ card.library.updated_at|date:"Y-m-d H:i" }}
+    </p>
+    {% if card.nodes %}
+    <p class="nodes">{% for node in card.nodes %}<span class="chip muted">{{ node }}</span>{% endfor %}
+      {% if card.more_nodes %}<span class="hint">+{{ card.more_nodes }} more</span>{% endif %}</p>
+    {% endif %}
+
+    {# The jobs this library draws on: one today, a list when collections arrive. #}
+    <ul class="card-jobs">
+      {% for entry in card.jobs %}
+      <li>
+        <a href="{% url 'job_detail' entry.job.id %}">{{ entry.job.name|default:"(unnamed job)" }}</a>
+        <span class="inventory">{{ entry.inventory }}</span>
+        {% include "phylobot/_tag_chips.html" with tags=entry.job.tags.all %}
+      </li>
+      {% endfor %}
+    </ul>
+
+    <p class="card-actions">
+      <a href="{% url 'library_page' card.library.job_id card.library.id %}">Open</a>
+    </p>
+  </li>
+  {% endfor %}
+</ul>
+{% else %}
+  {% if filtered %}
+  <p>No libraries match. <a href="{% url 'my_libraries' %}">Show them all</a></p>
+  {% else %}
+  <div class="empty">
+    <p>No libraries yet. A library turns ancestors into a shortlist of candidate sequences
+      to order: each ML ancestor, its AltAll control, and the variants that cover the
+      uncertainty.</p>
+    <p>Two ways to start:</p>
+    <ul>
+      <li>Open a finished job's <strong>tree viewer</strong> or <strong>ancestor viewer</strong>
+        and choose “Add to library”. <a href="{% url 'my_jobs' %}">My jobs</a></li>
+      <li>Start from a single sequence: <a href="{% url 'homologs' %}">find homologs</a>, review
+        them, and run a job on the result.</li>
+    </ul>
+  </div>
+  {% endif %}
+{% endif %}
+
+{% if deleted %}
+<details class="deleted-libraries">
+  <summary><h2>Deleted Libraries</h2> <span class="hint">({{ deleted|length }})</span></summary>
+  <p class="hint">The records stay, as deleted jobs' do; their ancestors are gone.</p>
+  <ul class="library-list">{% for lib in deleted %}
+    <li>{{ lib.name }} <span class="hint"><code>{{ lib.code }}</code> ·
+      {{ lib.job.name|default:"(unnamed job)" }} · deleted {{ lib.deleted_at|date:"Y-m-d H:i" }}</span></li>
+  {% endfor %}</ul>
+</details>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,43 @@
+{# The map of the job's reconstructions (uncertainty_overview.reconstruction_map): one dot #}
+{# per reconstruction, placed so that the distance between two dots is how far apart their #}
+{# posteriors are; a pale disc is a cluster's own posterior spread. Its controls belong to #}
+{# the page's GET form (#uncertainty), so a view is a URL; hiding levels lays the map out #}
+{# again on what is left. #}
+{% with m=recon_map %}
+<div class="map-controls">
+  <input type="hidden" name="map_set" value="1" form="uncertainty">
+  <label>Colour by
+    <select name="colour_by" form="uncertainty" data-submit-to="map">{% for key, label in m.colour_choices %}
+      <option value="{{ key }}"{% if key == m.colour_by %} selected{% endif %}>{{ label }}</option>{% endfor %}
+    </select></label>
+  {% for c in m.choices %}<div class="map-levels" role="group" aria-label="Show these {{ c.label|lower }} levels">
+    <span class="map-levels-name">{{ c.label }}</span>
+    {% for value, label, ticked in c.levels %}<label class="check"><input type="checkbox" name="show" value="{{ value }}" form="uncertainty" data-submit-to="map"{% if ticked %} checked{% endif %}> {{ label }}</label>{% endfor %}
+  </div>{% endfor %}
+  {% if m.hidden %}<p class="hint map-hidden">{{ m.hidden }} reconstruction{{ m.hidden|pluralize }} hidden, and the map laid out
+    again on the rest · <a href="{{ map_reset }}#map">show all</a></p>{% endif %}
+</div>
+{% if m.note %}<p class="hint">{{ m.note }}</p>{% else %}
+<div class="uncertainty-map">
+  <figure class="plot" data-tips data-filename="uncertainty.{{ mode }}.map"><div class="pp-tip" hidden></div>
+    <div class="plot-tools">Download <button type="button" class="link" data-plot-download="png">PNG</button> · <button type="button" class="link" data-plot-download="svg">SVG</button></div>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {{ m.size }} {{ m.size }}" width="{{ m.size }}" height="{{ m.size }}" role="img"
+         font-family="system-ui, -apple-system, 'Segoe UI', sans-serif"
+         aria-label="A map of the job's reconstructions: nearby dots agree">
+      <rect x="0.5" y="0.5" width="{{ m.size|add:-1 }}" height="{{ m.size|add:-1 }}" rx="6" fill="none" stroke="#d8dde5"/>
+      {% for x, y, r in m.halos %}{% if r > 0.5 %}<circle cx="{{ x }}" cy="{{ y }}" r="{{ r }}" fill="#2a78d6" fill-opacity="0.1" stroke="#2a78d6" stroke-opacity="0.35" stroke-dasharray="3 3"/>{% endif %}{% endfor %}
+      {% for p in m.points %}<circle cx="{{ p.x }}" cy="{{ p.y }}" r="5" fill="{{ p.fill }}" stroke="#ffffff" stroke-width="1.5" data-tip="{{ p.tip }}"/>{% endfor %}
+      {% for l in m.labels %}<text x="{{ l.x }}" y="{{ l.y }}" text-anchor="middle" font-size="12.5" font-weight="600" fill="#1d2330" stroke="#ffffff" stroke-width="3" paint-order="stroke">{{ l.text }}</text>{% endfor %}
+    </svg>
+  </figure>
+  <div class="uncertainty-map-key">
+    <p class="map-legend">{% for fill, label, count in m.legend %}<span><svg width="12" height="12" aria-hidden="true"><circle cx="6" cy="6" r="5" fill="{{ fill }}"/></svg> {{ label }} <span class="hint">({{ count }})</span></span>{% endfor %}</p>
+    <p><strong>Each dot is one reconstruction; dots close together agree.</strong> <button type="button" class="help-dot" popovertarget="help-map" aria-label="About reading the map">?</button><span class="help-popover" popover id="help-map"><strong>Reading the map</strong><span><span>Each dot is one reconstruction of all {{ summary.nodes }} ancestors (one combination and gap version), coloured by its {{ m.by }}. The farther apart two dots, the more positions their ancestors differ at. Dots fanned out on a tiny ring sit at the same place: they barely differ.</span><span>Untick a level to leave it out and spread the rest over the map: hiding the outlying cluster shows what separates the others.</span><span>The two directions show {{ m.shown }}% of the differences between the reconstructions shown{% if m.largest %}; the farthest pair is {{ m.largest }}{% endif %}. Hover a dot for its name.</span></span></span></p>
+    {% if mode == "posterior" %}<p><span class="map-disc" aria-hidden="true"></span><strong>A pale disc</strong> is
+      the posterior's own spread ({{ m.noise }} positions). Clusters farther apart than their
+      discs are wide: the choices matter more than the posterior.</p>
+    {% else %}<p>Most probable sequences only, so no posterior spread is drawn.</p>{% endif %}
+  </div>
+</div>
+{% endif %}
+{% endwith %}

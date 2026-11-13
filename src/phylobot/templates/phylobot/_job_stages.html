@@ -1,0 +1,36 @@
+{% load phylobot_extras %}{# The pipeline's stages and their dependencies (phylobot.stages.graph). #}
+<figure class="stage-graph" data-scheme="simple">
+  <div class="stage-graph-head">
+    <figcaption class="hint">Each box is a pipeline step: time taken and finish time
+      ({% now "T" %}). Hover a box for its tasks.</figcaption>
+    <label class="stage-scheme">Colours
+      <select data-stage-scheme>
+        <option value="simple">Simple</option>
+        <option value="vivid">Vivid</option>
+        <option value="mono">Greyscale, bold</option>
+        <option value="safe">Colour-blind safe</option>
+      </select></label>
+  </div>
+  <svg viewBox="0 0 {{ g.width }} {{ g.height }}" width="{{ g.width }}" height="{{ g.height }}"
+       role="img" aria-label="Pipeline steps and their dependencies">
+    <defs><marker id="stage-arrow" viewBox="0 0 6 6" refX="5.5" refY="3" markerWidth="5" markerHeight="5" orient="auto">
+      <path d="M0,0.6 L5.5,3 L0,5.4 Z" fill="context-stroke"/></marker></defs>
+    <g class="links">{% for link in g.links %}
+      <path d="{{ link.path }}" class="{{ link.state }}" marker-end="url(#stage-arrow)"/>{% endfor %}
+    </g>
+    {% for s in g.stages %}
+    <g class="stage {{ s.status|slugify }}" data-group="{{ s.group }}" transform="translate({{ s.x }},{{ s.y }})">
+      <title>{{ s.tooltip }}{% if s.started %}
+Started {{ s.started|date:"Y-m-d H:i:s T" }}{% endif %}{% if s.completed %}
+Finished {{ s.completed|date:"Y-m-d H:i:s T" }}{% endif %}{% if s.elapsed is not None %}
+{% if s.status == "running" %}Running for{% else %}Took{% endif %} {{ s.elapsed|duration }}{% endif %}</title>
+      <rect class="box" width="{{ g.node_w }}" height="{{ g.node_h }}" rx="6"/>
+      <text class="name" x="10" y="17">{{ s.label }}</text>
+      <circle class="dot" cx="13.5" cy="30" r="3.25"/>
+      <text class="state" x="21" y="33.5">{{ s.status }}{% if s.count %} · {{ s.count }}{% endif %}</text>
+      <text class="time" x="10" y="44.5">{{ s.elapsed|step_duration }}</text>
+      {% if s.completed %}<text class="time" x="{{ g.node_w|add:-9 }}" y="44.5" text-anchor="end">{{ s.completed|time:"H:i:s" }}</text>{% endif %}
+    </g>
+    {% endfor %}
+  </svg>
+</figure>

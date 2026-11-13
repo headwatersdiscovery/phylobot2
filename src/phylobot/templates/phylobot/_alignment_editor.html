@@ -1,0 +1,83 @@
+{# The alignment editor (alignment_editor_views): the viewer's canvas and controls, plus #}
+{# an edit bar. The edits are the form's hidden cut/drop/sort fields (stored positions); #}
+{# alignment_editor.js fills the one-off fields from the canvas's selection and submits. #}
+<div id="alignment-editor" class="aln-editor">
+  {% if htmx %}{% for message in messages %}<p class="message {{ message.tags }}">{{ message }}</p>{% endfor %}{% endif %}
+  <form class="aln-save" method="post" action="{% url 'alignment_save' record.id %}">
+    {% csrf_token %}
+    {% for key, value in state.items %}<input type="hidden" name="{{ key }}" value="{{ value }}">{% endfor %}
+    <input type="hidden" name="version" value="{{ record.version }}">
+    <input type="hidden" name="mode" value="copy">
+    {% if not record.from_job %}<button type="button" class="primary" data-overwrite data-name="{{ record.name }}"
+        {% if not changed %}disabled title="No edits yet"{% endif %}>Save (overwrite)</button>
+    <span class="aln-save-or">or</span>{% endif %}
+    <label for="aln-save-name">copy as</label>
+    <input id="aln-save-name" name="name" value="{{ default_name }}" maxlength="100" required autocomplete="off">
+    <button type="submit"{% if record.from_job %} class="primary"{% endif %}>Save a copy</button>
+    {% if empty_rows %}<span class="warning">{{ empty_rows }} sequence{{ empty_rows|pluralize:" is,s are" }} all gaps:
+      a job would refuse {{ empty_rows|pluralize:"it,them" }}.</span>{% endif %}
+    <span class="hint">{% if record.from_job %}The job depends on its alignment, so your edits go
+      into a copy.{% elif changed %}Overwrite replaces “{{ record.name }}”; a copy leaves it as it
+      is.{% else %}No edits yet.{% endif %}</span>
+  </form>
+  <form id="alignment-viewer" class="viewer" method="get" action="{% url 'alignment_editor' record.id %}"
+        hx-get="{% url 'alignment_editor' record.id %}" hx-trigger="change, submit"
+        hx-target="#alignment-editor" hx-swap="outerHTML" hx-push-url="true"
+        data-editor="{{ record.id }}" data-version="{{ record.version }}">
+    <input type="hidden" name="cut" value="{{ state.cut|default:'' }}">
+    <input type="hidden" name="drop" value="{{ state.drop|default:'' }}">
+    <input type="hidden" name="sort" value="{{ state.sort|default:'' }}">
+    <input type="hidden" name="cut_columns" value="">
+    <input type="hidden" name="keep_columns" value="">
+    <input type="hidden" name="drop_rows" value="">
+    <input type="hidden" name="keep_rows" value="">
+    <input type="hidden" name="sort_toggle" value="">
+
+    <div class="aln-edit-bar" role="toolbar" aria-label="Edit the alignment">
+      <button type="button" data-undo disabled title="Undo the last edit (Ctrl+Z / ⌘Z)">Undo</button>
+      <span class="aln-selection" aria-live="polite" data-selection>Drag across columns to select
+        them; click or drag over names to select sequences.</span>
+      <span class="aln-selection-actions" data-selection-actions hidden>
+        <button type="button" class="danger-outline" data-cut-columns hidden>Delete columns</button>
+        <button type="button" data-keep-columns hidden>Keep only these columns</button>
+        <button type="button" class="danger-outline" data-drop-rows hidden>Remove sequences</button>
+        <button type="button" data-keep-rows hidden>Keep only these sequences</button>
+        <button type="button" class="link" data-clear>Clear</button>
+      </span>
+      <span class="aln-edit-more">
+        {% if edits.sort %}<button name="sort_reset" value="1" data-edit class="link" title="Sorted by name (click the Name header to reverse)">Back to file order</button>{% endif %}
+        {% if empty_rows %}<button name="drop_empty" value="1" data-edit title="Sequences with no residue in the columns shown">Remove {{ empty_rows }} empty sequence{{ empty_rows|pluralize }}</button>{% endif %}
+        {% if gap_columns %}<button name="cut_gaps" value="1" data-edit title="Columns where every sequence shown has a gap">Remove {{ gap_columns }} all-gap column{{ gap_columns|pluralize }}</button>{% endif %}
+        {% if changed %}<a class="link" href="{{ reset_url }}" hx-get="{{ reset_url }}" hx-target="#alignment-editor"
+           hx-swap="outerHTML" hx-push-url="true" data-edit>Start over</a>{% endif %}
+      </span>
+    </div>
+
+    {% include "phylobot/_aln_display_controls.html" %}
+    {% include "phylobot/_aln_tracks_editor.html" %}
+
+    <p class="aln-summary">{{ sequences }} sequences × {{ columns }} {% if states == "codons" %}codons{% else %}columns{% endif %}{% if changed %}
+      <span class="hint">(of {{ stored_sequences }} × {{ stored_columns }}: {{ removed_columns }} column{{ removed_columns|pluralize }}
+        cut, {{ removed_sequences }} sequence{{ removed_sequences|pluralize }} removed{% if edits.sort %}, sorted by name{% endif %})</span>{% endif %}
+      · Download{% if changed %} as edited{% endif %}: <a href="{{ export_url }}&amp;export=fasta">FASTA</a> ·
+      <a href="{{ export_url }}&amp;export=clustal">Clustal</a> ·
+      <a href="{{ export_url }}&amp;export=tracks">every track (TSV)</a> ·
+      <a href="#" class="aln-png" data-stem="{{ file_stem }}">this view (PNG)</a></p>
+    {% if legend %}<p class="legend-tiles aln-legend">{% for label, colour in legend %}<span{% if colour != "transparent" %} style="background: {{ colour }}"{% endif %}>{{ label }}</span>{% endfor %}</p>{% endif %}
+    <p class="hint">Shift extends a selection, Ctrl/⌘ adds to it; Delete removes what is selected,
+      Esc clears it. Tracks are computed from the sequences shown.</p>
+
+    {# The whole alignment in a strip (alignment.js draws it and shows it only when the view #}
+    {# does not hold everything); the box is the part in view, dragged to move around. #}
+    <div class="aln-overview" hidden title="The whole alignment. The box is the part in view: drag it, or click anywhere, to move.">
+      <canvas></canvas><div class="aln-overview-window"></div>
+    </div>
+    <div class="aln-wrap" data-viewer>
+      <canvas class="aln-canvas"></canvas>
+      <div class="aln-scroller"><div class="aln-sizer"></div></div>
+      <div class="aln-tip" hidden></div>
+    </div>
+    {{ data|json_script:"aln-data" }}
+  </form>
+
+</div>

@@ -1,0 +1,63 @@
+{% comment %}The live check of the sequences (views.sequence_check): their type and size, or
+the first thing the pipeline's validation refuses. data-seqtype tells the page's script
+whether coding-DNA options apply. Codons with ambiguous bases get a line and a dialog the
+user must confirm (submit.html's script sets ambiguity_ack; SubmitForm checks it).{% endcomment %}
+<div id="sequence-check" class="sequence-check" data-seqtype="{{ check.seqtype|default:'' }}"
+     aria-live="polite"{% if oob %} hx-swap-oob="true"{% endif %}>
+  {% if check %}
+    {% if check.error %}
+      <p class="errors">{{ check.error }}</p>
+    {% else %}
+      <p>✓ {{ check.sequences }} {% if check.seqtype == "codon" %}coding DNA{% else %}protein{% endif %}
+        sequence{{ check.sequences|pluralize }},
+        {% if check.min_length == check.max_length %}{{ check.min_length }}{% else %}{{ check.min_length }}–{{ check.max_length }}{% endif %}
+        {{ check.unit }} each{% if check.detected %}
+        <span class="hint">(detected{% if check.seqtype == "codon" %}: checked and translated with the genetic code below{% endif %}; choose the type below if that's wrong)</span>{% endif %}</p>
+    {% endif %}
+    {% for warning in check.warnings %}<p class="warning">{{ warning }}</p>{% endfor %}
+    {% if check.ambiguity and not check.error %}{% with a=check.ambiguity %}
+      <p class="warning ambiguity-line" data-ambiguity="{{ a.fingerprint }}">
+        <span data-ambiguity-pending>{{ a.codons }} codon{{ a.codons|pluralize }} in {{ a.sequences }} sequence{{ a.sequences|pluralize }}
+          {{ a.codons|pluralize:"has,have" }} ambiguous bases: please review how they will be treated.</span>
+        <span data-ambiguity-done hidden>✓ {{ a.codons }} codon{{ a.codons|pluralize }} with ambiguous bases, reviewed.</span>
+        <button type="button" data-ambiguity-open>Review…</button></p>
+      <dialog id="ambiguity-dialog" class="ambiguity-dialog" aria-labelledby="ambiguity-title"
+              data-fingerprint="{{ a.fingerprint }}">
+        <div class="ambiguity-body">{# not a form: this sits inside the New Job form #}
+          <h2 id="ambiguity-title">Ambiguous Bases in Your Coding DNA</h2>
+          <p>{{ a.codons }} codon{{ a.codons|pluralize }} in {{ a.sequences }} sequence{{ a.sequences|pluralize }}
+            {{ a.codons|pluralize:"contains,contain" }} IUPAC ambiguity codes (R = A or G, Y = C or T,
+            M = A or C, N = any base, …). PhyloBot keeps them as you gave them, and each
+            step treats them as follows:</p>
+          <ul class="ambiguity-treatment">
+            <li><strong>Translation</strong> (the aligners, amino-acid models and ancestors):
+              the amino acid that every possible codon gives (CTR is Leu either way), otherwise
+              X, unknown.{% if a.translated %} Here {{ a.translated }} of the {{ a.codons }} keep{{ a.translated|pluralize:"s," }} an amino acid.{% endif %}</li>
+            <li><strong>PAML codeml</strong> weighs every codon the bases allow (GRG as GAG or GGG).</li>
+            <li><strong>IQ-TREE's codon models</strong> treat the whole codon as unknown, as if it were NNN.</li>
+            <li><strong>PRANK's codon aligner</strong> writes NNN in its place; PhyloBot puts your codon back.</li>
+            <li><strong>Mutational paths</strong>: no change where the codon may be its ancestor's,
+              otherwise an uncertain change (e.g. N64X).</li>
+          </ul>
+          <p class="hint">A few ambiguous codons are likely to barely change the results. However,
+            many in one sequence (a low-quality read, say) provide the codon models less
+            information to learn.</p>
+          <div class="ambiguity-table">
+            <table>
+              <thead><tr><th>Sequence</th><th>Codon no.</th><th>Bases</th><th>Could be</th><th>Translated as</th></tr></thead>
+              <tbody>{% for row in check.ambiguous_rows %}
+                <tr><td>{{ row.sequence }}</td><td class="number">{{ row.number }}</td><td><code>{{ row.codon }}</code></td><td>{{ row.readings }}</td><td>{{ row.as }}</td></tr>{% endfor %}
+              </tbody>
+            </table>
+            {% if check.ambiguous_unlisted %}<p class="hint">…and {{ check.ambiguous_unlisted }} more.</p>{% endif %}
+          </div>
+          <p class="actions">
+            <button type="button" data-ambiguity-choice="edit">Cancel, go back</button>
+            <button type="button" data-ambiguity-choice="confirm" class="primary" autofocus>I understand, continue</button>
+          </p>
+        </div>
+      </dialog>
+    {% endwith %}{% endif %}
+  {% endif %}
+</div>
+{% if files %}{% include "phylobot/_sequence_files.html" with oob=True %}{% endif %}

@@ -1,0 +1,12 @@
+{
+  "_note": "Signed off by the project owner 2026-10-18. Per replicate, true species tree, MAFFT + LG+G4. Observed over seeds 401-410: GeneRax RF 0 in 10 of 10, the true duplication found in 10 of 10, no chimeric ancestors, duplication precision 1.00; IQ-TREE's chimeric ancestors 3 (in 2 replicates), all flagged against GeneRax's tree.",
+  "generax": {
+    "max_rf": 2,
+    "duplications_found": true,
+    "max_chimeric": 0,
+    "min_duplication_precision": 0.5
+  },
+  "iqtree": {
+    "chimeric_flagged": true
+  }
+}

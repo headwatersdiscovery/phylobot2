@@ -1,0 +1,270 @@
+{% extends "phylobot/base.html" %}
+{% load phylobot_extras %}
+{% block title %}My Jobs · PhyloBot{% endblock %}
+{% block content %}
+<div class="page-head">
+  <h1>My Jobs</h1>
+  {% if can_import %}<div class="actions">
+    <button type="button" class="head-action" id="import-job-open"
+            title="Import a job from a ZIP made by a job's Download ZIP, on this PhyloBot or another">
+      {% include "phylobot/_icon.html" with name="upload" size=16 %} Import job</button>
+  </div>{% endif %}
+</div>
+{% if can_import %}
+<dialog id="import-job" aria-labelledby="import-title">
+  <form method="post" action="{% url 'import_job' %}" enctype="multipart/form-data">
+    {% csrf_token %}
+    <h2 id="import-title">Import a Job</h2>
+    <p>Choose a ZIP made by a job's <strong>Download ZIP</strong>, on this PhyloBot or
+      another. The job arrives finished and marked <span class="badge imported">imported</span>:
+      its results were computed elsewhere, so it cannot be resumed, and the CPU time it
+      used there is not counted here.</p>
+    <p><input type="file" name="archive" accept=".zip,application/zip" required
+              aria-label="ZIP to import">
+      <span class="hint">Up to {{ import_limit }}{% if user.is_staff %} (<a href="{% url 'site_settings' %}#importing-jobs">Settings</a>){% endif %}.</span></p>
+    <p class="actions">
+      <button type="button" data-close>Cancel</button>
+      <button type="submit" class="primary">Import</button>
+    </p>
+  </form>
+</dialog>
+<script>
+  (() => {
+    const dialog = document.getElementById("import-job");
+    document.getElementById("import-job-open").addEventListener("click", () => dialog.showModal());
+    dialog.querySelector("[data-close]").addEventListener("click", () => dialog.close());
+    dialog.querySelector("form").addEventListener("submit", (event) => {
+      const button = event.target.querySelector('button[type="submit"]');
+      button.disabled = true;
+      button.textContent = "Importing…";
+    });
+  })();
+</script>
+{% endif %}
+{% if total %}{% include "phylobot/_job_filters.html" %}{% endif %}
+
+{% if rows %}
+<form method="post" action="{% url 'bulk_tags' %}" id="jobs-form">
+  {% csrf_token %}
+  <input type="hidden" name="next" value="{{ request.get_full_path }}">
+  <div class="toolbar">
+    <span class="selection-tools">
+      <input name="tags" placeholder="#tag" list="tag-suggestions" aria-label="Tag" autocomplete="off">
+      <button type="submit" name="action" value="add" data-needs-selection>Add tag to selected</button>
+      <button type="submit" name="action" value="remove" data-needs-selection>Remove tag from selected</button>
+    </span>
+    <button type="button" id="delete-selected" class="danger-outline" data-needs-selection>Delete selected</button>
+  </div>
+  <datalist id="tag-suggestions">{% for name in all_tags %}<option value="#{{ name }}">{% endfor %}</datalist>
+  <div class="jobs-scroll">
+  <table class="jobs">
+    <thead>
+      <tr>
+        <th class="select"><input type="checkbox" id="select-all" aria-label="Select all jobs"></th>
+        {% for c in columns %}<th class="sortable {{ c.key }}{% if c.links|length > 1 %} multi{% endif %}"{% if c.sort %} aria-sort="{{ c.sort }}"{% endif %}>{% for h in c.links %}
+          <a href="?{{ h.query }}"{% if h.sort %} class="current"{% endif %} title="Sort by {{ h.label|lower }}{% if h.key == 'cpu' %} time used{% elif h.key == 'disk' %} used{% endif %}{% if h.sort %} (click to reverse){% endif %}">{{ h.label }}<span class="sort-arrow" aria-hidden="true">{% if h.sort == "ascending" %}▲{% elif h.sort == "descending" %}▼{% else %}↕{% endif %}</span></a>{% endfor %}</th>{% endfor %}
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for row in rows %}{% if row.is_search %}
+        {# A homolog search (phylobot.worklist): links to its own page, no local compute. #}
+        {# Its checkbox posts name="search"; bulk delete and the row's own delete go through #}
+        {# delete_jobs (which deletes searches too); tagging applies to jobs only. #}
+        <tr class="search-row">
+          <td class="select"><input type="checkbox" name="search" value="{{ row.obj.id }}"
+                 data-name="{{ row.name|default:'(unnamed search)' }}" data-status="{{ row.status }}"
+                 aria-label="Select {{ row.name|default:'search' }}"></td>
+          <td class="job-name"><a href="{{ row.url }}">{{ row.name|default:"(unnamed search)" }}</a>
+            <span class="hint">{{ row.short_id }}</span></td>
+          <td><span class="job-types"><a class="job-type homolog" href="?type={{ homolog_type }}"
+            title="A homolog search at a remote service. Show only these.">{{ homolog_label }}</a></span></td>
+          <td><span class="day">{{ row.created_at|date:"Y-m-d" }}</span> {{ row.created_at|date:"H:i" }}</td>
+          <td class="job-status"><span class="status {{ row.status }}">{{ row.status }}</span>
+            {% if row.finished_at %}<span class="when" title="Finished">{{ row.finished_at|date:"Y-m-d H:i" }}</span>{% endif %}</td>
+          <td class="usage"><span title="Searches run at a remote service: no compute is used here">–</span>
+            <span class="storage">–</span></td>
+          <td class="row-actions">
+            <a class="icon-button" href="{{ row.url }}"
+               title="Open this search" aria-label="Open search {{ row.name|default:'' }}">
+              {% include "phylobot/_icon.html" with name="view" %}</a>
+            {% if row.status == "succeeded" %}<button type="submit" form="dup-{{ row.obj.id }}" class="icon-button"
+               title="Duplicate: a copy you can rename or delete (nothing is searched again)"
+               aria-label="Duplicate search {{ row.name|default:'' }}">
+              {% include "phylobot/_icon.html" with name="run-again" %}</button>{% endif %}
+            <button type="button" class="icon-button danger" data-delete="{{ row.obj.id }}"
+               title="Delete (files removed, record kept)" aria-label="Delete search {{ row.name|default:'' }}">
+              {% include "phylobot/_icon.html" with name="trash" %}</button></td>
+        </tr>
+      {% else %}{% with job=row.obj types=row.types eta_text=row.eta made=row.made readers=row.readers %}
+        <tr{% if row.under %} class="follow-up-row" data-under="{{ row.under }}" hidden{% endif %}>
+          <td class="select"><input type="checkbox" name="job" value="{{ job.id }}"
+                 data-name="{{ job.name|default:'(unnamed)' }}" data-status="{{ job.status }}"
+                 data-dependents="{{ readers|join:'\n' }}"
+                 aria-label="Select {{ job.name|default:'job' }}"></td>
+          <td class="job-name"><a href="{% url 'job_detail' job.id %}">{{ job.name|default:"(unnamed)" }}</a>
+            <span class="hint">{{ job.id|stringformat:"s"|slice:":8" }}</span>{% if job.params.simulated %}
+            <span class="badge simulated" title="Simulated data, not real sequences">simulated</span>{% endif %}{% if job.imported_at %}
+            <span class="badge imported" title="Imported from a ZIP on {{ job.imported_at|date:'Y-m-d' }}: computed elsewhere, not on this server">imported</span>{% endif %}
+            {% if made and made.parts %}<span class="job-made" title="{{ made.details }}">{% for part in made.parts %}<span class="phrase">{{ part }}</span>{% if not forloop.last %} · {% endif %}{% endfor %}</span>{% endif %}
+            {% with tags=job.tags.all %}{% if tags %}<span class="job-tags">{% include "phylobot/_tag_chips.html" %}</span>{% endif %}{% endwith %}
+            {% if row.follow_ups %}<button type="button" class="link follow-ups" data-follow-ups="{{ row.id }}" aria-expanded="false"
+              title="Jobs run on this job's results: show or hide them">{{ row.follow_ups }} follow-up job{{ row.follow_ups|pluralize }}{% if row.follow_up_note %} <span class="hint">· {{ row.follow_up_note }}</span>{% endif %}</button>{% endif %}</td>
+          <td>{% include "phylobot/_job_types.html" %}</td>
+          <td><span class="day">{{ job.created_at|date:"Y-m-d" }}</span> {{ job.created_at|date:"H:i" }}</td>
+          <td class="job-status"><span class="status {{ job.status }}">{{ job.status }}</span>
+            {% if eta_text %}<em class="eta">ETA: {{ eta_text }}</em>{% elif job.finished_at %}<span class="when" title="Finished">{{ job.finished_at|date:"Y-m-d H:i" }}</span>{% endif %}</td>
+          <td class="usage"><span title="CPU time used: each step's run time × its CPUs">{% if job.cpu_seconds is not None %}{{ job.cpu_seconds|duration }}{% elif job.imported_from.cpu_seconds %}<span class="hint" title="Used where it ran before it was imported; not counted here">({{ job.imported_from.cpu_seconds|duration }})</span>{% else %}–{% endif %}</span>
+            <span class="storage" title="Storage its inputs and results take">{% if job.storage_bytes is not None %}{{ job.storage_bytes|filesizeformat }}{% else %}–{% endif %}</span></td>
+          <td class="row-actions">
+            <a class="icon-button" href="{% url 'job_download' job.id %}" download
+               title="Download inputs and results (ZIP)" aria-label="Download {{ job.name|default:'job' }} as a ZIP">
+              {% include "phylobot/_icon.html" with name="download" %}</a>
+            {% if not job.params.simulate %}<a class="icon-button" href="{% url 'submit' %}?from={{ job.id }}"
+               title="Duplicate and run again: a new job with these sequences and settings, to change and submit; this job is kept"
+               aria-label="Duplicate {{ job.name|default:'job' }} and run again">
+              {% include "phylobot/_icon.html" with name="run-again" %}</a>{% endif %}
+            {% if job.status == "queued" or job.status == "running" %}<button type="button"
+                    class="icon-button danger stop" data-stop="{{ job.id }}"
+                    data-stop-name="{{ job.name|default:'(unnamed)' }}" data-stop-status="{{ job.status }}"
+                    title="Stop this job (it cannot be resumed afterwards; its files are kept)"
+                    aria-label="Stop {{ job.name|default:'job' }}">
+              {% include "phylobot/_icon.html" with name="stop" %}</button>{% endif %}
+            <button type="button" class="icon-button danger" data-delete="{{ job.id }}"
+                    title="Delete (files removed, record kept)" aria-label="Delete {{ job.name|default:'job' }}">
+              {% include "phylobot/_icon.html" with name="trash" %}</button></td>
+        </tr>
+      {% endwith %}{% endif %}{% endfor %}
+    </tbody>
+  </table>
+  </div>
+</form>
+{% comment %}One POST form per unfinished job, outside #jobs-form (which posts tag changes
+and deletions): a form cannot nest, and one shared form would need its job ID set by
+script. The row's Stop button submits the matching one after the confirmation.{% endcomment %}
+{% for row in rows %}{% if not row.is_search and row.obj.status == "queued" or not row.is_search and row.obj.status == "running" %}
+  <form id="stop-{{ row.obj.id }}" method="post" action="{% url 'stop_job' row.obj.id %}" hidden>
+    {% csrf_token %}<input type="hidden" name="next" value="{{ request.get_full_path }}">
+  </form>
+{% endif %}{% endfor %}
+{% comment %}Duplicating a search is a POST; a form cannot nest in #jobs-form, so each lives
+here and the row's button submits it by `form=`.{% endcomment %}
+{% for row in rows %}{% if row.is_search and row.status == "succeeded" %}
+  <form id="dup-{{ row.obj.id }}" method="post" action="{% url 'duplicate_homolog_search' row.obj.id %}" hidden>
+    {% csrf_token %}<input type="hidden" name="next" value="{{ request.get_full_path }}">
+  </form>
+{% endif %}{% endfor %}
+{% include "phylobot/_delete_dialog.html" %}
+<script>
+  (() => {
+    const form = document.getElementById("jobs-form");
+    // Jobs and homolog searches are both selectable (phylobot.worklist); tagging applies to
+    // jobs only (bulk_tags ignores searches), deleting to both (delete_jobs handles both).
+    const boxes = [...form.querySelectorAll('input[name="job"], input[name="search"]')];
+    const selectAll = document.getElementById("select-all");
+    const deleteSelected = document.getElementById("delete-selected");
+    const needSelection = [...form.querySelectorAll("[data-needs-selection]")];
+
+    // Grouped view: a follow-up row folded under its job is not on screen, so it is never
+    // part of "select all" or a bulk action; folding a group unticks what it hides.
+    const shown = () => boxes.filter((box) => !box.closest("tr").hidden);
+
+    function refresh() {
+      const n = boxes.filter((box) => box.checked).length;
+      needSelection.forEach((button) => { button.disabled = n === 0; });
+      deleteSelected.textContent = n ? `Delete selected (${n})` : "Delete selected";
+      selectAll.checked = n > 0 && n === shown().length;
+      selectAll.indeterminate = n > 0 && n < shown().length;
+    }
+
+    form.querySelectorAll("[data-follow-ups]").forEach((button) => {
+      button.addEventListener("click", () => {
+        const open = button.getAttribute("aria-expanded") !== "true";
+        button.setAttribute("aria-expanded", String(open));
+        form.querySelectorAll(`tr[data-under="${button.dataset.followUps}"]`).forEach((row) => {
+          row.hidden = !open;
+          if (!open) row.querySelectorAll('input[type="checkbox"]').forEach((box) => { box.checked = false; });
+        });
+        refresh();
+      });
+    });
+
+    function deleteJobs(targets) {
+      const items = targets.map((box) => ({
+        name: box.dataset.name, status: box.dataset.status,
+        dependents: box.dataset.dependents ? box.dataset.dependents.split("\n") : [],
+      }));
+      const kind = targets.length && targets.every((box) => box.name === "search") ? "search" : "job";
+      confirmDelete(items, () => {
+        boxes.forEach((box) => { box.checked = targets.includes(box); });
+        form.action = "{% url 'delete_jobs' %}";  // the form otherwise posts tag changes
+        form.submit();
+      }, kind);
+    }
+
+    boxes.forEach((box) => box.addEventListener("change", refresh));
+    selectAll.addEventListener("change", () => {
+      shown().forEach((box) => { box.checked = selectAll.checked; });
+      refresh();
+    });
+    deleteSelected.addEventListener("click", () => deleteJobs(boxes.filter((b) => b.checked)));
+    form.querySelectorAll("[data-delete]").forEach((button) => {
+      button.addEventListener("click", () =>
+        deleteJobs(boxes.filter((box) => box.value === button.dataset.delete)));
+    });
+
+    // Stop an unfinished job (views.stop_job). Cancelled is terminal, so the dialog says
+    // the job cannot be resumed afterwards.
+    form.querySelectorAll("[data-stop]").forEach((button) => {
+      button.addEventListener("click", () => {
+        const { stop: id, stopName: name, stopStatus: status } = button.dataset;
+        confirmDialog({
+          title: `Stop “${name}”?`,
+          body: status === "queued"
+            ? "It has not started, so nothing is running yet. Its files are kept."
+            : "Its steps stop within a few seconds. Steps that finished keep their results, and the CPU time already used is still counted.",
+          note: "A stopped job cannot be resumed, so finishing this work later means running it again from the start.",
+          action: "Stop",
+          danger: true,
+        }, () => document.getElementById(`stop-${id}`).submit());
+      });
+    });
+    refresh();
+  })();
+</script>
+{% elif filters.active %}
+<p>No jobs match these filters. <a href="{% url 'my_jobs' %}">Clear filters</a></p>
+{% else %}
+<p>No jobs yet. <a href="{% url 'submit' %}">Submit one.</a></p>
+{% endif %}
+
+{% if deleted %}
+<section class="deleted">
+  <h2>Deleted Jobs <span class="hint">({{ deleted|length }}{% if deleted|length >= 500 %}+{% endif %})</span></h2>
+  <p class="hint">Their files are gone, but a record has been kept of what ran and the
+    compute cost.</p>
+  <div class="scroll">
+    <table class="jobs">
+      <thead>
+        <tr><th>Job</th><th>Type</th><th>Tags</th><th>Submitted</th><th>Final status</th><th>Deleted</th><th>CPU time</th></tr>
+      </thead>
+      <tbody>
+        {% for job, types in deleted %}
+          <tr>
+            <td>{{ job.name|default:"(unnamed)" }} <span class="hint">{{ job.id|stringformat:"s"|slice:":8" }}</span>
+              {% for rerun in job.reruns.all %}{% if not rerun.deleted_at %}<br><span class="hint">duplicated as
+                <a href="{% url 'job_detail' rerun.id %}">{{ rerun.id|stringformat:"s"|slice:":8" }}</a></span>{% endif %}{% endfor %}</td>
+            <td>{% include "phylobot/_job_types.html" with static=True %}</td>
+            <td class="tags">{% for tag in job.tags.all %}<span class="chip muted">#{{ tag.name }}</span>{% endfor %}</td>
+            <td><span class="day">{{ job.created_at|date:"Y-m-d" }}</span> {{ job.created_at|date:"H:i" }}</td>
+            <td><span class="status {{ job.status }}">{{ job.status }}</span></td>
+            <td><span class="day">{{ job.deleted_at|date:"Y-m-d" }}</span> {{ job.deleted_at|date:"H:i" }}</td>
+            <td class="cpu">{{ job.cpu_seconds|duration }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,1 @@
+{% for tag in tags %}<a class="chip" href="{% url 'my_jobs' %}?tag={{ tag.name|urlencode }}" title="Show jobs tagged #{{ tag.name }}">#{{ tag.name }}</a>{% endfor %}

@@ -1,0 +1,36 @@
+{# What reconciliation says about this ancestor (views.paralogy_context): whether the job's other tree of the same alignment and model agrees (R5: either can be wrong). #}
+{% with found=paralogy.found %}
+{% if paralogy.disagree %}<div class="paralogy mixes" role="note">
+  <p><strong>⚠ The two trees disagree about this ancestor.</strong> Rooted as GeneRax roots
+    it, its {{ paralogy.clade|length }} sequences ({{ paralogy.clade|slice:":4"|join:", " }}{% if paralogy.clade|length > 4 %}, …{% endif %})
+    form a group in {{ paralogy.own_label }}, but not in {{ paralogy.other_label }} (same
+    alignment and model).
+    {% if paralogy.verdict == "neither" %}The sequences cannot tell the two trees apart (AU test: {{ paralogy.own_short }} p = {{ paralogy.own_p|floatformat:"-2" }}, {{ paralogy.other_short }} p = {{ paralogy.other_p|floatformat:"-2" }}), so treat this ancestor as uncertain.
+    {% elif paralogy.verdict == "own" %}The sequences reject {{ paralogy.own_label }} (AU p = {{ paralogy.own_p|floatformat:"-3" }}), so {{ paralogy.other_label }} is the better-supported grouping.
+    {% elif paralogy.verdict == "other" %}The sequences reject {{ paralogy.other_label }} (AU p = {{ paralogy.other_p|floatformat:"-3" }}), so this grouping is the better-supported one.{% endif %}</p>
+  {% if found.mixes %}<p>In {{ paralogy.other_label }} these sequences fall on both sides of a
+    duplication (<a href="{{ paralogy.duplication_url }}">{% if paralogy.root %}at its root{% else %}{{ found.mixes }}{% endif %}</a>):
+    if that tree is right, this ancestor mixes paralogs, genes that had already split into
+    separate copies. Each copy's own ancestor there:</p>
+  <ul>{% for group in paralogy.groups %}
+    <li>{% if group.url %}<a href="{{ group.url }}">{{ group.node }}</a>: {% endif %}{{ group.names|join:", " }}{% if group.more %} and {{ group.more }} more{% endif %}</li>{% endfor %}
+  </ul>{% endif %}
+  <p class="hint">Neither tree is right by default: a gene tree from the sequences alone can
+    be noisy, and a tree fitted to the species tree can follow it into a wrong history when
+    paralogs were lost in different lineages (both seen in PhyloBot's validation).</p>
+</div>{% endif %}
+{% if found.duplication %}<p class="paralogy" role="note">
+  {% if paralogy.overlap.weak %}<strong>Doubtful duplication here.</strong> GeneRax puts a gene
+    duplication at this node, but {{ paralogy.overlap.describe }}. A real duplication leaves
+    both copies in many of the same species, so this usually means the tree grouped the
+    sequences wrongly and GeneRax explained the mismatch as a duplication plus losses.
+  {% elif found.reconciled_node and found.reconciled_event != "duplication" %}<strong>Duplication here, but not in {{ paralogy.other_label }}.</strong>
+    There the same clade, <a href="{{ paralogy.reconciled_url }}">{{ found.reconciled_node }}</a>,
+    is a {{ found.reconciled_event }}: one of the two trees is probably wrong here.
+  {% else %}<strong>Pre-duplication ancestor.</strong> This tree's reconciliation puts a gene
+    duplication here{% if paralogy.overlap %} ({{ paralogy.overlap.describe }}){% endif %}: this is
+    the gene before its copies split, often the ancestor a study wants.{% if found.reconciled_node %}
+    {{ paralogy.other_label|capfirst }} agrees: <a href="{{ paralogy.reconciled_url }}">{{ found.reconciled_node }}</a>.{% endif %}{% endif %}</p>
+{% elif found.reconciled_node and not paralogy.disagree %}<p class="paralogy" role="note">
+  {{ paralogy.other_label|capfirst }} has this clade too: <a href="{{ paralogy.reconciled_url }}">{{ found.reconciled_node }}</a>.</p>{% endif %}
+{% endwith %}

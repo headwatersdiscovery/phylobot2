@@ -1,0 +1,77 @@
+{% load static %}<!doctype html>
+<html lang="en" data-skin="{{ skin }}" data-backdrop="{{ backdrop }}"
+      data-backdrop-preference="{{ backdrop_preference }}"
+      data-backdrop-speed="{{ backdrop_speed }}" data-backdrop-density="{{ backdrop_density }}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}PhyloBot{% endblock %}</title>
+  <link rel="stylesheet" href="{% static 'phylobot/site.css' %}">
+  {% for s in skins %}{% if s.stylesheet %}<link rel="stylesheet" href="{% static s.stylesheet %}">
+  {% endif %}{% endfor %}<script src="{% static 'phylobot/skins.js' %}" defer></script>
+  <script src="{% static 'phylobot/matrix-rain.js' %}" defer></script>
+  {# The backdrop script does nothing unless the page fills the block below. #}
+  <script src="{% static 'phylobot/backdrop.js' %}" defer></script>
+  <script src="{% static 'phylobot/htmx-2.0.11.min.js' %}" defer></script>
+  <script src="{% static 'phylobot/help.js' %}" defer></script>
+  <script src="{% static 'phylobot/nav.js' %}" defer></script>
+  {# Remembers the result pages this browser had open, for the home page's "Jump Back In". #}
+  <script src="{% static 'phylobot/recent.js' %}" defer></script>
+  {% block head %}{% endblock %}
+</head>
+<body hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'{% if nav_section %} data-section="{{ nav_section }}"{% endif %}{% if user.is_authenticated %} data-user="{{ user.pk }}"{% endif %}{% if page_kind %} data-page-kind="{{ page_kind }}"{% endif %}>
+  {# Pages wanting the protein-fragment backdrop fill this; the science pages do not. #}
+  {% block backdrop %}{% endblock %}
+  <header>
+    <a class="brand" href="{% url 'home' %}">PhyloBot 2</a>
+    {# Seven entries, three of them menus (nav.js closes one on a click elsewhere or Escape; #}
+    {# each is a <details>, so it opens without the script). A menu whose page is the #}
+    {# current one is marked as the current link is. #}
+    <nav>
+      <a href="{% url 'submit' %}"{% if nav_section == "new" %} aria-current="page"{% endif %}>New Job</a>
+      <a href="{% url 'my_jobs' %}"{% if nav_section == "jobs" %} aria-current="page"{% endif %}>My Jobs</a>
+      <a href="{% url 'my_libraries' %}"{% if nav_section == "libraries" %} aria-current="page"{% endif %}>Libraries</a>
+      <details class="nav-menu" name="nav-menu">
+        <summary{% if nav_section == "homologs" or nav_section == "alignments" %} class="current"{% endif %}>Sequences</summary>
+        <div class="nav-menu-items">
+          <a href="{% url 'homologs' %}"{% if nav_section == "homologs" %} aria-current="page"{% endif %}>Find Homologs</a>
+          <a href="{% url 'my_alignments' %}"{% if nav_section == "alignments" %} aria-current="page"{% endif %}>My Alignments</a>
+        </div>
+      </details>
+      <details class="nav-menu" name="nav-menu">
+        <summary{% if nav_section == "simulations" or nav_section == "esr" %} class="current"{% endif %}>Validation</summary>
+        <div class="nav-menu-items">
+          <a href="{% url 'simulations' %}"{% if nav_section == "simulations" %} aria-current="page"{% endif %} title="Evolve sequences on a known tree, then check what a job recovers">Simulations</a>
+          <a href="{% url 'esr' %}"{% if nav_section == "esr" %} aria-current="page"{% endif %} title="How well do ancestors come out, on sequences whose truth is known?">Extant Sequence Reconstruction</a>
+        </div>
+      </details>
+      {% if user.username == "local" or user.is_staff %}<details class="nav-menu" name="nav-menu">
+        <summary{% if nav_section == "usage" or nav_section == "settings" %} class="current"{% endif %}>Account</summary>
+        <div class="nav-menu-items">
+          <a href="{% url 'my_usage' %}"{% if nav_section == "usage" %} aria-current="page"{% endif %}>My Usage</a>
+          <a href="{% url 'site_settings' %}"{% if nav_section == "settings" %} aria-current="page"{% endif %}>{% if user.username == "local" %}Settings{% else %}Admin Settings{% endif %}</a>
+        </div>
+      </details>
+      {% else %}<a href="{% url 'my_usage' %}"{% if nav_section == "usage" %} aria-current="page"{% endif %}>Usage</a>{% endif %}
+      <a href="{% url 'about' %}"{% if nav_section == "about" %} aria-current="page"{% endif %}>About</a>
+    </nav>
+    <label class="skin-picker">Skin
+      {# Each option says whether that skin shows a backdrop at all, for skins.js. #}
+      <select data-skin-picker>{% for s in skin_menu %}
+        <option value="{{ s.key }}" data-backdrop="{{ s.backdrop }}"{% if s.key == skin %} selected{% endif %}>{{ s.label }}</option>{% endfor %}
+      </select>
+    </label>
+    <span class="user">
+      {% if user.username == "local" %}local mode
+      {% elif user.is_authenticated %}{{ user.username }}
+        <form method="post" action="{% url 'logout' %}">{% csrf_token %}<button class="link">Sign out</button></form>
+      {% endif %}
+    </span>
+  </header>
+  <main>
+    {% for message in messages %}<p class="message {{ message.tags }}">{{ message }}</p>{% endfor %}
+    {% block content %}{% endblock %}
+  </main>
+  {% include "phylobot/_footer.html" %}
+</body>
+</html>

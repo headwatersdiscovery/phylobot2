@@ -1,0 +1,35 @@
+{# My alignments: "From your jobs", fetched after the page loads (alignment_editor_views.jobs_section). #}
+<section class="alignment-list" id="from-jobs">
+  <h2><button type="button" class="fold-toggle" aria-expanded="true" aria-controls="from-jobs-body">From Your Jobs</button></h2>
+  <div class="fold-body" id="from-jobs-body">
+  {% if jobs %}
+  <p class="hint">{% include "phylobot/_icon.html" with name="lock" size=14 %} These alignments belong
+    to their jobs, and cannot be edited or deleted here. Open one in the editor to copy it and
+    save a new alignment.</p>
+  <table class="jobs alignments from-jobs">
+    <thead><tr><th>Job</th><th>Alignment</th><th class="num">Sequences</th><th class="num">Columns</th>
+      <th>Job finished</th><th></th></tr></thead>
+    {% for job in jobs %}
+    <tbody>{% for a in job.alignments.all %}
+      <tr>{% if forloop.first %}
+        <td class="job" rowspan="{{ job.alignments.all|length }}"><a href="{% url 'job_detail' job.id %}">{{ job.name|default:"Job" }}</a>
+          {% include "phylobot/_tag_chips.html" with tags=job.tags.all %}</td>{% endif %}
+        <td><a href="{% url 'alignment_editor' a.id %}">{{ a.name }}</a>{% if a.simulated %} <span class="badge simulated" title="Simulated data, not real sequences">simulated</span>{% endif %}
+          <span class="lock" title="Part of the job">{% include "phylobot/_icon.html" with name="lock" size=13 %}</span></td>
+        <td class="num">{{ a.sequences }}</td>
+        <td class="num">{{ a.columns }}{% if a.seqtype == "codon" %} <span class="hint">codons</span>{% endif %}</td>
+        {% if forloop.first %}<td class="date" rowspan="{{ job.alignments.all|length }}">{{ job.finished_at|date:"Y-m-d H:i" }}</td>{% endif %}
+        <td class="row-actions">
+          {% include "phylobot/_alignment_row_icons.html" %}
+        </td>
+      </tr>{% endfor %}
+    </tbody>{% endfor %}
+  </table>
+  {% if more_jobs %}<p class="hint">and {{ more_jobs }} older job{{ more_jobs|pluralize }}' alignments
+    (open them from <a href="{% url 'my_jobs' %}">My jobs</a>).</p>{% endif %}
+  {% else %}
+  <p class="empty hint">No finished jobs yet. Each job's alignments appear here when it finishes.</p>
+  {% endif %}
+  </div>
+</section>
+

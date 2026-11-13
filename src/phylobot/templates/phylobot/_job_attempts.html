@@ -1,0 +1,25 @@
+{% load phylobot_extras %}{% comment %}Each run of a resumed job (views.attempt_rows; JobAttempt).
+CPU used counts only the steps an attempt ran itself; reused steps count where they ran.
+Billable: completed steps in full, failed ones at the rate in force when the attempt ended.{% endcomment %}
+<details class="attempts" open>
+  <summary><h2>Attempts</h2> <span class="hint">({{ attempts|length }})</span></summary>
+  <table class="attempts">
+    <thead><tr><th>Attempt</th><th>Started</th><th>Ran for</th><th>Outcome</th>
+      <th title="Steps this attempt ran, and steps it reused from earlier attempts">Steps run · reused</th>
+      <th title="Each step's run time × its CPUs, for the steps this attempt ran">CPU used</th>
+      <th title="Completed steps in full; failed or stopped steps at the rate set by the administrator when the attempt ended">Billable CPU</th></tr></thead>
+    <tbody>{% for row in attempts %}{% with a=row.attempt %}
+      <tr>
+        <td>{{ a.number }}</td>
+        <td>{{ a.started_at|date:"Y-m-d H:i"|default:"–" }}</td>
+        <td>{{ row.elapsed|default:"–" }}</td>
+        <td><span class="status {{ row.status }}">{{ row.status }}</span></td>
+        <td>{% if a.tasks_run is not None %}{{ a.tasks_run }} · {{ a.tasks_reused|default:0 }}{% else %}–{% endif %}</td>
+        <td>{% if row.used is not None %}{{ row.used|duration }}{% else %}–{% endif %}</td>
+        <td>{% if a.billable_cpu_seconds is not None %}{{ a.billable_cpu_seconds|duration }}{% if a.failed_cpu_seconds and a.failed_rate_percent != 100 %}
+          <span class="hint">(failed steps at {{ a.failed_rate_percent }}%)</span>{% endif %}{% else %}–{% endif %}</td>
+      </tr>
+    {% endwith %}{% endfor %}</tbody>
+  </table>
+  <p class="hint">Logs of earlier attempts are under <em>logs/attempts/</em> in All files.</p>
+</details>

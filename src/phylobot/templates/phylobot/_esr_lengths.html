@@ -1,0 +1,36 @@
+{# ESR by branch length (esr_lengths): the quarters table and two scatters. #}
+<div class="esr-lengths" id="esr-lengths">
+  <h3>By branch length</h3>
+  <p class="hint">Accuracy falls on long pendant branches whatever the model, because a
+    distant sequence is harder to reconstruct. What matters for trusting the posteriors is
+    whether the <em>gap</em> between mean posterior and accuracy grows with them.
+    {% if l.quartered %}The held-out sequences are split into four groups of (nearly) equal
+    size by pendant length.{% else %}With fewer than {{ l.min_tips }} sequences held out,
+    there are no quarters.{% endif %}</p>
+  <div class="esr-block">
+  <table class="results esr-quarters">
+    <thead><tr>
+      <th class="label">Level</th><th class="label">Sequences</th>
+      <th title="Pendant branch lengths in the group (substitutions per site)">Pendant</th>
+      <th>Tips</th><th>Sites</th><th>Accuracy</th><th>Mean pp</th>
+      <th title="Mean posterior minus accuracy: above 0, overconfident">Gap</th>
+      <th title="Expected calibration error over bins of 0.1">ECE</th>
+      <th title="Wrong residues with a posterior of {{ l.confident }} or more, per sequence">Wrong at pp ≥ {{ l.confident }}</th>
+      <th title="Wrong residues whose true residue had a posterior of {{ l.altall }} or more">AltAll catches</th>
+    </tr></thead>
+    <tbody>{% for r in l.table %}
+      <tr{% if r.all %} class="total"{% endif %}><td class="label">{{ r.level }}</td><td class="label">{{ r.label }}</td>
+        <td>{{ r.pendant }}</td><td>{{ r.tips }}</td><td>{{ r.sites }}</td><td>{{ r.accuracy }}</td>
+        <td>{{ r.mean_pp }}</td><td>{{ r.gap }}</td><td>{{ r.ece }}</td><td>{{ r.confident_wrong }}</td><td>{{ r.caught }}</td></tr>
+    {% endfor %}</tbody>
+  </table>
+  </div>
+  <div class="esr-scatters">
+    {% if l.gaps %}
+      {% include "phylobot/_esr_scatter.html" with c=l.gaps title="Gap per sequence" hint="Each dot is one held-out sequence: its mean posterior minus its accuracy, against its pendant length (log scale). The line joins the quarters' gaps. Above 0, overconfident." %}
+    {% endif %}
+    {% if l.difference %}
+      {% include "phylobot/_esr_scatter.html" with c=l.difference title="E1 against E0" hint="E1's mean log score minus E0's, per held-out sequence. Below 0, the sequence was helping to reconstruct itself through the fit. The line joins the quarters." %}
+    {% endif %}
+  </div>
+</div>

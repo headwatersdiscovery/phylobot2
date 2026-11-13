@@ -1,0 +1,22 @@
+{% if chosen_job %}
+  {% if tree_choices %}
+    <p><label for="sim-combination">Tree</label>
+      <select name="combination" id="sim-combination" hx-get="{% url 'simulation_tree_options' %}"
+              hx-trigger="change" hx-target="#tree-options" hx-swap="innerHTML"
+              hx-include="#sim-job, this">
+        {% for choice in tree_choices %}
+          <option value="{{ choice.key }}"{% if choice.key == combination %} selected{% endif %}>{{ choice.label }}</option>
+        {% endfor %}
+      </select></p>
+    <p data-show-when="root_source=ancestor"><label for="sim-node">Root sequence: ancestor</label>
+      <select name="node" id="sim-node">
+        {% for option in nodes %}
+          <option value="{{ option.name }}"{% if option.name == node %} selected{% endif %}>{{ option.label }}</option>
+        {% empty %}
+          <option value="">(this tree has no ancestors: the job stopped after trees)</option>
+        {% endfor %}
+      </select></p>
+  {% else %}
+    <p class="hint">That job has no trees.</p>
+  {% endif %}
+{% endif %}

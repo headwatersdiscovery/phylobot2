@@ -1,0 +1,7 @@
+{# The alignment viewer's header action: this alignment in the alignment editor. Swapped #}
+{# out of band with the viewer (it follows the alignment chosen there). #}
+<div class="actions" id="aln-viewer-actions"{% if oob %} hx-swap-oob="true"{% endif %}>
+  {% if editor_url %}<a class="head-action" href="{{ editor_url }}"
+     title="Open {{ editor_label }} in the alignment editor: cut columns, remove or sort sequences, and save your edits as a copy in My alignments. The job's own alignment is not changed.">
+    {% include "phylobot/_icon.html" with name="pencil" size=16 %} Edit a copy</a>{% endif %}
+</div>

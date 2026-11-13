@@ -1,0 +1,20 @@
+{# A (?) beside a property's title, opening how it is computed, what it is not, and its #}
+{# citations (`phylobot.about.PROPERTY_METHODS`). Shared by the ancestor viewer's panel #}
+{# and the comparison page, so the explanation of a property lives in one place. #}
+{# Takes `key` and `method`; `help_id` keeps the ids unique when a page shows the same #}
+{# property more than once. Behaviour is property_help.js; without JavaScript the note #}
+{# stays hidden and the citations are on the About page. #}
+{% if method %}
+<button type="button" class="property-help" aria-expanded="false"
+        aria-controls="method-{{ help_id|default:key }}" title="How this is computed">?</button>
+<div class="property-method" id="method-{{ help_id|default:key }}" hidden>
+  <p>{{ method.note }}</p>
+  {% if method.refs %}<ul class="property-refs">
+    {% for ref in method.refs %}<li>{{ ref.authors }}
+      {% if ref.title %}<em>{{ ref.title }}</em>{% endif %}
+      {{ ref.where }}
+      {% if ref.link %}<a href="{{ ref.link }}" rel="noreferrer noopener" target="_blank">{{ ref.doi|default:ref.link }}</a>{% endif %}</li>{% endfor %}
+  </ul>{% else %}
+  <p class="hint">PhyloBot's own calculation; there is no method to cite.</p>{% endif %}
+</div>
+{% endif %}

@@ -1,0 +1,20 @@
+{# The tracks shown above the alignment (viewer and editor): one-off buttons edit the #}
+{# list in the URL (alignment_views.track_list). #}
+  <div class="aln-tracks-editor">
+    <input type="hidden" name="tracks_set" value="1">
+    {# The chips in a group of their own: the alignment viewer's toolbar puts them on a #}
+    {# second row and keeps "Add a track" where it is, beside Height, with or without them. #}
+    <span class="track-chips{% if not shown %} empty{% endif %}"><span class="hint">Tracks:</span>
+    {% for key, kind in shown %}<span class="chip" title="{{ kind.description }}">
+      <input type="hidden" name="track" value="{{ key }}">{{ kind.label }}
+      {% if not forloop.first %}<button class="mini" name="track_up" value="{{ forloop.counter0 }}" title="Move up" aria-label="Move {{ kind.label }} up">↑</button>{% endif %}
+      <button class="mini" name="remove_track" value="{{ forloop.counter0 }}" title="Remove" aria-label="Remove {{ kind.label }}">×</button></span>
+    {% empty %}<span class="hint">none</span>{% endfor %}</span>
+    {% if can_add and addable %}<label class="add-track">
+      <select name="add_track" aria-label="Add a track">
+        <option value="">+ Add a track…</option>{% for group, items in addable %}
+        <optgroup label="{{ group }}">{% for key, kind in items %}
+          <option value="{{ key }}" title="{{ kind.description }}">{{ kind.label }}</option>{% endfor %}
+        </optgroup>{% endfor %}
+      </select></label>{% endif %}
+  </div>

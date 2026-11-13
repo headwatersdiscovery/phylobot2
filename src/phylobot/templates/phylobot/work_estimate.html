@@ -1,0 +1,109 @@
+{% extends "phylobot/base.html" %}
+{% load phylobot_extras %}
+{% block title %}Work Estimate · PhyloBot{% endblock %}
+{% block content %}
+<h1>Work Estimate</h1>
+<p>The New Job page estimates how much computing a job asks for, in <strong>work
+  units</strong>. One unit is about one CPU-minute on the reference machine (the
+  developer's laptop). Units mean the same on every PhyloBot installation, so they compare
+  jobs; each server converts them to its own time from the jobs it has run.</p>
+
+<section class="step">
+  <h2>This Server</h2>
+  {% if seconds_per_unit %}
+    <p>One work unit takes about <strong>{{ seconds_per_unit|duration }}</strong> of CPU time
+      here, learned from the last {{ learned_from }} successful job{{ learned_from|pluralize }}
+      (the median of CPU time used ÷ estimated units).</p>
+  {% else %}
+    <p>Not calibrated yet: this server has finished {{ learned_from }} of the
+      {{ min_history }} jobs it needs. Until then the New Job page shows work units without
+      a time.</p>
+  {% endif %}
+  <p class="hint">CPU time is each step's running time × its CPUs. When steps run side by
+    side and share the processors, each runs slower and counts more CPU time; the
+    calibration includes that, as it is learned from this server's own jobs (the last
+    {{ history }} at most, everyone's).</p>
+</section>
+
+<section class="step">
+  <h2>Examples</h2>
+  <p class="hint">The New Job page's defaults (MAFFT, ModelFinder and one IQ-TREE search,
+    SH-aLRT, Fitch gap placement with an outgroup) for inputs of different sizes.</p>
+  <table class="results">
+    <thead><tr><th>Sequences</th><th>Mean length</th><th>Work units</th>
+      <th>CPU time{% if seconds_per_unit %} here{% else %} (reference){% endif %}</th>
+      <th class="label">Largest share</th></tr></thead>
+    <tbody>
+      {% for example in examples %}
+        <tr>
+          <td>{{ example.size.sequences }}</td>
+          <td>{{ example.size.length|floatformat:"0" }}</td>
+          <td>{% if example.units < 10 %}{{ example.units|floatformat:1 }}{% else %}{{ example.units|floatformat:"0g" }}{% endif %}</td>
+          <td>{{ example.seconds|duration }}</td>
+          <td class="label">{{ example.largest }}</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</section>
+
+<section class="step">
+  <h2>Your Recent Jobs</h2>
+  {% if rows %}
+    <p class="hint">Estimated at submission, beside the CPU time each job used. A ratio far
+      from 1 (outside {{ outlier|floatformat:"0" }}× either way, flagged) usually means
+      steps ran side by side and slowed each other, or an input unlike the benchmark's.</p>
+    <table class="results">
+      <thead><tr><th class="label">Job</th><th>Finished</th><th>Work units</th><th>Expected CPU time</th>
+        <th>CPU time used</th><th>Used ÷ expected</th></tr></thead>
+      <tbody>
+        {% for row in rows %}
+          <tr{% if row.outlier %} class="outlier"{% endif %}>
+            <td class="label"><a href="{% url 'job_detail' row.job.id %}">{{ row.job.name|default:"(unnamed)" }}</a>
+              <span class="hint">{{ row.job.id|stringformat:"s"|slice:":8" }}</span></td>
+            <td>{{ row.job.finished_at|date:"Y-m-d H:i" }}</td>
+            <td>{{ row.job.work_units|floatformat:1 }}</td>
+            <td>{{ row.expected|duration }}</td>
+            <td>{{ row.job.cpu_seconds|duration }}</td>
+            <td>{{ row.ratio|floatformat:2 }}{% if row.outlier %} ⚑{% endif %}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <p class="hint">None yet: jobs record their estimate when submitted, and appear here once
+      they have finished.</p>
+  {% endif %}
+</section>
+
+<section class="step">
+  <h2>Reference Costs</h2>
+  <p>Each step's CPU time at {{ reference.sequences }} sequences of
+    {{ reference.length|floatformat:"0" }} residues, and how it grows: for N sequences of
+    mean length L, cost × (N/{{ reference.sequences }})<sup>a</sup> ×
+    (L/{{ reference.length|floatformat:"0" }})<sup>b</sup>.</p>
+  <table class="results">
+    <thead><tr><th class="label">Step</th><th class="label">Model</th><th>CPU time</th><th class="label">Per</th><th>a (sequences)</th>
+      <th>b (length)</th></tr></thead>
+    <tbody>
+      {% for row in costs %}
+        <tr>
+          <td class="label">{{ row.label }}</td>
+          <td class="label">{{ row.variant }}</td>
+          <td>{{ row.cost.seconds|floatformat:2 }} s</td>
+          <td class="label">{{ row.per }}</td>
+          <td>{{ row.cost.a|floatformat:2 }}</td>
+          <td>{{ row.cost.b|floatformat:2 }}</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  <p class="hint">Measured on 2026-09-30: every step
+    timed alone (one at a time) on simulated families (10-80 sequences of 400 residues; 20
+    sequences of 200-1600) and real ones (the Ime2 example; the top 20 and 60 UniRef90 hits
+    of the Ime2 search), with amd64 tools under emulation on an Apple laptop. The exponents
+    come from the simulated sweeps, the levels from the real sets (real proteins took
+    1.1-4× as long as simulated ones of the same size). Branch support (SH-aLRT, UFBoot) added no measurable time up to 40 sequences.
+    Steps of a second or less are fixed costs.</p>
+</section>
+{% endblock %}

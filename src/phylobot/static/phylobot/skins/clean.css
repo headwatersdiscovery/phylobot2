@@ -1,0 +1,243 @@
+/* Clean skin (the default; phylobot.skins). Layered over site.css, scoped by data-skin so
+   the other skins are untouched.
+   Soft grey page, white cards for each section, a darker grey top bar, rounded controls,
+   quiet borders: colour is kept for what needs attention (actions, status, results).
+   The Dark, High legibility, Matrix, Spectrum, Lagoon, Broadsheet, Dim, Abyss, PhyloBot '95 and Science Fair skins share this layout: dark.css and legible.css
+   redefine the tokens below (dark.css also remaps the light colours site.css and the
+   SVG figures hard-code). Use tokens here, not colours. */
+:root:is([data-skin="clean"], [data-skin="dark"], [data-skin="legible"], [data-skin="matrix"], [data-skin="spectrum"], [data-skin="lagoon"], [data-skin="broadsheet"], [data-skin="dim"], [data-skin="abyss"], [data-skin="retro95"], [data-skin="sciencefair"]) {
+  --page: #f2f3f5;          /* page background */
+  --bg: #ffffff;            /* surfaces: cards, panels, tables (site.css calls it --bg) */
+  --bar: #e3e6ea;           /* top bar */
+  --fg: #1f2733;
+  --muted: #687384;
+  --line: #e2e5ea;          /* hairlines inside cards */
+  --edge: #d6dae0;          /* card and control borders */
+  --accent: #2b62b5;
+  --accent-soft: #e9f0fb;
+  --accent-ring: rgba(43, 98, 181, .22);
+  --title-rim: #fff;        /* the home title's "2": its first shadow */
+  --title-shadow: #f0b44c;   /* and its second */
+  --subtle: #f6f7f9;        /* table heads, code, wells */
+  --radius: 12px;           /* cards */
+  --radius-control: 8px;    /* buttons, inputs */
+  --shadow: 0 1px 2px rgba(22, 32, 48, .04), 0 2px 8px rgba(22, 32, 48, .04);
+  --fg-2: #3a4452;          /* nav links, table heads, h3 */
+  --hover: #fbfbfc;         /* button hover */
+  --hover-edge: #b9c0ca;
+  --row-hover: #fafbfc;
+  --on-accent: #ffffff;     /* text on the accent */
+  --accent-hover: #2456a3;
+  --link-line: rgba(43, 98, 181, .35);
+  --glass: rgba(255, 255, 255, .6);  /* pills on the top bar */
+  --track: #e4e8ee;         /* progress track */
+  --danger: #b3372a;
+  --danger-edge: #e6b8b2;
+  --danger-soft: #fdf4f2;
+  --danger-fill: #c0392b;
+  --neutral-bg: #eef0f3; --neutral-fg: #4c5665;
+  --running-bg: #e3edfb; --running-fg: #22509a;
+  --ok-bg: #e0f2e6; --ok-fg: #1e6b3a;
+  --bad-bg: #fbe4e1; --bad-fg: #9b2a1f;
+  --select-arrow: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%23687384' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");
+  accent-color: var(--accent);
+
+  & body { background: var(--page); font-size: 15px; line-height: 1.55;
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+    -webkit-font-smoothing: antialiased; }
+
+  /* Top bar: a darker grey band; links as soft pills, the current page filled. */
+  & header { background: var(--bar); border-bottom: 1px solid var(--edge); padding: .55rem 1.5rem; gap: .5rem 1.25rem; }
+  & header .brand { color: var(--fg); text-decoration: none; font-size: 1.05rem; letter-spacing: -.01em; margin-right: .5rem; }
+  & header nav { gap: .1rem; }  /* nine links fit one line at 1300 px */
+  & header nav :is(a, summary) { color: var(--fg-2); text-decoration: none; padding: .3rem .6rem; border-radius: 999px;
+    font-weight: 500; transition: background-color .15s ease, color .15s ease; }
+  & header nav :is(a, summary):hover { background: var(--glass); color: var(--fg); }
+  & header nav :is(a[aria-current="page"], summary.current) { background: var(--bg); color: var(--accent); box-shadow: 0 1px 2px rgba(22, 32, 48, .08); }
+  & header .user { font-size: .85rem; padding: .2rem .65rem; border-radius: 999px; background: var(--glass); }
+  & .skin-picker select { padding: .2rem 1.6rem .2rem .55rem; font-size: .85rem; background-color: var(--glass); }
+
+  /* Page: centred column, generous vertical rhythm. */
+  & main { margin: 0 auto; max-width: 1180px; padding: 2rem 2rem 4rem; }
+  & h1 { font-size: 1.85rem; font-weight: 700; letter-spacing: -.02em; margin: 0 0 .75rem; }
+  & h2 { font-size: 1.12rem; font-weight: 650; letter-spacing: -.005em; }
+  & h3 { font-size: .98rem; font-weight: 650; color: var(--fg-2); margin-top: 1.35rem; }
+  & .hint { color: var(--muted); }
+  & a { color: var(--accent); text-decoration-color: var(--link-line); text-underline-offset: .18em; }
+  & a:hover { text-decoration-color: currentColor; }
+  & code { font-size: .88em; background: var(--subtle); padding: .05rem .3rem; border-radius: 4px; }
+  & pre code { font-size: inherit; background: none; padding: 0; }
+
+  /* Sections as cards. */
+  & section.step, & section.results, & details.inputs, & details.stages, & details.files, & details.attempts,
+  & details.libraries, & .snippet, & .path-section, & .viewer, & .about > section,
+  & section.alignment-list, & details.alignment-upload, & .aln-save {
+    background: var(--bg); border: 1px solid var(--edge); border-radius: var(--radius);
+    box-shadow: var(--shadow); padding: 1.1rem 1.5rem 1.25rem; margin: 0 0 1.25rem; }
+  & .about-toc { background: var(--bg); border: 1px solid var(--edge); border-radius: var(--radius);
+    box-shadow: var(--shadow); padding: .8rem .6rem .8rem .8rem; }
+  & section.step, & .about > section { padding-top: .35rem; }
+  & section.step h2, & .about > section > h2 { margin-top: .85rem; font-size: 1.2rem; }
+  & section.step > h2:first-child, & section.results > h2:first-child, & .about > section > h2:first-child { padding-bottom: .6rem; border-bottom: 1px solid var(--line); margin-bottom: .9rem; }
+  & .step-number { background: var(--accent-soft); color: var(--accent); width: 1.9rem; height: 1.9rem; font-size: .95rem; }
+  & details.inputs, & details.stages, & details.files, & details.libraries, & details.attempts { padding: .8rem 1.5rem; }
+  & details > summary { cursor: pointer; }
+  & details.files summary h2, & details.libraries summary h2 { font-size: 1.12rem; }
+  & section.results { padding-top: .35rem; }
+  & section.alignment-list > h2:first-child { margin-top: .25rem; }
+  & section.results h2 { margin-top: .85rem; }
+  & .alignment-result { padding-top: 1rem; border-top: 1px solid var(--line); }
+  & .stage-graph { border-color: var(--line); border-radius: 10px; background: var(--subtle); }
+  & .stage-graph[data-scheme] { background: var(--subtle); }
+  /* A sectioned viewer is not itself a card: each of its sections is one, so the page
+     reads like New Job. Without this the cards would nest. */
+  & .viewer.sectioned { background: transparent; border: 0; box-shadow: none; padding: 0; margin: 0; }
+  & .viewer.sectioned .viewer-section {
+    background: var(--bg); border: 1px solid var(--edge); border-radius: var(--radius);
+    box-shadow: var(--shadow); padding: 1.1rem 1.5rem 1.25rem; margin: 0 0 1.25rem; }
+  & .viewer.sectioned .viewer-section > h2:first-child {
+    margin-top: .35rem; font-size: 1.2rem; padding-bottom: .6rem;
+    border-bottom: 1px solid var(--line); margin-bottom: .9rem; }
+  /* Carded already, so the plain-skin separator would double the border. */
+  & .viewer.sectioned .compare-panel { border-top: 0; padding-top: .35rem; margin-bottom: 1.25rem; }
+  & .viewer .path-section { border: 0; border-top: 1px solid var(--line); border-radius: 0; box-shadow: none;
+    padding: .5rem 0 0; margin: 2rem 0 0; }
+  /* The tree viewer's Mutational Path: its rule below it, above the tree. */
+  & .viewer .path-section.viewer-fold { border-top: 0; border-bottom: 1px solid var(--line);
+    padding: 0 0 .6rem; margin: .6rem 0 .8rem; }
+  & .snippet { margin: 0; }
+  & .title-page .title { margin-top: .5rem; }
+  & .title-page h1 { font-size: 3.7rem; line-height: 1.05; margin: 0; }
+  & .title-page .slogan { font-size: 1.85rem; letter-spacing: -.01em; }
+  & .title-page h1 .two { text-shadow: .055em .055em 0 var(--title-rim), .11em .11em 0 var(--title-shadow); }
+
+  /* Buttons: softly rounded, quiet until hovered; primary actions filled. */
+  & button:not(.link, .toggle, .icon-button, .chip-remove, .job-panel-close, .job-panel-tab, .sort, .help-dot, .picker-row, .offer-open, .fold-toggle, .examples-help),
+  & a.button, & .head-action, & input[type=file]::file-selector-button {
+    font: inherit; font-size: .92rem; font-weight: 500; line-height: 1.25; color: var(--fg);
+    background: var(--bg); border: 1px solid var(--edge); border-radius: var(--radius-control);
+    padding: .42rem .95rem; cursor: pointer; box-shadow: 0 1px 1px rgba(22, 32, 48, .04);
+    transition: border-color .15s ease, background-color .15s ease, box-shadow .15s ease; }
+  & button:not(.link, .toggle, .icon-button, .chip-remove, .job-panel-close, .job-panel-tab, .sort, .help-dot, .picker-row, .offer-open, .fold-toggle, .examples-help):hover,
+  & a.button:hover, & .head-action:hover, & input[type=file]::file-selector-button:hover {
+    border-color: var(--hover-edge); background: var(--hover); }
+  & button:disabled, & button:disabled:hover { opacity: .55; cursor: default; border-color: var(--edge); background: var(--bg); }
+  & button.primary, & a.button,
+  & dialog .actions button.primary, & .path-section button.trace {
+    background: var(--accent); border-color: var(--accent); color: var(--on-accent); font-weight: 600; }
+  & button.primary:hover, & a.button:hover,
+  & dialog .actions button.primary:hover, & .path-section button.trace:hover { background: var(--accent-hover); border-color: var(--accent-hover); }
+  & .path-section button.trace.secondary { background: var(--bg); color: var(--fg); border-color: var(--edge); font-weight: 500; }
+  & .head-action { color: var(--accent); }
+  & button.danger-outline { color: var(--danger); border-color: var(--danger-edge); background: var(--bg); }
+  & button.danger-outline:hover { border-color: var(--danger); background: var(--danger-soft); }
+  & dialog .actions button.danger { background: var(--danger-fill); border-color: var(--danger-fill); color: #fff; }
+  & button.mini { padding: .1rem .4rem; font-size: .8rem; border-radius: 6px; box-shadow: none; }
+  & input[type=file] { font-size: .88rem; color: var(--muted); }
+  & input[type=file]::file-selector-button { margin-right: .6rem; padding: .3rem .8rem; }
+  & .icon-button { border-radius: var(--radius-control); }
+  & .job-panel-foot button.primary { border-radius: var(--radius-control); padding: .65rem; }
+  & .job-panel-tab { border-radius: 0 10px 10px 0; }
+  & :is(button, a, input, select, textarea, summary):focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  /* Fields. */
+  & input:is([type=text], [type=number], [type=email], [type=password], [type=search], [type=date], :not([type])),
+  & select, & textarea {
+    font: inherit; font-size: .92rem; color: var(--fg); background: var(--bg);
+    border: 1px solid var(--edge); border-radius: var(--radius-control); padding: .38rem .6rem;
+    transition: border-color .15s ease, box-shadow .15s ease; }
+  & textarea { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 13px; padding: .6rem .75rem; }
+  & table.species input { padding: .15rem .45rem; font-size: .88rem; }
+  & select { padding-right: 1.8rem; appearance: none; cursor: pointer;
+    background-image: var(--select-arrow);
+    background-repeat: no-repeat; background-position: right .6rem center; }
+  & table.ancestor-sites th.extant select { font-size: .8rem; padding: .1rem 1.1rem .1rem .3rem; border-radius: 6px;
+    background-position: right .3rem center; }
+  & :is(input, select, textarea):focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-ring); }
+  & input[type=checkbox], & input[type=radio] { width: 1rem; height: 1rem; vertical-align: -.15em; margin: 0 .35rem 0 0; }
+  & ul label, & .model-options label { line-height: 1.9; }
+  & .outgroup-list, & .database-option { border-color: var(--edge); border-radius: 10px; }
+  & .database-option:has(input:checked), & .from-homologs { background: var(--accent-soft); }
+  & .from-homologs { border-radius: 0 10px 10px 0; }
+
+  /* Tables: white, light rules, rounded outer corners. */
+  & :is(table.results, table.grid, table.jobs, table.hits, .settings-table) {
+    border-collapse: separate; border-spacing: 0; background: var(--bg); }
+  & :is(table.results, table.grid) { border: 1px solid var(--edge); border-radius: 10px; overflow: hidden; }
+  /* clip, not hidden: a hidden overflow is a scroll container, and a .results-scroll header
+     would stick to the table rather than to its box. */
+  & .results-scroll table.results { overflow: clip; }
+  & :is(table.results, table.grid) :is(th, td) { border: 0; border-bottom: 1px solid var(--line); border-right: 1px solid var(--line); padding: .35rem .65rem; }
+  & table.results :is(th, td) { padding: .35rem .5rem; }  /* many columns: fit without scrolling */
+  & :is(table.results, table.grid) tr > :last-child { border-right: 0; }
+  & :is(table.results, table.grid) tr:last-child > * { border-bottom: 0; }
+  & table.results th, & table.grid tr.group th { background: var(--subtle); color: var(--fg-2); }
+  & table.grid :is(th, td) { padding: .2rem .5rem; }
+  & table.jobs { border: 1px solid var(--edge); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); }
+  & table.jobs :is(th, td) { padding: .65rem .6rem; border-bottom-color: var(--line); }
+  & table.jobs :is(th, td):first-child { padding-left: .85rem; }
+  /* The library's ancestors table has nine columns, several nowrapped so each target
+     keeps to one row; the skin's roomy cells are what tip it into needing a scrollbar
+     beside the open View panel. Same specificity as the rule above, so it must follow it. */
+  & table.library-table :is(th, td) { padding: .5rem .5rem; }
+  & table.jobs thead th, & table.hits thead th { background: var(--subtle); font-size: .82rem; font-weight: 600;
+    color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+  & table.jobs tbody tr:last-child td { border-bottom: 0; }
+  & table.jobs tbody tr:hover td { background: var(--row-hover); }
+  & section.deleted { margin-top: 3rem; }
+  & .deleted .scroll { border-color: var(--edge); border-radius: var(--radius); box-shadow: var(--shadow); }
+  /* The scroll box is the card, so it lines up with the live jobs table above. */
+  & .deleted .scroll table.jobs { border: 0; border-radius: 0; box-shadow: none; overflow: visible; }
+  & .settings-table :is(th, td) { border-bottom-color: var(--line); }
+
+  /* Status pills, chips, messages. */
+  & .status { font-weight: 600; font-size: .8rem; padding: .1rem .6rem; letter-spacing: .01em; }
+  & .status.queued { background: var(--neutral-bg); color: var(--neutral-fg); }
+  & .status.running { background: var(--running-bg); color: var(--running-fg); }
+  & .status.succeeded { background: var(--ok-bg); color: var(--ok-fg); }
+  & .status.failed { background: var(--bad-bg); color: var(--bad-fg); }
+  & .status.cancelled { background: var(--neutral-bg); color: var(--muted); }
+  & .chip { background: var(--accent-soft); padding: .05rem .6rem; }
+  & .message { background: var(--ok-bg); color: var(--ok-fg); border-radius: 10px; padding: .65rem 1rem; }
+  & .message.error { background: var(--bad-bg); color: var(--bad-fg); }
+  & .errors { border-radius: 10px; padding: .65rem 1rem; }
+  & progress { appearance: none; height: .5rem; border: 0; border-radius: 999px; overflow: hidden; background: var(--track); vertical-align: .05em; }
+  & progress::-webkit-progress-bar { background: var(--track); border-radius: 999px; }
+  & progress::-webkit-progress-value { background: var(--accent); border-radius: 999px; }
+  & progress::-moz-progress-bar { background: var(--accent); border-radius: 999px; }
+  & .tags { margin-bottom: 1.25rem; }
+  & .preview { background: var(--subtle); border-radius: 10px; }
+
+  /* Code and logs. */
+  & pre { background: var(--subtle); border: 1px solid var(--line); border-radius: 10px; }
+  & .command pre { border-radius: var(--radius-control); }
+
+  /* Viewers: controls sit in a quiet well; scroll areas get rounded frames. */
+  & .viewer-controls { background: var(--subtle); border: 1px solid var(--line); border-radius: 10px; padding: .75rem 1rem; }
+  & :is(.sites-scroll, .path-scroll) { border-color: var(--edge); border-radius: 10px; }
+  & table.ancestor-sites thead th, & table.path-table thead th, & table.path-table thead th.name { background: var(--subtle); }
+  & .review-actions { background: var(--subtle); border-color: var(--line); border-radius: 10px; }
+
+  /* Overlays. */
+  & dialog { border-radius: 14px; padding: 1.4rem 1.6rem; }
+  & dialog .actions button { border-radius: var(--radius-control); }
+  & .job-panel { top: 3.1rem; border-left-color: var(--edge); }
+  & .job-panel-head, & .job-panel-foot { border-color: var(--line); }
+  & .work-bar { border-radius: 999px; }
+
+  & .site-footer { border-top: 0; justify-content: center; padding: 1.5rem; }
+}
+@media (max-width: 700px) {
+  :root:is([data-skin="clean"], [data-skin="dark"], [data-skin="legible"], [data-skin="matrix"], [data-skin="spectrum"], [data-skin="lagoon"], [data-skin="broadsheet"], [data-skin="dim"], [data-skin="abyss"], [data-skin="retro95"], [data-skin="sciencefair"]) main { padding: 1.25rem 1rem 3rem; }
+  :root:is([data-skin="clean"], [data-skin="dark"], [data-skin="legible"], [data-skin="matrix"], [data-skin="spectrum"], [data-skin="lagoon"], [data-skin="broadsheet"], [data-skin="dim"], [data-skin="abyss"], [data-skin="retro95"], [data-skin="sciencefair"]) :is(section.step, section.results, details.inputs, details.stages, details.files, details.libraries) { padding-left: 1rem; padding-right: 1rem; }
+}
+
+/* The landing and About pages' backdrop (backdrop.js): PDB structures drifting down in
+   muted sage, dusty blue, lavender and warm grey, faint enough to read as texture. Scoped
+   to Clean alone; Dark, Spectrum and Lagoon set their own palette, and the skins that show no
+   backdrop at all (High legibility, Matrix, Classic) need none. */
+:root[data-skin="clean"] .backdrop {
+  --backdrop-colors: #8799a8, #9a8fa3, #8fa69a, #a99a83;
+  --backdrop-count: 9;
+  --backdrop-alpha: .25;
+}

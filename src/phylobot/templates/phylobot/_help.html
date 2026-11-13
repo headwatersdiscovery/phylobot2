@@ -1,0 +1,12 @@
+{# A "?" beside a label, opening a short explanation. The native popover API does the #}
+{# showing, so there is no script; where it is unsupported the CSS keeps the panel #}
+{# hidden rather than spilling it into the page. #}
+{# Without `body` only the button is rendered, so several "?" can share one popup: #}
+{# include it once with the text, then beside each further label without. An id may #}
+{# hold only one panel, or the duplicate ids would make the popover unopenable. #}
+<button type="button" class="help-dot" popovertarget="help-{{ id }}"
+        aria-label="What {{ title }} means">?</button>
+{% if body %}<span class="help-popover" popover id="help-{{ id }}">
+  <strong>{{ title }}</strong>
+  <span>{{ body|safe }}</span>
+</span>{% endif %}

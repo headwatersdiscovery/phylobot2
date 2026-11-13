@@ -1,0 +1,91 @@
+{% extends "phylobot/base.html" %}
+{% block title %}Structure · {{ job.name|default:"Job" }} · PhyloBot{% endblock %}
+{% block content %}
+{% load static %}<script src="{% static 'phylobot/3Dmol-2.5.3.min.js' %}" defer></script><script src="{% static 'phylobot/structure.js' %}" defer></script><script src="{% static 'phylobot/toc.js' %}" defer></script><script src="{% static 'phylobot/sequence_lookup.js' %}" defer></script>
+<p class="hint"><a href="{% url 'job_detail' job.id %}">← {{ job.name|default:"Job" }}</a></p>
+<h1>Ancestors on Structure</h1>
+{% if not selection %}
+<p class="hint">This job has no reconstructed ancestors to show on a structure{% if job.status != "succeeded" %} (it has not finished){% endif %}.</p>
+{% else %}
+{% include "phylobot/_structure_viewer.html" %}
+
+{# Attaching and removing structures: POST forms, so outside the viewer's GET form, in a #}
+{# second container of the same two columns so the section lines up with the viewer's. #}
+<div class="viewer sectioned structure-manage"><div></div><div class="viewer-sections">
+<details class="viewer-section" id="structures" open>
+  <summary><h2>Attached Structures{% if structures %} <span class="hint">({{ structures|length }})</span>{% endif %}</h2> {% include "phylobot/_help.html" with id="structures" title="Structures" body="Structures are attached to the job, and stay with it: PDB entries, predicted models from AlphaFold DB, or your own files (PDB format or mmCIF), such as a model of an ancestor predicted elsewhere. Attach as many as are useful: extant relatives, and a model for each ancestor you care about. Nothing of the job's is sent anywhere: fetching sends only the identifier, and the lookup only the name and species you type." %}</summary>
+  {% if structures %}
+  <table class="hits structures-attached">
+    <thead><tr><th>Structure</th><th>From</th><th>Title</th><th>Chains</th><th></th></tr></thead>
+    <tbody>{% for s in structures %}
+      <tr>
+        <td><a href="{% url 'structure_viewer' job.id %}?structure={{ s.id }}">{{ s.label }}</a></td>
+        <td>{% if s.source == "rcsb" %}<a href="https://www.rcsb.org/structure/{{ s.accession }}" target="_blank" rel="noopener noreferrer">PDB</a>{% elif s.source == "alphafold" %}<a href="https://alphafold.ebi.ac.uk/entry/{{ s.accession }}" target="_blank" rel="noopener noreferrer">AlphaFold DB</a>{% else %}Uploaded{% endif %}{% if s.predicted %} <span class="hint">· predicted</span>{% endif %}</td>
+        <td>{{ s.title|default:"—" }}</td>
+        <td>{% for c in s.chains %}{{ c.id }} <span class="hint">({{ c.residues }})</span>{% if not forloop.last %}, {% endif %}{% endfor %}</td>
+        <td class="structure-row-actions"><a href="{% url 'structure_file' job.id s.id %}?download=1">download</a>
+          <form method="post" action="{% url 'structure_drop' job.id s.id %}">{% csrf_token %}<button class="link">remove</button></form></td>
+      </tr>{% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p class="hint">No structure is attached to this job yet. Attach one or several below.</p>
+  {% endif %}
+
+  {% if can_attach %}
+  <div class="structure-attach">
+    <div>
+      <h3>By Identifier</h3>
+      <form method="post" action="{% url 'structure_attach' job.id %}">{% csrf_token %}
+        <p><label>PDB IDs or UniProt accessions<br>
+          <input type="text" name="identifier" maxlength="200" size="34" placeholder="2SRC, 1OPL, P12931" autocomplete="off" required></label></p>
+        <p class="hint">Several at once, with commas or spaces between them (up to {{ max_at_once }}). A PDB ID fetches
+          that entry from RCSB; a UniProt accession fetches its predicted model from AlphaFold DB.</p>
+        {% if suggested %}<details class="structure-suggested"><summary>{{ suggested|length }} of this job's sequences name a UniProt accession</summary>
+          <p class="hint">Click one to add it to the box above.</p>
+          <p>{% for name, accession in suggested %}<button type="button" class="link" data-structure-suggest="{{ accession }}" title="{{ name }}">{{ accession }}</button> <span class="hint">{{ name }}</span>{% if not forloop.last %} · {% endif %}{% endfor %}</p></details>{% endif %}
+        <p class="consent"><input type="checkbox" name="consent" value="on" id="attach-consent" required>
+          <label for="attach-consent">Send these identifiers to RCSB or AlphaFold DB</label>
+          <span class="required-tag">Required</span></p>
+        <p><button type="submit" class="primary">Attach</button></p>
+      </form>
+    </div>
+    <div>
+      <h3>Upload Files</h3>
+      <form method="post" action="{% url 'structure_upload' job.id %}" enctype="multipart/form-data">{% csrf_token %}
+        <p><label>PDB or mmCIF files, or a predictor's ZIP<br><input type="file" name="file" accept=".pdb,.ent,.cif,.mmcif,.zip" multiple required></label></p>
+        <p><label>Name (optional, for a single file)<br><input type="text" name="label" maxlength="80" placeholder="AncSR2, AlphaFold"></label></p>
+        <p class="check"><label><input type="checkbox" name="predicted" value="on"> Predicted models (the B-factor column is pLDDT)</label></p>
+        <p class="hint">For structures that are in no database, and for models of this job's ancestors predicted
+          elsewhere: AlphaFold Server's ZIP as downloaded (its top-ranked model is taken), a .cif from AlphaFold 3,
+          a .pdb from ColabFold or ESMFold. Up to {{ max_at_once }} files, {{ max_mb }} MB each. They stay on this machine.</p>
+        <p><button type="submit">Upload</button></p>
+      </form>
+    </div>
+  </div>
+  <h3>Find by Name</h3>
+  <form hx-get="{% url 'structure_find' job.id %}" hx-target="#structure-lookup-results" hx-swap="innerHTML"
+        hx-indicator="#structure-lookup-working" method="get" action="{% url 'structure_find' job.id %}"
+        class="sequence-lookup-form" data-suggest-url="{% url 'homolog_suggest' %}">
+    <datalist id="species-list">{% for sci, common in model_species %}<option value="{{ sci }}">{{ common }}</option>{% endfor %}</datalist>
+    <datalist id="gene-list"></datalist>
+    <div class="lookup-fields">
+      <p>{{ lookup_form.protein.label_tag }}<br>{{ lookup_form.protein }}</p>
+      <p>{{ lookup_form.species.label_tag }}<br>{{ lookup_form.species }}</p>
+    </div>
+    <p class="check">{{ lookup_form.reviewed_only }} {{ lookup_form.reviewed_only.label_tag }}</p>
+    <p class="consent">{{ lookup_form.consent }}
+      <label for="{{ lookup_form.consent.id_for_label }}">{{ lookup_form.consent.label }}</label>
+      {% include "phylobot/_help.html" with id="structure-lookup-consent" title="Looking up structures at UniProt" body="Only the protein or gene name and the species you type are sent to UniProt, which lists each matching protein's PDB entries and AlphaFold model. Your sequences are never sent." %}
+      <span class="required-tag">Required</span></p>
+    <p><button type="submit">Look up structures</button>
+      <span id="structure-lookup-working" class="htmx-indicator hint">Searching UniProt…</span></p>
+  </form>
+  <div id="structure-lookup-results" aria-live="polite"></div>
+  {% else %}
+  <p class="hint">A job holds at most {{ max_structures }} structures: remove one to attach another.</p>
+  {% endif %}
+</details>
+</div></div>
+{% endif %}
+{% endblock %}

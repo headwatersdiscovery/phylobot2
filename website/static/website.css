@@ -1,0 +1,292 @@
+/* phylobot.com only (website/): the landing page's own layout, on top of the app's styles,
+   which build.py copies beside it (site.css, then the skins).
+
+   Layout: a title that fills the first screen, then full-width bands, each with a centred
+   column. Solid bands alternate with clear ones, through which the backdrop's structures keep
+   falling. The one piece of motion that is the page's own is the pipeline figure.
+
+   The look is a journal's: serif headings, hairline rules, numbered figures with captions,
+   and one colour. Everything is ink (the text colour, in tints) except what the page is
+   pointing at, which takes the skin's accent. No colour is this page's own, so every skin in
+   the menu dresses it: the tokens are --fg, --bg, --accent, and currentColor for rules.
+   Text takes var(--fg) only where the element paints its own var(--bg) behind it: some
+   skins (PhyloBot '95) set the page itself light-on-dark. */
+:root {
+  --site-serif: "Source Serif 4", "Iowan Old Style", "Palatino Linotype", Georgia, serif;
+  --site-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  --hair: color-mix(in srgb, currentColor 16%, transparent);    /* a rule, on any ground */
+  --band-pad: clamp(3.5rem, 2rem + 6vw, 6.5rem);
+}
+
+html { scroll-padding-top: 4.5rem; scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+/* The skins set a width and padding for the app's pages, hence the weight of this selector. */
+:root[data-skin] .website main, .website main { max-width: none; margin: 0; padding: 0; }
+.website .wrap { max-width: 70rem; margin: 0 auto; padding: 0 1.5rem; }
+.website .wrap.narrow { max-width: 54rem; }
+.website [id] { scroll-margin-top: 4.5rem; }
+
+/* The skin menu, alone in the corner where the bar's was. */
+.site-skin { position: absolute; top: .9rem; right: 1.25rem; z-index: 5; }
+
+/* A few links to the page's own sections, once the title has scrolled away. */
+.site-nav { position: fixed; top: .7rem; left: 50%; transform: translateX(-50%); z-index: 20; display: flex; gap: .15rem;
+            align-items: center; padding: .3rem .4rem; border-radius: 999px; white-space: nowrap;
+            background: color-mix(in srgb, var(--bg) 86%, transparent); backdrop-filter: blur(12px);
+            border: 1px solid var(--line); box-shadow: 0 6px 24px -10px rgba(15, 25, 45, .35); font-size: .88rem; }
+.site-nav a { padding: .3rem .8rem; border-radius: 999px; color: var(--fg); text-decoration: none; }
+.site-nav a:hover { background: color-mix(in srgb, var(--fg) 8%, transparent); }
+.site-nav a[aria-current="true"] { background: color-mix(in srgb, var(--accent) 14%, transparent); color: var(--accent); }
+.site-nav .brand { font-weight: 700; }
+.site-nav .brand .two { color: var(--accent); }
+
+/* ---- the title: the app's title page, filling the first screen so nothing below it shows
+   half-drawn; a quiet cue at its foot says there is more. ---- */
+.website .title-page.hero { max-width: 62rem; margin: 0 auto; padding: 3rem 1.5rem 0; box-sizing: border-box;
+                            min-height: min(100svh, 60rem); display: flex; flex-direction: column; }
+/* (The skins give the title a margin of its own, hence the weight of this selector.) */
+:root[data-skin] .website .title-page .title { position: relative; margin: auto 0; gap: 1.1rem; }
+.website .title-page .intro { text-align: center; max-width: 44rem; font-size: 1.15rem; }
+.website .title-page .intro.audience { font-size: .76rem; letter-spacing: .16em; text-transform: uppercase; opacity: .68; margin-top: -.35rem; }
+.website .title-page .actions { gap: .75rem 1.5rem; margin-top: .9rem; }
+.website .title-page .actions :is(a.button, .head-action) { padding: .6rem 1.4rem; font-weight: 600; font-size: 1rem; }
+.website .title-page .actions .quiet { font-weight: 600; text-decoration: none; }
+.website .title-page .actions .quiet::after { content: " \2192"; }
+.website .title-page .actions .quiet:hover { text-decoration: underline; }
+.website .head-action .play { font-size: .8em; }
+.scroll-cue { align-self: center; display: flex; flex-direction: column; align-items: center; gap: .45rem; padding: 1.5rem 1rem 1.6rem;
+              font-size: .72rem; letter-spacing: .16em; text-transform: uppercase; text-decoration: none; opacity: .55; }
+:root[data-skin] .website .scroll-cue { color: inherit; }
+.scroll-cue::after { content: ""; width: .55rem; height: .55rem; border: solid currentColor; border-width: 0 1.5px 1.5px 0; transform: rotate(45deg); }
+.scroll-cue:hover { opacity: 1; }
+
+/* ---- bands ---- */
+.band { padding: var(--band-pad) 0; }
+.band:is(.how, .who, .get) { background: var(--bg); color: var(--fg); }
+.band-head { max-width: 44rem; margin: 0 0 2.75rem; }
+/* The skins size headings for the app's pages, hence the weight of these selectors. */
+:root[data-skin] .website .band-head h2 { font-size: clamp(2rem, 1.45rem + 2.2vw, 3rem); font-weight: 600; line-height: 1.08;
+  letter-spacing: -.015em; margin: 0 0 .7rem; padding: 0; border: 0; text-wrap: balance; }
+.website .band-head p { font-size: 1.15rem; line-height: 1.5; margin: 0; opacity: .72; }
+:root[data-skin] .website .band h3 { font-size: 1.15rem; font-weight: 600; line-height: 1.3; margin: 0 0 .45rem; text-wrap: balance; }
+
+/* ---- Figure 1: the pipeline, played (website.js draws the stage) ----
+   Drawn as a figure in a paper: rules above and below, no box, one ink. Residues are tints
+   of the text colour by chemical class, so a conserved column still reads as a column; the
+   accent marks only what the step is about (the chosen ancestor, the path, what changed). */
+.demo { margin: 0; }
+.demo-stage { overflow: hidden; padding: 1.75rem 1rem 1.5rem; border-block: 1px solid var(--hair); }
+.demo-canvas { position: relative; width: 690px; margin: 0 auto; --move: .8s; transform-origin: top left; }
+.demo-canvas svg { position: absolute; inset: 0; overflow: visible; }
+.demo-canvas .branch { fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round;
+                       stroke-dasharray: 1; stroke-dashoffset: 1;
+                       transition: stroke-dashoffset var(--move) ease-out var(--delay, 0s), stroke .4s, stroke-width .4s, opacity .4s; }
+.demo-canvas .tip-dot { fill: currentColor; opacity: 0; transition: opacity .3s; }
+.demo-canvas .node { fill: var(--bg); stroke: currentColor; stroke-width: 1.5; cursor: pointer; opacity: 0;
+                     transform-box: fill-box; transform-origin: center; transform: scale(.2);
+                     transition: opacity .3s, transform .35s cubic-bezier(.3, 1.4, .5, 1), fill .3s, stroke .3s; }
+.demo-canvas .node.selected { fill: var(--accent); stroke: var(--accent); }
+.demo-canvas .halo { fill: none; stroke: var(--accent); stroke-width: 1; opacity: 0; transition: opacity .3s; pointer-events: none; }
+.demo-row { position: absolute; left: 262px; height: 28px; transition: opacity .5s; }
+.demo-row .name { position: absolute; left: 0; top: 0; width: 50px; line-height: 28px; font: 400 .7rem/28px var(--site-mono);
+                  opacity: .6; white-space: nowrap; }
+.demo-row .res { position: absolute; top: 0; width: 26px; height: 28px; border-radius: 3px; display: grid; place-items: center;
+                 font: 500 .8rem/1 var(--site-mono); background: color-mix(in srgb, currentColor var(--ink, 8%), transparent);
+                 transition: transform var(--move) cubic-bezier(.3, .7, .2, 1), opacity .5s, box-shadow .3s, background-color .3s; }
+.demo-row .res.h { --ink: 5%; } .demo-row .res.p { --ink: 10%; } .demo-row .res.b { --ink: 16%; } .demo-row .res.a { --ink: 23%; }
+.demo-row .res.gap { background: none; opacity: 0; }
+/* The rest of the family: the same rows, a hair tall, swelling towards the six under the lens. */
+.demo-row.mini { height: var(--h); }
+.demo-row.mini .res { height: var(--h); border-radius: 1.5px; font-size: var(--fs, 0); font-weight: 400; }
+.demo-canvas .branch.ctx { stroke-width: .5; stroke-opacity: .6; }
+.demo-row .res.changed { box-shadow: 0 0 0 1.5px var(--accent); background: color-mix(in srgb, var(--accent) 16%, transparent); z-index: 1; }
+/* The ancestor's row is the accent's: this is the thing being inferred. */
+.demo-row.ancestor .name { width: auto; left: auto; right: calc(100% - 50px); padding-right: 8px; opacity: 1; color: var(--accent); font-weight: 500; }
+/* Each ancestral residue is a small bar chart: filled from the bottom as far as its posterior
+   probability (--pp, set by website.js), so a certain site is solid and a doubtful one half-empty. */
+.demo-row.ancestor .res { --fill: color-mix(in srgb, var(--accent) 34%, transparent); --rest: color-mix(in srgb, var(--accent) 7%, transparent);
+                          background: linear-gradient(to top, var(--fill) var(--pp, 100%), var(--rest) var(--pp, 100%));
+                          box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 34%, transparent); }
+.demo-row.ancestor .res.changed { box-shadow: 0 0 0 1.5px var(--accent); }
+/* A protein at every ancestral node: that is what a node is. */
+.demo-canvas .fold-glyph { fill: none; stroke: currentColor; stroke-width: 1.3; stroke-linecap: round; stroke-linejoin: round;
+                           opacity: 0; transition: opacity .4s .15s, stroke .3s; pointer-events: none; }
+.demo-canvas .fold-glyph.selected { stroke: var(--accent); }
+.demo-canvas:is([data-step="4"], [data-step="5"]) .fold-glyph { opacity: .75; }
+.demo-canvas:is([data-step="4"], [data-step="5"]) .fold-glyph.selected { opacity: 1; }
+.demo-chip { position: absolute; transform: translate(-50%, 5px); padding: .05rem .4rem; border-radius: 4px; white-space: nowrap;
+             background: var(--bg); color: var(--accent); box-shadow: 0 0 0 1px var(--accent);
+             font: 500 .66rem/1.5 var(--site-mono); opacity: 0; transition: opacity .4s; pointer-events: none; }
+/* What each step has brought on stage: the canvas carries data-step, and every step keeps
+   what the ones before it showed. */
+.demo-canvas[data-step="1"] .demo-row.tip .res { transform: translateX(var(--packed)); }
+.demo-canvas:not([data-step="1"]) .demo-row.tip .res { transform: translateX(var(--aligned)); }
+.demo-canvas:not([data-step="1"]) .res.gap { opacity: .35; }
+/* (Round line caps would leave a dot at each undrawn branch's end.) */
+.demo-canvas:is([data-step="1"], [data-step="2"]) .branch { opacity: 0; }
+.demo-canvas:is([data-step="3"], [data-step="4"], [data-step="5"]) .branch { stroke-dashoffset: 0; }
+.demo-canvas:is([data-step="3"], [data-step="4"], [data-step="5"]) .tip-dot { opacity: 1; }
+.demo-canvas:is([data-step="4"], [data-step="5"]) .node { opacity: 1; transform: none; }
+.demo-canvas:is([data-step="4"], [data-step="5"]) .halo.selected { opacity: 1; }
+.demo-canvas:not([data-step="4"], [data-step="5"]) .demo-row.ancestor { opacity: 0; }
+.demo-canvas[data-step="5"] .branch.on-path { stroke: var(--accent); stroke-width: 2.5; }
+.demo-canvas[data-step="5"] .branch:not(.on-path) { opacity: .28; }
+.demo-canvas[data-step="5"] .demo-row.tip:not(.on-path) { opacity: .28; }
+.demo-canvas[data-step="5"] .demo-chip { opacity: 1; }
+@media (prefers-reduced-motion: reduce) { .demo-canvas * { transition: none !important; } }
+
+.demo-steps { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 1.5rem;
+              counter-reset: step; }
+.demo-steps li { counter-increment: step; }
+/* The skins dress every button; these are the list's own, hence the weight of the selectors. */
+:root[data-skin] .website .demo-steps button {
+  all: unset; box-sizing: border-box; display: block; width: 100%; cursor: pointer; padding: 1.1rem 0 0;
+  position: relative; opacity: .5; transition: opacity .3s; }
+:root[data-skin] .website .demo-steps button::before { content: ""; position: absolute; left: 0; top: -1.5px; height: 2px; width: 0; background: var(--accent); }
+.demo-steps button b { display: block; font-size: 1.05rem; font-weight: 600; margin-bottom: .35rem; }
+.demo-steps button b::before { content: counter(step); font: 400 .78rem/1 var(--site-mono); margin-right: .7em; opacity: .7; }
+.demo-steps button span { display: block; font-size: .9rem; line-height: 1.5; }
+:root[data-skin] .website .demo-steps button:hover, :root[data-skin] .website .demo-steps button[aria-current="step"] { opacity: 1; }
+:root[data-skin] .website .demo-steps button[aria-current="step"] b::before { color: var(--accent); opacity: 1; }
+:root[data-skin] .website .demo-steps button[aria-current="step"]::before { width: 100%; }
+:root[data-skin] .website .demo.playing .demo-steps button[aria-current="step"]::before { animation: demo-dwell var(--dwell, 3s) linear; }
+:root[data-skin] .website .demo-steps button:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; border-radius: 4px; }
+@keyframes demo-dwell { from { width: 0; } to { width: 100%; } }
+.demo-note { display: flex; margin: 1.5rem 0 0; font-size: .85rem; }
+.demo-note > span { opacity: .7; }
+.demo-note button { margin-left: auto; }
+/* What it runs, set like the makers' names on an instrument. */
+.tools { margin: 3rem 0 0; display: flex; flex-wrap: wrap; gap: .5rem 1.6rem; align-items: baseline;
+         font: 400 .72rem/1.6 var(--site-mono); letter-spacing: .08em; text-transform: uppercase; }
+.tools span { opacity: .62; }
+.tools a { margin-left: auto; font: inherit; }
+
+/* ---- the tutorial video: a 16:9 place that never moves the page when the player arrives ---- */
+.band.tutorial { padding-bottom: 0; }
+.video { aspect-ratio: 16 / 9; max-width: 100%; border-radius: 12px; overflow: hidden; background: #10141c;
+         border: 1px solid var(--hair); box-shadow: 0 1px 2px rgba(15, 25, 45, .08), 0 34px 70px -34px rgba(15, 25, 45, .55); }
+.video iframe { display: block; width: 100%; height: 100%; border: 0; }
+.video-poster { position: relative; display: grid; place-items: center; width: 100%; height: 100%;
+                background: radial-gradient(120% 90% at 50% 40%, #2a3447, #10141c 75%) center / cover no-repeat;
+                color: #fff; text-decoration: none; }
+.video-play { width: 5.2rem; height: 5.2rem; border-radius: 50%; background: rgba(255, 255, 255, .94);
+              box-shadow: 0 6px 24px rgba(0, 0, 0, .35); display: grid; place-items: center;
+              transition: transform .15s ease-out; }
+.video-play::before { content: ""; margin-left: .4rem; border-style: solid; border-width: .95rem 0 .95rem 1.6rem;
+                      border-color: transparent transparent transparent #1d2330; }
+.video-poster:hover .video-play, .video-poster:focus-visible .video-play { transform: scale(1.07); }
+.video-poster:focus-visible { outline: 3px solid var(--accent); outline-offset: -3px; }
+.video-note { position: absolute; right: .9rem; bottom: .7rem; font-size: .78rem; color: rgba(255, 255, 255, .75); }
+@media (prefers-reduced-motion: reduce) { .video-play { transition: none; } }
+
+/* ---- a look inside: the viewers, as numbered figures ---- */
+.feature { display: grid; grid-template-columns: minmax(0, 4fr) minmax(0, 8fr); gap: clamp(1.5rem, 4vw, 4rem); align-items: center; }
+.feature + .feature { margin-top: clamp(3rem, 7vw, 5.5rem); }
+.feature:nth-of-type(even) { grid-template-columns: minmax(0, 8fr) minmax(0, 4fr); }
+.feature:nth-of-type(even) .feature-text { order: 2; }
+:root[data-skin] .website .feature-text h3 { font-size: 1.75rem; line-height: 1.15; margin: 0 0 .8rem; }
+.feature-text p { font-size: 1.05rem; line-height: 1.65; margin: 0; opacity: .86; }
+.shot { margin: 0; }
+.shot .frame { border-radius: 10px; overflow: hidden; border: 1px solid var(--hair); background: var(--bg);
+               box-shadow: 0 1px 2px rgba(15, 25, 45, .08), 0 34px 70px -34px rgba(15, 25, 45, .55); }
+.shot img { display: block; width: 100%; height: auto; cursor: zoom-in; }
+.shot .dark { display: none; }
+:root:is([data-skin="dark"], [data-skin="dim"], [data-skin="abyss"], [data-skin="matrix"]) .shot .light { display: none; }
+:root:is([data-skin="dark"], [data-skin="dim"], [data-skin="abyss"], [data-skin="matrix"]) .shot .dark { display: block; }
+.shot figcaption { margin-top: .9rem; font-size: .85rem; opacity: .7; }
+dialog.zoom { padding: 0; border: 0; border-radius: 10px; max-width: min(96vw, 1500px); max-height: 94vh; overflow: auto;
+              background: var(--bg); box-shadow: 0 30px 90px rgba(0, 0, 0, .5); }
+dialog.zoom img { display: block; width: 100%; height: auto; cursor: zoom-out; }
+dialog.zoom::backdrop { background: rgba(8, 12, 20, .72); }
+
+/* ---- who it is for; what makes it trustworthy: columns under a rule, as in a contents page ---- */
+.audiences, .claims { list-style: none; margin: 0; padding: 0; display: grid; gap: 2.5rem 3rem; }
+.audiences { grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr)); }
+.claims { grid-template-columns: repeat(auto-fit, minmax(min(100%, 24rem), 1fr)); }
+:is(.audiences, .claims) li { padding-top: 1.3rem; border-top: 1px solid var(--hair); }
+:root[data-skin] .website :is(.audiences, .claims) h3 { font-size: 1.3rem; line-height: 1.2; margin: 0 0 .6rem; }
+:is(.audiences, .claims) p { margin: 0; line-height: 1.65; opacity: .86; }
+.fold { margin-top: 1rem; border: 1px solid var(--hair); border-radius: 10px; background: var(--bg); color: var(--fg); }
+.claims + .fold { margin-top: 3rem; }
+.fold > summary { cursor: pointer; padding: .85rem 1.2rem; font-weight: 600; }
+.fold > summary:hover { color: var(--accent); }
+.fold > .about { max-width: none; margin: 0; padding: 0 1.25rem 1.1rem; }
+.fold > .about > h3:first-child { margin-top: .25rem; }
+
+/* ---- quick start: commands in a terminal, whatever the skin ---- */
+.website .get-it { grid-template-columns: repeat(auto-fit, minmax(min(100%, 26rem), 1fr)); gap: 2.5rem; align-items: start; }
+.terminal { position: relative; }
+.terminal .command { display: block; }
+:root[data-skin] .website .terminal pre, .website .terminal pre {
+  margin: 0; padding: 1.2rem 1.35rem; border: 0; border-radius: 12px; background: #10141c; color: #e6edf3;
+  font: 400 .84rem/1.75 var(--site-mono); overflow-x: auto; box-shadow: 0 1px 2px rgba(15, 25, 45, .1), 0 30px 60px -32px rgba(15, 25, 45, .6); }
+:root[data-skin] .website .terminal pre code, .website .terminal pre code { background: none; color: inherit; padding: 0; font: inherit; }
+/* Copy sits level with the heading, clear of a long command. */
+:root[data-skin] .website .terminal button.copy, .website .terminal button.copy { position: absolute; top: 0; right: 0; margin: 0; }
+:root[data-skin] .website .terminal h3 { margin-bottom: .8rem; padding-right: 4rem; }
+.terminal .hint { margin: .9rem 0 0; }
+
+/* ---- how to cite, and every method ---- */
+.website .refs.band .about { margin: 0 auto; }
+:root[data-skin] .website .refs h2[id] { margin: 3.5rem 0 .5rem; font-size: 1.5rem; }
+.refs .source { margin-top: 3rem; font-size: .92rem; opacity: .8; }
+.method-group { border-top: 1px solid var(--hair); }
+.method-group:last-of-type { border-bottom: 1px solid var(--hair); }
+.method-group > summary { display: flex; flex-wrap: wrap; gap: .1rem .75rem; align-items: baseline; padding: .6rem .25rem;
+                          cursor: pointer; list-style: none; }
+.method-group > summary::-webkit-details-marker { display: none; }
+.method-group > summary::before { content: "▸"; opacity: .6; width: .8rem; flex: none; }
+.method-group[open] > summary::before { content: "▾"; }
+.method-group > summary:hover .method-heading { color: var(--accent); }
+.method-group .method-heading { font-weight: 600; }
+.method-group > summary .hint { flex: 1 1 16rem; }
+.method-group > :not(summary) { margin-left: 1.05rem; }
+.website .about .method-group ul.methods { margin-top: .25rem; }
+
+/* ---- the serif ---- */
+
+/* (After the rules it refines: they weigh the same.) The serif is for the skins with no typeface of their own (they set the system's). The
+   others keep theirs: High legibility's is the point of it, and Matrix, Broadsheet and
+   PhyloBot '95 would not be themselves in another. (The faces are bundled: Broadsheet and
+   Dark II declare them.) */
+:root:is([data-skin="clean"], [data-skin="dark"], [data-skin="spectrum"], [data-skin="lagoon"]) .website {
+  & .title-page .slogan { font-family: var(--site-serif); font-style: italic; font-weight: 400; letter-spacing: -.01em;
+                          font-size: clamp(1.9rem, 1.5rem + 1.8vw, 2.6rem); }
+  & .band-head h2 { font-family: var(--site-serif); font-weight: 400; letter-spacing: -.02em; }
+  & :is(.feature-text, .audiences, .claims) h3 { font-family: var(--site-serif); font-weight: 600; letter-spacing: -.01em; }
+  & .refs h2[id] { font-family: var(--site-serif); font-weight: 600; }
+  & :is(.shot figcaption, .demo-note) b { font-family: var(--site-serif); font-style: italic; font-weight: 600; font-size: 1.08em; }
+}
+
+/* ---- narrow windows ---- */
+@media (max-width: 820px) {
+  .site-nav { display: none; }
+  .feature, .feature:nth-of-type(even) { grid-template-columns: minmax(0, 1fr); }
+  .feature:nth-of-type(even) .feature-text { order: 0; }
+  .demo-steps { grid-template-columns: minmax(0, 1fr); gap: 0; margin-top: 1.25rem; }
+  :root[data-skin] .website .demo-steps button { padding: .7rem 0 .7rem 1rem; border-left: 2px solid var(--hair); }
+  :root[data-skin] .website .demo-steps button::before { display: none; }
+  :root[data-skin] .website .demo-steps button[aria-current="step"] { border-left-color: var(--accent); }
+  .tools a { margin-left: 0; }
+}
+@media (max-width: 700px) {
+  .website .wrap { padding: 0 1rem; }
+  .website .about table.comparison { display: block; overflow-x: auto; table-layout: auto; }
+  .website .about table.comparison :is(th, td) { min-width: 4.2rem; }
+  .site-skin { position: static; display: flex; justify-content: flex-end; padding: .6rem 1rem 0; }
+  .website .title-page.hero { padding-top: 1rem; min-height: calc(100svh - 3rem); }
+}
+
+/* ---- one skin at a time ---- */
+
+/* Matrix: residues rain behind the title (matrix-rain.js), as they do in the app's bar. */
+:root[data-skin="matrix"] [data-matrix-rain] canvas.matrix-rain { position: absolute; inset: 0; width: 100%; height: 100%;
+  z-index: -1; opacity: .35; pointer-events: none; }
+/* PhyloBot '95: the homepage is white on a starfield, and the menu has no bar to sit on... */
+:root[data-skin="retro95"] .site-skin { color: #fff; }
+:root[data-skin="retro95"] .site-skin select { background: #c0c0c0; color: #000; }
+/* ...so in the bands that paint no surface of their own, text and links take the homepage's
+   colours, not the windows'. */
+:root[data-skin="retro95"] .website .band:not(.how, .who, .get) :is(h2, h3) { color: inherit; }
+:root[data-skin="retro95"] .band:not(.how, .who, .get) .hint { color: #c0c0c0; }
+:root[data-skin="retro95"] .band:not(.how, .who, .get) :is(a, button.link):not(.fold *) { color: #00ffff; }

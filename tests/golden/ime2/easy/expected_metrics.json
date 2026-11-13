@@ -1,0 +1,7 @@
+{
+  "_note": "Set by the project owner 2026-09-27 from the first MAFFT + IQ-TREE run (RF 0, 5/5 clades, identity mean 0.826, min 0.777).",
+  "max_rf_distance": 0,
+  "min_clades_recovered_fraction": 1.0,
+  "min_mean_identity": 0.80,
+  "min_identity": 0.75
+}

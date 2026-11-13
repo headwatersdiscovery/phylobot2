@@ -1,0 +1,11 @@
+{% extends "phylobot/base.html" %}
+{% block title %}Alignment · {{ job.name|default:"Job" }} · PhyloBot{% endblock %}
+{% block content %}
+{% load static %}<script src="{% static 'phylobot/alignment.js' %}" defer></script><script src="{% static 'phylobot/plots.js' %}" defer></script><script src="{% static 'phylobot/fold.js' %}" defer></script>
+<p class="hint"><a href="{% url 'job_detail' job.id %}">← {{ job.name|default:"Job" }}</a></p>
+<div class="page-head">
+  <h1>Alignment Viewer</h1>
+  {% include "phylobot/_alignment_viewer_actions.html" %}
+</div>
+{% include "phylobot/_alignment_viewer.html" %}
+{% endblock %}

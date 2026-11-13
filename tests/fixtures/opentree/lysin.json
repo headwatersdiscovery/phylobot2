@@ -1,0 +1,1136 @@
+[
+ {
+  "body": {
+   "date_created": "2025-12-20 00:55:58",
+   "filtered_flags": [
+    "barren",
+    "environmental",
+    "hidden",
+    "hybrid",
+    "inconsistent",
+    "major_rank_conflict",
+    "major_rank_conflict_inherited",
+    "merged",
+    "not_otu",
+    "viral",
+    "was_container"
+   ],
+   "num_source_studies": 1931,
+   "num_source_trees": 2064,
+   "root": {
+    "node_id": "ott93302",
+    "num_tips": 2385875,
+    "taxon": {
+     "name": "cellular organisms",
+     "ott_id": 93302,
+     "rank": "no rank",
+     "tax_sources": [
+      "ncbi:131567"
+     ],
+     "unique_name": "cellular organisms"
+    }
+   },
+   "synth_id": "opentree16.1",
+   "taxonomy_version": "3.7draft3"
+  },
+  "endpoint": "tree_of_life/about",
+  "payload": {},
+  "status": 200
+ },
+ {
+  "body": {
+   "context": "All life",
+   "governing_code": "undefined",
+   "includes_approximate_matches": false,
+   "includes_deprecated_taxa": false,
+   "includes_suppressed_names": false,
+   "matched_names": [
+    "Haliotis australis",
+    "Haliotis conicopora",
+    "Haliotis corrugata",
+    "Haliotis cracherodii",
+    "Haliotis cyclobates",
+    "Haliotis discus",
+    "Haliotis discus hannai",
+    "Haliotis diversicolor",
+    "Haliotis fulgens",
+    "Haliotis gigantea",
+    "Haliotis iris",
+    "Haliotis kamtschatkana",
+    "Haliotis laevigata",
+    "Haliotis midae",
+    "Haliotis ovina",
+    "Haliotis pustulata",
+    "Haliotis roei",
+    "Haliotis rubra",
+    "Haliotis rufescens",
+    "Haliotis scalaris",
+    "Haliotis sieboldii",
+    "Haliotis sorenseni",
+    "Haliotis tuberculata",
+    "Haliotis tuberculata coccinea",
+    "Haliotis tuberculata tuberculata",
+    "Haliotis varia",
+    "Haliotis walallensis"
+   ],
+   "results": [
+    {
+     "matches": [
+      {
+       "is_approximate_match": false,
+       "is_synonym": false,
+       "matched_name": "Haliotis australis",
+       "nomenclature_code": "ICZN",
+       "score": 1.0,
+       "search_string": "haliotis australis",
+       "taxon": {
+        "flags": [],
+        "is_suppressed": false,
+        "is_suppressed_from_synth": false,
+        "name": "Haliotis australis",
+        "ott_id": 780550,
+        "rank": "species",
+        "source": "ott3.7draft3",
+        "synonyms": [
+         "Haliotis aleata",
+         "Haliotis costata",
+         "Haliotis plicata",
+         "Haliotis rugosoplicata"
+        ],
+        "tax_sources": [
+         "worms:445302",
+         "ncbi:36092",
+         "gbif:4616010",
+         "irmng:10884662"
+        ],
+        "unique_name": "Haliotis australis"
+       }
+      }
+     ],
+     "name": "Haliotis australis"
+    },
+    {
+     "matches": [
+      {
+       "is_approximate_match": false,
+       "is_synonym": false,
+       "matched_name": "Haliotis conicopora",
+       "nomenclature_code": "ICZN",
+       "score": 1.0,
+       "search_string": "haliotis conicopora",
+       "taxon": {
+        "flags": [],
+        "is_suppressed": false,
+        "is_suppressed_from_synth": false,
+        "name": "Haliotis conicopora",
+        "ott_id": 109695,
+        "rank": "species",
+        "source": "ott3.7draft3",
+        "synonyms": [],
+        "tax_sources": [
+         "ncbi:37742",
+         "irmng:11094093"
+        ],
+        "unique_name": "Haliotis conicopora"
+       }
+      }
+     ],
+     "name": "Haliotis conicopora"
+    },
+    {
+     "matches": [
+      {
+       "is_approximate_match": false,
+       "is_synonym": false,
+       "matched_name": "Haliotis corrugata",
+       "nomenclature_code": "ICZN",
+       "score": 1.0,
+       "search_string": "haliotis corrugata",
+       "taxon": {
+        "flags": [],
+        "is_suppressed": false,
+        "is_suppressed_from_synth": false,
+        "name": "Haliotis corrugata",
+        "ott_id": 228115,
+        "rank": "species",
+        "source": "ott3.7draft3",
+        "synonyms": [
+         "Haliotis corrugata corrugata",
+         "Haliotis diegoensis",
+         "Haliotis nodosa",
+         "Haliotis oweni"
+        ],
+        "tax_sources": [
+         "worms:445308",
+         "ncbi:6453",
+         "gbif:2293069",
+         "irmng:10422326"
+        ],
+        "unique_name": "Haliotis corrugata"
+       }
+      }
+     ],
+     "name": "Haliotis corrugata"
+    },
+    {
+     "matches": [
+      {
+       "is_approximate_match": false,
+       "is_synonym": false,
+       "matched_name": "Haliotis cracherodii",
+       "nomenclature_code": "ICZN",
+       "score": 1.0,
+       "search_string": "haliotis cracherodii",
+       "taxon": {
+        "flags": [],
+        "is_suppressed": false,
+        "is_suppressed_from_synth": false,
+        "name": "Haliotis cracherodii",
+        "ott_id": 260344,
+        "rank": "species",
+        "source": "ott3.7draft3",
+        "synonyms": [
+         "Haliotis bonita",
+         "Haliotis californiensis",
+         "Haliotis cracherodii cracherodii",
+         "Haliotis cracherodii holzneri",
+         "Haliotis expansa",
+         "Haliotis holzneri",
+         "Haliotis imperforata",
+         "Haliotis lusus",
+         "Haliotis rosea",
+         "Haliotis splendidula"
+        ],
+        "tax_sources": [
+         "worms:405012",
+         "ncbi:6455",
+         "gbif:2293077",
+         "irmng:10939419"
+        ],
+        "unique_name": "Haliotis cracherodii"
+       }
+      }
+     ],
+     "name": "Haliotis cracherodii"
+    },
+    {
+     "matches": [
+      {
+       "is_approximate_match": false,
+       "is_synonym": false,
+       "matched_name": "Haliotis cyclobates",
+       "nomenclature_code": "ICZN",
+       "score": 1.0,
+       "search_string": "haliotis cyclobates",
+       "taxon": {
+        "flags": [],
+        "is_suppressed": false,
+        "is_suppressed_from_synth": false,
+        "name": "Haliotis cyclobates",
+        "ott_id": 780548,
+        "rank": "species",
+        "source": "ott3.7draft3",
+        "synonyms": [
+         "Haliotis excavata"
+        ],
+        "tax_sources": [
+         "worms:445312",
+         "ncbi:36093",
+         "gbif:4616001",
+         "irmng:10523149"
+        ],
+        "unique_name": "Haliotis cyclobates"
+       }
+      }
+     ],
+     "name": "Haliotis cyclobates"
+    },
+    {
+     "matches": [
+      {
+       "is_approximate_match": false,
+       "is_synonym": false,
+       "matched_name": "Haliotis discus",
+       "nomenclature_code": "ICZN",
+       "score": 1.0,
+       "search_string": "haliotis discus",
+       "taxon": {
+        "flags": [],
+        "is_suppressed": false,
+        "is_suppressed_from_synth": false,
+        "name": "Haliotis discus",
+        "ott_id": 780545,
+        "rank": "species",
+        "source": "ott3.7draft3",
+        "synonyms": [
+         "Haliotis discus discus",
+         "Nordotis discus"
+        ],
+        "tax_sources": [
+         "worms:397082",
+         "ncbi:36094",
+         "gbif:4357763",
+         "irmng:10522883"
+        ],
+        "unique_name": "Haliotis discus"
+       }
+      }
+     ],
+     "name": "Haliotis discus"
+    },
+    {
+     "matches": [
+      {
+       "is_approximate_match": false,
+       "is_synonym": false,
+       "matched_name": "Haliotis discus hannai",
+       "nomenclature_code": "ICZN",
+       "score": 1.0,
+       "search_string": "haliotis discus hannai",
+       "taxon": {
+        "flags": [
+         "infraspecific"
+        ],
+        "is_suppressed": false,
+        "is_suppressed_from_synth": false,
+        "name": "Haliotis discus hannai",
+        "ott_id": 132947,
+        "rank": "subspecies",
+        "source": "ott3.7draft3",
+        "synonyms": [],
+        "tax_sources": [
+         "ncbi:42344"
+        ],
+        "unique_name": "Haliotis discus hannai"
+       }
+      }
+     ],
+     "name": "Haliotis discus hannai"
+    },
+    {
+     "matches": [
+      {
+       "is_approximate_match": false,
+       "is_synonym": false,
+       "matched_name": "Haliotis diversicolor",
+       "nomenclature_code": "ICZN",
+       "score": 1.0,
+       "search_string": "haliotis diversicolor",
+       "taxon": {
+        "flags": [],
+        "is_suppressed": false,
+        "is_suppressed_from_synth": false,
+        "name": "Haliotis diversicolor",
+        "ott_id": 780542,
+        "rank": "species",
+        "source": "ott3.7draft3",
+        "synonyms": [
+         "Haliotis diversicolor diversicolor",
+         "Haliotis elevata",
+         "Haliotis funebris",
+         "Haliotis gruneri",
+         "Haliotis sepiculata",
+         "Haliotis supertexta",
+         "Haliotis tayloriana",
+         "Sulculus diversicolor"
+        ],
+        "tax_sources": [
+         "worms:445319",
+         "ncbi:36095",
+         "gbif:4615981",
+         "irmng:10528839"
+        ],
+        "unique_name": "Haliotis diversicolor"
+       }
+      }
+     ],
+     "name": "Haliotis diversicolor"
+    },
+    {
+     "matches": [
+      {
+       "is_approximate_match": false,
+       "is_synonym": false,
+       "matched_name": "Haliotis fulgens",
+       "nomenclature_code": "ICZN",
+       "score": 1.0,
+       "search_string": "haliotis fulgens",
+       "taxon": {
+        "flags": [],
+        "is_suppressed": false,
+        "is_suppressed_from_synth": false,
+        "name": "Haliotis fulgens",
+        "ott_id": 228123,
+        "rank": "species",
+        "source": "ott3.7draft3",
+        "synonyms": [
+         "Haliotis fulgens fulgens",
+         "Haliotis guadalupensis",
+         "Haliotis planilirata",
+         "Haliotis revea",
+         "Haliotis splendens",
+         "Haliotis turveri"
+        ],
+        "tax_sources": [
+         "worms:445325",
+         "ncbi:6456",
+         "gbif:2293073",
+         "irmng:11387431",
+         "irmng:11024302"
+        ],
+        "unique_name": "Haliotis fulgens"
+       }
+      }
+     ],
+     "name": "Haliotis fulgens"
+    },
+    {
+     "matches": [
+      {
+       "is_approximate_match": false,
+       "is_synonym": false,
+       "matched_name": "Haliotis gigantea",
+       "nomenclature_code": "ICZN",
+       "score": 1.0,
+       "search_string": "haliotis gigantea",
+       "taxon": {
+        "flags": [],
+        "is_suppressed": false,
+        "is_suppressed_from_synth": false,
+        "name": "Haliotis gigantea",
+        "ott_id": 109696,
+        "rank": "species",
+        "source": "ott3.7draft3",
+        "synonyms": [
+         "Haliotis gigas",
+         "Haliotis sieboldii",
+         "Haliotis tubifera"
+        ],
+        "tax_sources": [
+         "worms:367891",
+         "ncbi:37743",
+         "gbif:4357753",
+         "irmng:10536351"
+        ],
+        "unique_name": "Haliotis gigantea"
+       }
+      }
+     ],
+     "name": "Haliotis gigantea"
+    },
+    {
+     "matches": [
+      {
+       "is_approximate_match": false,
+       "is_synonym": false,
+       "matched_name": "Haliotis iris",
+       "nomenclature_code": "ICZN",
+       "score": 1.0,
+       "search_string": "haliotis iris",
+       "taxon": {
+        "flags": [],
+        "is_suppressed": false,
+        "is_suppressed_from_synth": false,
+        "name": "Haliotis iris",
+        "ott_id": 780539,
+        "rank": "species",
+        "source": "ott3.7draft3",
+        "synonyms": [
+         "Haliotis iridis"
+        ],
+        "tax_sources": [
+         "worms:445331",
+         "ncbi:36096",
+         "gbif:4615966",
+         "irmng:10544590"
+        ],
+        "unique_name": "Haliotis iris"
+       }
+      }
+     ],
+     "name": "Haliotis iris"
+    },
+    {
+     "matches": [
+      {
+       "is_approximate_match": false,
+       "is_synonym": false,
+       "matched_name": "Haliotis kamtschatkana",
+       "nomenclature_code": "ICZN",
+       "score": 1.0,
+       "search_string": "haliotis kamtschatkana",
+       "taxon": {
+        "flags": [],
+        "is_suppressed": false,
+        "is_suppressed_from_synth": false,
+        "name": "Haliotis kamtschatkana",
+        "ott_id": 820683,
+        "rank": "species",
+        "source": "ott3.7draft3",
+        "synonyms": [
+         "Haliotis assimilis",
+         "Haliotis aulaea",
+         "Haliotis kamtschatkana assimilis",
+         "Haliotis kamtschatkana kamtschatkana",
+         "Haliotis smithsoni"
+        ],
+        "tax_sources": [
+         "worms:405014",
+         "ncbi:6457",
+         "gbif:2293082",
+         "irmng:11257917"
+        ],
+        "unique_name": "Haliotis kamtschatkana"
+       }
+      }
+     ],
+     "name": "Haliotis kamtschatkana"
+    },
+    {
+     "matches": [
+      {
+       "is_approximate_match": false,
+       "is_synonym": false,
+       "matched_name": "Haliotis laevigata",
+       "nomenclature_code": "ICZN",
+       "score": 1.0,
+       "search_string": "haliotis laevigata",
+       "taxon": {
+        "flags": [],
+        "is_suppressed": false,
+        "is_suppressed_from_synth": false,
+        "name": "Haliotis laevigata",
+        "ott_id": 780536,
+        "rank": "species",
+        "source": "ott3.7draft3",
+        "synonyms": [
+         "Haliotis albicans",
+         "Haliotis excisa",
+         "Haliotis glabra",
+         "Schismotis excisa"
+        ],
+        "tax_sources": [
+         "worms:445335",
+         "ncbi:36097",
+         "gbif:4615987",
+         "irmng:10533726"
+        ],
+        "unique_name": "Haliotis laevigata"
+       }
+      }
+     ],
+     "name": "Haliotis laevigata"
+    },
+    {
+     "matches": [
+      {
+       "is_approximate_match": false,
+       "is_synonym": false,
+       "matched_name": "Haliotis midae",
+       "nomenclature_code": "ICZN",
+       "score": 1.0,
+       "search_string": "haliotis midae",
+       "taxon": {
+        "flags": [],
+        "is_suppressed": false,
+        "is_suppressed_from_synth": false,
+        "name": "Haliotis midae",
+        "ott_id": 780532,
+        "rank": "species",
+        "source": "ott3.7draft3",
+        "synonyms": [
+         "Haliotis capensis",
+         "Haliotis elatior",
+         "Haliotis midae elatior"
+        ],
+        "tax_sources": [
+         "worms:207660",
+         "ncbi:36098",
+         "gbif:4357751",
+         "irmng:10736020"
+        ],
+        "unique_name": "Haliotis midae"
+       }
+      }
+     ],
+     "name": "Haliotis midae"
+    },
+    {
+     "matches": [
+      {
+       "is_approximate_match": false,
+       "is_synonym": false,
+       "matched_name": "Haliotis ovina",
+       "nomenclature_code": "ICZN",
+       "score": 1.0,
+       "search_string": "haliotis ovina",
+       "taxon": {
+        "flags": [],
+        "is_suppressed": false,
+        "is_suppressed_from_synth": false,
+        "name": "Haliotis ovina",
+        "ott_id": 780530,
+        "rank": "species",
+        "source": "ott3.7draft3",
+        "synonyms": [
+         "Haliotis caelata",
+         "Haliotis latilabris",
+         "Haliotis ovina ovina",
+         "Haliotis ovina patamakanthini",
+         "Haliotis patamakanthini",
+         "Haliotis volcanius"
+        ],
+        "tax_sources": [
+         "worms:445340",
+         "ncbi:36099",
+         "gbif:4615974",
+         "irmng:10697284"
+        ],
+        "unique_name": "Haliotis ovina"
+       }
+      }
+     ],
+     "name": "Haliotis ovina"
+    },
+    {
+     "matches": [
+      {
+       "is_approximate_match": false,
+       "is_synonym": false,
+       "matched_name": "Haliotis pustulata",
+       "nomenclature_code": "ICZN",
+       "score": 1.0,
+       "search_string": "haliotis pustulata",
+       "taxon": {
+        "flags": [],
+        "is_suppressed": false,
+        "is_suppressed_from_synth": false,
+        "name": "Haliotis pustulata",
+        "ott_id": 109692,
+        "rank": "species",
+        "source": "ott3.7draft3",
+        "synonyms": [
+         "Haliotis cruenta",
+         "Haliotis jousseaumi",
+         "Haliotis multiperforata"
+        ],
+        "tax_sources": [
+         "ncbi:37749",
+         "irmng:10531948"
+        ],
+        "unique_name": "Haliotis pustulata"
+       }
+      }
+     ],
+     "name": "Haliotis pustulata"
+    },
+    {
+     "matches": [
+      {
+       "is_approximate_match": false,
+       "is_synonym": false,
+       "matched_name": "Haliotis roei",
+       "nomenclature_code": "ICZN",
+       "score": 1.0,
+       "search_string": "haliotis roei",
+       "taxon": {
+        "flags": [],
+        "is_suppressed": false,
+        "is_suppressed_from_synth": false,
+        "name": "Haliotis roei",
+        "ott_id": 132944,
+        "rank": "species",
+        "source": "ott3.7draft3",
+        "synonyms": [
+         "Haliotis scabricostata",
+         "Haliotis sulcosa"
+        ],
+        "tax_sources": [
+         "worms:445351",
+         "ncbi:42343",
+         "gbif:4615967",
+         "irmng:10707371"
+        ],
+        "unique_name": "Haliotis roei"
+       }
+      }
+     ],
+     "name": "Haliotis roei"
+    },
+    {
+     "matches": [
+      {
+       "is_approximate_match": false,
+       "is_synonym": false,
+       "matched_name": "Haliotis rubra",
+       "nomenclature_code": "ICZN",
+       "score": 1.0,
+       "search_string": "haliotis rubra",
+       "taxon": {
+        "flags": [],
+        "is_suppressed": false,
+        "is_suppressed_from_synth": false,
+        "name": "Haliotis rubra",
+        "ott_id": 695282,
+        "rank": "species",
+        "source": "ott3.7draft3",
+        "synonyms": [
+         "Haliotis ancile",
+         "Haliotis cunninghami",
+         "Haliotis improbula",
+         "Haliotis naevosa",
+         "Haliotis ruber",
+         "Haliotis rubra rubra",
+         "Haliotis vixlirata",
+         "Haliotis whitehousei",
+         "Sanhaliotis whitehousei"
+        ],
+        "tax_sources": [
+         "worms:445354",
+         "ncbi:36100",
+         "gbif:4615980",
+         "irmng:10528253"
+        ],
+        "unique_name": "Haliotis rubra"
+       }
+      }
+     ],
+     "name": "Haliotis rubra"
+    },
+    {
+     "matches": [
+      {
+       "is_approximate_match": false,
+       "is_synonym": false,
+       "matched_name": "Haliotis rufescens",
+       "nomenclature_code": "ICZN",
+       "score": 1.0,
+       "search_string": "haliotis rufescens",
+       "taxon": {
+        "flags": [],
+        "is_suppressed": false,
+        "is_suppressed_from_synth": false,
+        "name": "Haliotis rufescens",
+        "ott_id": 820667,
+        "rank": "species",
+        "source": "ott3.7draft3",
+        "synonyms": [
+         "Haliotis californiana",
+         "Haliotis hattorii",
+         "Haliotis ponderosa",
+         "Haliotis rufenscens"
+        ],
+        "tax_sources": [
+         "worms:445357",
+         "ncbi:6454",
+         "gbif:2293078",
+         "irmng:11269628"
+        ],
+        "unique_name": "Haliotis rufescens"
+       }
+      }
+     ],
+     "name": "Haliotis rufescens"
+    },
+    {
+     "matches": [
+      {
+       "is_approximate_match": false,
+       "is_synonym": false,
+       "matched_name": "Haliotis scalaris",
+       "nomenclature_code": "ICZN",
+       "score": 1.0,
+       "search_string": "haliotis scalaris",
+       "taxon": {
+        "flags": [],
+        "is_suppressed": false,
+        "is_suppressed_from_synth": false,
+        "name": "Haliotis scalaris",
+        "ott_id": 784604,
+        "rank": "species",
+        "source": "ott3.7draft3",
+        "synonyms": [
+         "Haliotis crenata",
+         "Haliotis scalaris scalaris",
+         "Haliotis tricostalis",
+         "Haliotis tricostata",
+         "Padollus scalaris"
+        ],
+        "tax_sources": [
+         "worms:445358",
+         "ncbi:36101",
+         "gbif:4615964",
+         "irmng:11285664"
+        ],
+        "unique_name": "Haliotis scalaris"
+       }
+      }
+     ],
+     "name": "Haliotis scalaris"
+    },
+    {
+     "matches": [
+      {
+       "is_approximate_match": false,
+       "is_synonym": true,
+       "matched_name": "Haliotis sieboldii",
+       "nomenclature_code": "ICZN",
+       "score": 1.0,
+       "search_string": "haliotis sieboldii",
+       "taxon": {
+        "flags": [],
+        "is_suppressed": false,
+        "is_suppressed_from_synth": false,
+        "name": "Haliotis gigantea",
+        "ott_id": 109696,
+        "rank": "species",
+        "source": "ott3.7draft3",
+        "synonyms": [
+         "Haliotis gigas",
+         "Haliotis sieboldii",
+         "Haliotis tubifera"
+        ],
+        "tax_sources": [
+         "worms:367891",
+         "ncbi:37743",
+         "gbif:4357753",
+         "irmng:10536351"
+        ],
+        "unique_name": "Haliotis gigantea"
+       }
+      }
+     ],
+     "name": "Haliotis sieboldii"
+    },
+    {
+     "matches": [
+      {
+       "is_approximate_match": false,
+       "is_synonym": false,
+       "matched_name": "Haliotis sorenseni",
+       "nomenclature_code": "ICZN",
+       "score": 1.0,
+       "search_string": "haliotis sorenseni",
+       "taxon": {
+        "flags": [],
+        "is_suppressed": false,
+        "is_suppressed_from_synth": false,
+        "name": "Haliotis sorenseni",
+        "ott_id": 228130,
+        "rank": "species",
+        "source": "ott3.7draft3",
+        "synonyms": [],
+        "tax_sources": [
+         "worms:445362",
+         "ncbi:6458",
+         "gbif:2293070",
+         "irmng:10978175"
+        ],
+        "unique_name": "Haliotis sorenseni"
+       }
+      }
+     ],
+     "name": "Haliotis sorenseni"
+    },
+    {
+     "matches": [
+      {
+       "is_approximate_match": false,
+       "is_synonym": false,
+       "matched_name": "Haliotis tuberculata",
+       "nomenclature_code": "ICZN",
+       "score": 1.0,
+       "search_string": "haliotis tuberculata",
+       "taxon": {
+        "flags": [],
+        "is_suppressed": false,
+        "is_suppressed_from_synth": false,
+        "name": "Haliotis tuberculata",
+        "ott_id": 386375,
+        "rank": "species",
+        "source": "ott3.7draft3",
+        "synonyms": [
+         "Haliotis aquatilis",
+         "Haliotis canariensis",
+         "Haliotis incisa",
+         "Haliotis janus",
+         "Haliotis japonica",
+         "Haliotis lucida",
+         "Haliotis pellucida",
+         "Haliotis reticulata",
+         "Haliotis secernenda",
+         "Haliotis speciosa",
+         "Haliotis striata",
+         "Haliotis vulgaris",
+         "Haliotis zealandica"
+        ],
+        "tax_sources": [
+         "worms:140059",
+         "ncbi:36103",
+         "gbif:2293076",
+         "irmng:10837506",
+         "irmng:10235299"
+        ],
+        "unique_name": "Haliotis tuberculata"
+       }
+      }
+     ],
+     "name": "Haliotis tuberculata"
+    },
+    {
+     "matches": [
+      {
+       "is_approximate_match": false,
+       "is_synonym": false,
+       "matched_name": "Haliotis tuberculata coccinea",
+       "nomenclature_code": "ICZN",
+       "score": 1.0,
+       "search_string": "haliotis tuberculata coccinea",
+       "taxon": {
+        "flags": [
+         "infraspecific"
+        ],
+        "is_suppressed": false,
+        "is_suppressed_from_synth": false,
+        "name": "Haliotis tuberculata coccinea",
+        "ott_id": 735487,
+        "rank": "subspecies",
+        "source": "ott3.7draft3",
+        "synonyms": [],
+        "tax_sources": [
+         "ncbi:37771"
+        ],
+        "unique_name": "Haliotis tuberculata coccinea"
+       }
+      }
+     ],
+     "name": "Haliotis tuberculata coccinea"
+    },
+    {
+     "matches": [
+      {
+       "is_approximate_match": false,
+       "is_synonym": false,
+       "matched_name": "Haliotis tuberculata tuberculata",
+       "nomenclature_code": "ICZN",
+       "score": 1.0,
+       "search_string": "haliotis tuberculata tuberculata",
+       "taxon": {
+        "flags": [
+         "infraspecific"
+        ],
+        "is_suppressed": false,
+        "is_suppressed_from_synth": false,
+        "name": "Haliotis tuberculata tuberculata",
+        "ott_id": 827286,
+        "rank": "subspecies",
+        "source": "ott3.7draft3",
+        "synonyms": [],
+        "tax_sources": [
+         "ncbi:454124"
+        ],
+        "unique_name": "Haliotis tuberculata tuberculata"
+       }
+      }
+     ],
+     "name": "Haliotis tuberculata tuberculata"
+    },
+    {
+     "matches": [
+      {
+       "is_approximate_match": false,
+       "is_synonym": false,
+       "matched_name": "Haliotis varia",
+       "nomenclature_code": "ICZN",
+       "score": 1.0,
+       "search_string": "haliotis varia",
+       "taxon": {
+        "flags": [],
+        "is_suppressed": false,
+        "is_suppressed_from_synth": false,
+        "name": "Haliotis varia",
+        "ott_id": 631832,
+        "rank": "species",
+        "source": "ott3.7draft3",
+        "synonyms": [
+         "Haliotis astricta",
+         "Haliotis concinna",
+         "Haliotis dohrniana",
+         "Haliotis dringii",
+         "Haliotis gemma",
+         "Haliotis granulata",
+         "Haliotis papulata",
+         "Haliotis pustulifera",
+         "Haliotis semistriata",
+         "Haliotis viridis",
+         "Sanhaliotis aliena"
+        ],
+        "tax_sources": [
+         "worms:207654",
+         "ncbi:283773",
+         "ncbi:37750",
+         "gbif:4357747",
+         "irmng:10793567",
+         "irmng:10530595",
+         "irmng:10531802",
+         "irmng:10922282",
+         "irmng:10527068",
+         "irmng:11391773",
+         "irmng:11405289",
+         "irmng:10534787",
+         "irmng:10539957",
+         "irmng:10840148"
+        ],
+        "unique_name": "Haliotis varia"
+       }
+      }
+     ],
+     "name": "Haliotis varia"
+    },
+    {
+     "matches": [
+      {
+       "is_approximate_match": false,
+       "is_synonym": false,
+       "matched_name": "Haliotis walallensis",
+       "nomenclature_code": "ICZN",
+       "score": 1.0,
+       "search_string": "haliotis walallensis",
+       "taxon": {
+        "flags": [],
+        "is_suppressed": false,
+        "is_suppressed_from_synth": false,
+        "name": "Haliotis walallensis",
+        "ott_id": 228126,
+        "rank": "species",
+        "source": "ott3.7draft3",
+        "synonyms": [
+         "Haliotis fulgens walallensis"
+        ],
+        "tax_sources": [
+         "worms:445374",
+         "ncbi:6459",
+         "gbif:2293079",
+         "irmng:10720702"
+        ],
+        "unique_name": "Haliotis walallensis"
+       }
+      }
+     ],
+     "name": "Haliotis walallensis"
+    }
+   ],
+   "taxonomy": {
+    "author": "open tree of life project",
+    "name": "ott",
+    "source": "ott3.7draft3",
+    "version": "3.7",
+    "weburl": "https://tree.opentreeoflife.org/about/taxonomy-version/ott3.7"
+   },
+   "unambiguous_names": [
+    "Haliotis australis",
+    "Haliotis conicopora",
+    "Haliotis corrugata",
+    "Haliotis cracherodii",
+    "Haliotis cyclobates",
+    "Haliotis discus",
+    "Haliotis discus hannai",
+    "Haliotis diversicolor",
+    "Haliotis fulgens",
+    "Haliotis gigantea",
+    "Haliotis iris",
+    "Haliotis kamtschatkana",
+    "Haliotis laevigata",
+    "Haliotis midae",
+    "Haliotis ovina",
+    "Haliotis pustulata",
+    "Haliotis roei",
+    "Haliotis rubra",
+    "Haliotis rufescens",
+    "Haliotis scalaris",
+    "Haliotis sorenseni",
+    "Haliotis tuberculata",
+    "Haliotis tuberculata coccinea",
+    "Haliotis tuberculata tuberculata",
+    "Haliotis varia",
+    "Haliotis walallensis"
+   ],
+   "unmatched_names": []
+  },
+  "endpoint": "tnrs/match_names",
+  "payload": {
+   "context_name": "All life",
+   "do_approximate_matching": false,
+   "names": [
+    "Haliotis australis",
+    "Haliotis conicopora",
+    "Haliotis corrugata",
+    "Haliotis cracherodii",
+    "Haliotis cyclobates",
+    "Haliotis discus",
+    "Haliotis discus hannai",
+    "Haliotis diversicolor",
+    "Haliotis fulgens",
+    "Haliotis gigantea",
+    "Haliotis iris",
+    "Haliotis kamtschatkana",
+    "Haliotis laevigata",
+    "Haliotis midae",
+    "Haliotis ovina",
+    "Haliotis pustulata",
+    "Haliotis roei",
+    "Haliotis rubra",
+    "Haliotis rufescens",
+    "Haliotis scalaris",
+    "Haliotis sieboldii",
+    "Haliotis sorenseni",
+    "Haliotis tuberculata",
+    "Haliotis tuberculata coccinea",
+    "Haliotis tuberculata tuberculata",
+    "Haliotis varia",
+    "Haliotis walallensis"
+   ]
+  },
+  "status": 200
+ },
+ {
+  "body": {
+   "broken": {},
+   "newick": "(Haliotis_diversicolor_ott780542,(Haliotis_discus_hannai_ott132947)Haliotis_discus_ott780545,Haliotis_pustulata_ott109692,Haliotis_conicopora_ott109695,Haliotis_gigantea_ott109696,Haliotis_roei_ott132944,Haliotis_corrugata_ott228115,Haliotis_fulgens_ott228123,Haliotis_walallensis_ott228126,Haliotis_sorenseni_ott228130,Haliotis_cracherodii_ott260344,(Haliotis_tuberculata_coccinea_ott735487,Haliotis_tuberculata_tuberculata_ott827286)Haliotis_tuberculata_ott386375,Haliotis_varia_ott631832,Haliotis_rubra_ott695282,Haliotis_ovina_ott780530,Haliotis_midae_ott780532,Haliotis_laevigata_ott780536,Haliotis_iris_ott780539,Haliotis_cyclobates_ott780548,Haliotis_australis_ott780550,Haliotis_scalaris_ott784604,Haliotis_rufescens_ott820667,Haliotis_kamtschatkana_ott820683)Haliotis_ott228119;",
+   "supporting_studies": [
+    "pg_421@tree523"
+   ]
+  },
+  "endpoint": "tree_of_life/induced_subtree",
+  "payload": {
+   "label_format": "name_and_id",
+   "ott_ids": [
+    109692,
+    109695,
+    109696,
+    132944,
+    132947,
+    228115,
+    228123,
+    228126,
+    228130,
+    260344,
+    631832,
+    695282,
+    735487,
+    780530,
+    780532,
+    780536,
+    780539,
+    780542,
+    780548,
+    780550,
+    784604,
+    820667,
+    820683,
+    827286
+   ]
+  },
+  "status": 200
+ }
+]

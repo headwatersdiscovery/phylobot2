@@ -1,0 +1,2 @@
+{# A job's types (phylobot.job_types): the analysis stages it reached as one joined chain, then the rest (which may wrap below it). Each links to My Jobs filtered by it, unless `static` (deleted jobs, which the filters do not cover). #}
+<span class="job-types">{% if types.0.stage %}<span class="job-chain">{% for t in types %}{% if t.stage %}{% include "phylobot/_job_type.html" %}{% endif %}{% endfor %}</span>{% endif %}{% for t in types %}{% if not t.stage %}{% include "phylobot/_job_type.html" %}{% endif %}{% endfor %}</span>

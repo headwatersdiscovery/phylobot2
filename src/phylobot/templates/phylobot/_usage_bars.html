@@ -1,0 +1,10 @@
+{# Horizontal bars from phylobot.usage.bar_rows: one series, values at the tips. #}
+<div class="viz">
+  <svg class="viz-svg" viewBox="0 0 560 {{ height }}" role="img" aria-label="CPU time by pipeline stage; the table below has every value">
+    {% for b in bars %}
+    <text class="viz-rowlabel" x="186" y="{{ b.mid_y }}" dy=".35em" text-anchor="end">{{ b.label }}</text>
+    <path class="viz-fill s1" d="{{ b.path }}" tabindex="0" data-tip-value="{{ b.value }} ({{ b.share }})" data-tip-label="{{ b.label }}"/>
+    <text class="viz-value" x="{{ b.tip_x }}" y="{{ b.mid_y }}" dy=".35em">{{ b.value }}</text>
+    {% endfor %}
+  </svg>
+</div>

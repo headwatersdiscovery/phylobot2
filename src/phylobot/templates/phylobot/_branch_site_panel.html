@@ -1,0 +1,51 @@
+{# The branch-site test (phylobot.branch_site_views), inside the tree viewer's GET form: #}
+{# the foreground menus re-draw the tree; the button posts to #branch-site-form (tree.html). #}
+{% with p=bs_panel %}{% if p.available %}
+<section class="path-section branch-site-section">
+  <h2>Test for Positive Selection (Branch-Site)</h2>
+  <p class="hint">codeml's branch-site test (Model A against its null; Zhang, Nielsen &amp; Yang
+    2005) asks whether some codons evolved under positive selection (dN/dS &gt; 1) on the
+    foreground branches you choose, compared with the rest of the tree. <strong>Choose the
+    foreground from your hypothesis</strong> (a duplication, a change of function, host or
+    habitat) before you look at results: a branch chosen because its free-ratio dN/dS or its
+    changes look striking has already been tested by eye, and the p-value no longer means
+    what it says.</p>
+  <p class="hint">The test uses this tree's branching order and the codon alignment: codeml
+    re-estimates every branch length under its own codon model, so the model above does not
+    affect it.</p>
+  <div class="viewer-controls">
+    <label>Foreground node
+      <select name="fg"><option value="">choose…</option>
+        <optgroup label="Ancestral nodes">{% for n in p.nodes %}{% if not n.extant %}
+          <option value="{{ n.name }}"{% if n.name == p.node %} selected{% endif %}>{{ n.label }}</option>{% endif %}{% endfor %}
+        </optgroup>
+        <optgroup label="Extant sequences">{% for n in p.nodes %}{% if n.extant %}
+          <option value="{{ n.name }}"{% if n.name == p.node %} selected{% endif %}>{{ n.label }}</option>{% endif %}{% endfor %}
+        </optgroup>
+      </select></label>
+    <label>Foreground branches
+      <select name="fg_scope">{% for key, label in bs_scopes %}
+        <option value="{{ key }}"{% if key == p.scope %} selected{% endif %}>{{ label|capfirst }}</option>{% endfor %}
+      </select></label>
+    <input type="hidden" name="combination" value="{{ combination }}" form="branch-site-form">
+    <input type="hidden" name="fg" value="{{ p.node }}" form="branch-site-form">
+    <input type="hidden" name="fg_scope" value="{{ p.scope }}" form="branch-site-form">
+    {% if p.existing %}<a class="button primary" href="{% url 'job_detail' p.existing.id %}">See the result</a>
+    {% else %}<button type="submit" class="trace" form="branch-site-form"{% if not p.foreground %} disabled{% endif %}>Test for positive selection here</button>{% endif %}
+  </div>
+  {% if p.error %}<p class="error">{{ p.error }}</p>
+  {% elif p.existing %}<p class="hint">Foreground highlighted in purple on the tree. You have
+    {% if p.existing.status == "succeeded" %}already run this test{% else %}this test {{ p.existing.get_status_display|lower }}{% endif %}
+    (the same codon alignment, tree topology and foreground{% if p.existing.params.branch_site_of.combination != combination %}, from
+    another model's tree with the same branching order{% endif %}): <a href="{% url 'job_detail' p.existing.id %}">{{ p.existing.name|default:p.existing.id }}</a>.</p>
+  {% elif p.foreground %}<p class="hint">Foreground highlighted in purple on the tree
+    ({{ p.foreground|length }} branch{{ p.foreground|length|pluralize:"es" }} as drawn{% if rooted %}; the outgroup root
+    splits one branch in two, and codeml analyses the tree unrooted{% endif %}). The test runs as a new job on
+    this tree and the codon alignment, with its own entry in My Jobs; codeml takes minutes to
+    hours depending on the size of the data.</p>{% endif %}
+  {% if p.tests %}<p>Tests on this tree (from any model with the same branching order):</p>
+  <ul class="branch-site-tests">{% for t in p.tests %}
+    <li><a href="{% url 'job_detail' t.id %}">{{ t.name|default:t.id }}</a> · {{ t.get_status_display|lower }}</li>{% endfor %}
+  </ul>{% endif %}
+</section>
+{% endif %}{% endwith %}

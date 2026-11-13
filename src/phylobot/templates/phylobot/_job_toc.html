@@ -1,0 +1,9 @@
+{# The job page's "On this page" nav (toc.js marks where the reader is). The middle list #}
+{# lists what the status block holds, and is replaced with it while the job runs. #}
+<nav class="viewer-toc page-toc job-toc" data-toc aria-label="On this page">
+  <p class="viewer-toc-title">On this page</p>
+  {% if inputs %}<ol><li><a href="#inputs">Input Sequences</a></li></ol>{% endif %}
+  {% include "phylobot/_job_toc_live.html" %}
+  {% if libraries_possible %}<ol><li><a href="#libraries">Ancestral Libraries</a></li>
+    <li><a href="#structures">Structures</a></li></ol>{% endif %}
+</nav>

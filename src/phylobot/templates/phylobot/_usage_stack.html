@@ -1,0 +1,13 @@
+{# 100% stacked bars from phylobot.usage.stack_rows: a legend, then one bar per measure. #}
+<ul class="viz-legend">{% for s in rows.0.segments %}<li><span class="viz-swatch s{{ s.slot }}"></span>{{ s.label }}</li>{% endfor %}</ul>
+<div class="viz">
+  <svg class="viz-svg" viewBox="0 0 560 {% if rows|length == 2 %}92{% else %}40{% endif %}" role="img" aria-label="Jobs and CPU time by kind of job; the table below has every value">
+    {% for row in rows %}
+    <text class="viz-rowlabel" x="0" y="{{ row.mid_y }}" dy="-.15em">{{ row.label }}</text>
+    <text class="viz-tick" x="0" y="{{ row.mid_y }}" dy="1.05em">{{ row.total }}</text>
+    {% for s in row.segments %}<path class="viz-fill s{{ s.slot }}" d="{{ s.path }}" tabindex="0"
+      data-tip-value="{{ s.value }} ({{ s.share }})" data-tip-label="{{ row.label }}: {{ s.label }}"/>
+    {% if s.text %}<text class="viz-inside s{{ s.slot }}" x="{{ s.text_x }}" y="{{ row.mid_y }}" dy=".35em">{{ s.text }}</text>{% endif %}{% endfor %}
+    {% endfor %}
+  </svg>
+</div>

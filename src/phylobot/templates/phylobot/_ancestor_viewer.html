@@ -1,0 +1,178 @@
+{# The whole viewer is one GET form: any change re-requests it (HTMX swaps it in place and #}
+{# updates the address bar, so a view can be bookmarked or shared). #}
+{# Laid out as discrete sections, as the New Job page is, with an "On this page" sidebar. #}
+{# The nav is inside the form so it is swapped with the sections and can never list one #}
+{# that is not there (no posteriors, no analogs, no properties); toc.js re-binds after #}
+{# each swap, and the links work without it. #}
+{% if selection %}
+<form id="viewer" class="viewer sectioned" method="get" action="{% url 'ancestor_viewer' job.id %}"
+      hx-get="{% url 'ancestor_viewer' job.id %}" hx-trigger="change, submit" hx-target="this"
+      hx-swap="outerHTML" hx-push-url="true">
+  <nav class="viewer-toc page-toc" data-toc aria-label="On this page">
+    <p class="viewer-toc-title">On this page</p>
+    <ol>
+      <li><a href="#choose">Select Ancestor</a></li>
+      <li><a href="#sequence">Sequence</a></li>
+      <li><a href="#ancestor">Name and Description</a></li>
+      <li><a href="#downloads">Download ({% firstof called.name node %})</a></li>
+      {% if plots %}<li><a href="#support">Support</a></li>{% endif %}
+      {% if properties or property_offer %}<li><a href="#properties">Properties</a></li>{% endif %}
+      {% if comparison %}<li><a href="#analogs">Other Combinations</a></li>{% endif %}
+      <li><a href="#sites">Sites</a></li>
+    </ol>
+  </nav>
+
+  <div class="viewer-sections">
+    <details class="viewer-section" id="choose" open>
+      <summary><h2>Select Ancestor</h2></summary>
+      <div class="viewer-controls">
+        <label>Alignment
+          <select name="aligner">{% for key, label in aligners.items %}
+            <option value="{{ key }}"{% if key == aligner %} selected{% endif %}>{{ label }}</option>{% endfor %}
+          </select></label>
+        <label>Model
+          <select name="combination">{% for key, label in models %}
+            <option value="{{ key }}"{% if key == combination %} selected{% endif %}>{{ label }}</option>{% endfor %}
+          </select></label>
+        <label>Ancestral node
+          <select name="node">{% for choice in nodes %}
+            <option value="{{ choice.name }}"{% if choice.name == node %} selected{% endif %}>{{ choice.label }}</option>{% endfor %}
+          </select></label>
+        <label>Reconstruction / gap masking
+          <select name="gaps">{% for key, label in versions %}
+            <option value="{{ key }}"{% if key == version %} selected{% endif %}>{{ label }}</option>{% endfor %}
+          </select></label>
+        {% if codons_available %}<label>States
+          <select name="states">
+            <option value="amino"{% if states == "amino" %} selected{% endif %}>Amino acids</option>
+            <option value="codons"{% if states == "codons" %} selected{% endif %}>Codons</option>
+          </select></label>{% endif %}
+        {% if calibration_available %}<label>Probabilities
+          <select name="pp">
+            <option value="raw"{% if pp == "raw" %} selected{% endif %}>Raw (IQ-TREE's)</option>
+            <option value="calibrated"{% if pp == "calibrated" %} selected{% endif %}>Calibrated</option>
+          </select></label>{% endif %}
+        <input type="hidden" name="shown" value="{{ combination }}">
+        <noscript><button>Show</button></noscript>
+      </div>
+
+      {% if not altall_available %}<input type="hidden" name="altall" value="{{ altall_threshold }}">{% endif %}
+      {% if states == "codons" %}<p class="hint">Codons, with the amino acid each encodes. A codon's
+        probability is shared among synonymous codons, so codon tiles often look less certain
+        than the amino-acid ones at the same site (the amino acid's probability is the sum of
+        its codons'): the known caveat of reconstructing codons.</p>{% endif %}
+      {% if calibration %}{% include "phylobot/_calibration_note.html" %}{% endif %}
+      {% if not has_posteriors %}<p class="hint">{{ version_label|cut:" (no posteriors)" }} reports no posterior
+        probabilities: tiles show its residues, uncoloured. Pick another version for IQ-TREE's.</p>{% endif %}
+    </details>
+
+    {# The ancestor itself, first: what the reader came for. Each residue is the row's first #}
+    {# tile (its most probable state) in that tile's colour, and links to its row in Sites. #}
+    <details class="viewer-section" id="sequence" open>
+      <summary><h2>Sequence</h2></summary>
+      <p><strong>{% if called %}{{ called.name }}</strong> ({{ node }}){% if not called.alike %} <span class="pop-flag" title="Named on a node with the same sequences below it but other branching inside">≈</span>{% endif %}{% else %}{{ node }}</strong>{% endif %}
+        · {{ length }} residues · {{ version_label }} ·
+        <a href="{{ tree_url }}">show in the tree</a> ·
+        <a href="{% url 'alignment_viewer' job.id %}?aligner={{ aligner|urlencode }}&amp;combination={{ combination|urlencode }}&amp;order=tree&amp;ancestors=on&amp;gaps={{ version|urlencode }}">show in the alignment</a></p>
+      <p class="ancestor-sequence" data-sequence aria-label="The reconstructed sequence of {{ node }}">{% for row in rows %}{% with t=row.tiles.0 %}{% if t.kind != "gap" %}<a href="#site-{{ row.column }}"{% if t.style %} style="{{ t.style }}"{% endif %} title="Column {{ row.column }}: {{ t.state }}{% if t.note %} ({{ t.note }}){% endif %}{% if t.pp is not None %}, probability {{ t.pp|floatformat:2 }}{% endif %}">{% firstof t.note t.state %}</a>{% endif %}{% endwith %}{% endfor %}</p>
+      <p class="ancestor-sequence-actions">
+        <button type="button" class="with-icon" data-copy-sequence>{% include "phylobot/_icon.html" with name="copy" size=16 %} <span>Copy sequence</span></button>
+        {% if downloads %}<a class="button plain with-icon" href="{{ downloads.0.1 }}">{% include "phylobot/_icon.html" with name="download" size=16 %} FASTA</a>{% endif %}
+        {# This ancestor painted on a protein structure (phylobot.structure_views). #}
+        <a class="button plain with-icon" href="{% url 'structure_viewer' job.id %}?combination={{ combination|urlencode }}&amp;node={{ node|urlencode }}&amp;gaps={{ version|urlencode }}" title="See this ancestor on a protein structure: its residues, how sure each one is, and where it differs">{% include "phylobot/_icon.html" with name="structure" size=16 %} View on Structure</a>
+        {% if has_posteriors %}<span class="legend-tiles" title="Posterior probability of each residue">{% for pp, style in legend %}<span style="{{ style }}">{{ pp }}</span>{% endfor %}</span>
+        <button type="button" class="help-dot" popovertarget="help-sequence" aria-label="About the sequence">?</button><span class="help-popover" popover id="help-sequence"><strong>The sequence</strong><span><span>The most probable state at every site, gaps removed, coloured by its posterior probability. Click a residue for its row in Sites, where the alternatives are.</span><span>Copy and FASTA give this sequence; AltAll, the aligned versions and the probabilities are under Download.</span></span></span>{% endif %}
+      </p>
+    </details>
+
+    <details class="viewer-section" id="ancestor"{% if called or description or paralogy %} open{% else %} data-folded{% endif %}>
+      <summary><h2>Name and Description{% if called %}: {{ called.name }}{% endif %}</h2></summary>
+      {% if nameable %}{# Posts through the page-level form (ancestors.html). Their change #}
+      {# events stop here, or the viewer's hx-trigger would swap the fields away mid-edit. #}
+      <div class="ancestor-name">
+        <input type="hidden" name="node" value="{{ node }}" form="ancestor-name">
+        <input type="hidden" name="combination" value="{{ combination }}" form="ancestor-name">
+        <input type="hidden" name="aligner" value="{{ aligner }}" form="ancestor-name">
+        <input type="hidden" name="gaps" value="{{ version }}" form="ancestor-name">
+        <label>Name
+          <input name="ancestor_name" form="ancestor-name" value="{{ called.name|default:"" }}"
+                 maxlength="40" size="24" pattern="[A-Za-z][A-Za-z0-9._\-]{0,39}" placeholder="e.g. Anc.GFP"
+                 title="{{ name_rules|capfirst }}" onchange="event.stopPropagation()"></label>
+        <label>Description
+          <textarea name="description" form="ancestor-name" rows="3" maxlength="20000"
+                    placeholder="Notes about this ancestor: what it is, why it matters, what to order"
+                    onchange="event.stopPropagation()">{{ description }}</textarea></label>
+        <p class="ancestor-name-actions">
+          <button type="submit" form="ancestor-name" class="primary" data-name-save>Save</button>
+          {% if called %}<button type="submit" form="ancestor-name" name="remove" value="1">Remove the name</button>{% endif %}
+          <button type="button" class="help-dot" popovertarget="help-ancestor-name" aria-label="About name and description">?</button><span class="help-popover" popover id="help-ancestor-name"><strong>Name and description</strong><span>They belong to this ancestor's descendants, so every combination with the same ancestor shares them.</span></span></p>
+      </div>
+      {% elif description %}<p class="ancestor-description">{{ description|linebreaksbr }}</p>{% endif %}
+      {% if paralogy %}{% include "phylobot/_ancestor_paralogy.html" %}{% endif %}
+    </details>
+
+    <details class="viewer-section" id="downloads" open>
+      <summary><h2>Download ({% firstof called.name node %})</h2></summary>
+      <ul class="download-links" aria-label="Files you can download for {{ node }}">{% for label, href, note in downloads %}
+        <li><a href="{{ href }}" title="{{ note }}">{{ label }}</a></li>{% endfor %}
+        <li><a href="{{ excel_url }}" title="The Sites table below, every alignment column with the ancestor's states and the chosen sequences' residues.">sites table (Excel)</a></li>
+        <li class="download-help"><button type="button" class="help-dot" popovertarget="help-downloads" aria-label="What each file is">?</button><span class="help-popover downloads-help" popover id="help-downloads"><strong>What each file is</strong><span>{% for label, href, note in downloads %}<span><b>{{ label }}</b> — {{ note }}</span>{% endfor %}<span><b>sites table (Excel)</b> — The Sites table below, every alignment column with the ancestor's states and the chosen sequences' residues; the same as its Download Excel.</span></span></span></li>
+      </ul>
+      <p class="library-actions">{% with add_label="Add "|add:node|add:" to" %}
+        {% include "phylobot/_library_add.html" with add_form="library-add-node" add_nodes=library_nodes %}{% endwith %}</p>
+    </details>
+
+    {% if plots %}
+    <details class="viewer-section" id="support" open>
+      <summary><h2>Support for {{ node }}</h2></summary>
+      {# One grid for the whole section: row 1 is the ML histogram and the trace, #}
+      {# row 2 the AltAll control and its histogram. Both partials emit grid items. #}
+      <div class="support-grid">
+        {% include "phylobot/_ancestor_plots.html" %}
+        {% include "phylobot/_altall.html" %}
+      </div>
+    </details>
+    {% endif %}
+
+    {# Both partials carry their own <section class="viewer-section">, so the nav's #}
+    {# entries and the sections stay in step from one place each. #}
+    {% include "phylobot/_ancestor_properties.html" %}
+
+    {% include "phylobot/_ancestor_analogs.html" %}
+
+    <details class="viewer-section" id="sites" open>
+      <summary><h2>Sites</h2></summary>
+      <div class="viewer-table-head">
+        <p class="hint"><span class="legend-tiles">{% for pp, style in legend %}<span style="{{ style }}">{{ pp }}</span>{% endfor %}</span>
+          <button type="button" class="help-dot" popovertarget="help-sites" aria-label="About the Sites table">?</button><span class="help-popover" popover id="help-sites"><strong>The Sites table</strong><span><span>One row per alignment column: the chosen sequences' residues (and residue numbers; + shows another sequence, × removes one) beside the ancestor's states with probability 0.01 or more, most probable first.</span><span>{% if scored_gaps %}<b>–</b> tiles give the probability of a gap from the gap/residue reconstruction (masked where above 0.5); residue probabilities are IQ-TREE's, given a residue.{% else %}Tiles are coloured by posterior probability.{% endif %}</span></span></span></p>
+        <div class="table-tools"><a href="{{ excel_url }}">Download Excel</a>
+        <label class="palette">Colours
+          <select name="palette">{% for key, label in palettes %}
+            <option value="{{ key }}"{% if key == palette %} selected{% endif %}>{{ label }}</option>{% endfor %}
+          </select></label></div>
+      </div>
+      <div class="sites-scroll">
+      <table class="ancestor-sites">
+        <thead><tr>
+          <th class="column">Site in {{ aligner_label }}</th>
+          {% if calibration %}<th class="temperature" title="The column's calibration temperature: probabilities were raised to 1/T and renormalised">T</th>{% endif %}
+          {% for extant in extants %}<th class="extant">Site in
+            {% if not forloop.first %}<button class="mini" name="remove_extant" value="{{ forloop.counter0 }}" title="Remove this column" aria-label="Remove this column">×</button>{% endif %}
+            {% if forloop.last and can_add_extant %}<button class="mini" name="add_extant" value="1" title="Show another sequence" aria-label="Show another sequence">+</button>{% endif %}<br>
+            <select name="extant" title="{{ extant }}">{% for name in sequence_names %}
+              <option value="{{ name }}"{% if name == extant %} selected{% endif %}>{{ name }}</option>{% endfor %}
+            </select></th>{% endfor %}
+          <th colspan="{{ tile_columns|length }}">Ancestral states</th>
+        </tr></thead>
+        <tbody>{% for row in rows %}
+          <tr id="site-{{ row.column }}"><td class="column">{{ row.column }}</td>{% if calibration %}<td class="temperature">{% if row.tiles.0.kind != "gap" %}{{ row.temperature|floatformat:2 }}{% endif %}</td>{% endif %}{% for residue, number in row.extants %}<td class="extant">{{ residue }}{% if number %}<br>({{ number }}){% endif %}</td>{% endfor %}{% for tile in row.tiles %}<td class="tile {{ tile.kind }}"{% if tile.style %} style="{{ tile.style }}"{% endif %}>{{ tile.state }}{% if tile.note %} <small class="codon-aa">{{ tile.note }}</small>{% endif %}{% if tile.pp is not None %}<br>({{ tile.pp|floatformat:2 }}){% endif %}</td>{% endfor %}</tr>{% endfor %}
+        </tbody>
+      </table>
+      </div>
+    </details>
+  </div>
+</form>
+{% else %}
+<div id="viewer"><p>No ancestors to show: {% if job.status == "succeeded" %}this job did not
+  reconstruct ancestral sequences{% else %}the job has not finished successfully{% endif %}.</p></div>
+{% endif %}

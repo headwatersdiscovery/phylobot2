@@ -1,0 +1,42 @@
+{# The reference tree with a pie at each ancestor (uncertainty_views.pie_tree): a pie's #}
+{# area is the ancestor's total, its slices the bar's segments. Drawn as the tree viewer #}
+{# draws it (phylobot.treeview), in the branch lengths chosen here. #}
+{% with d=pie_tree %}
+<div class="viewer-controls">
+  <label>Branch lengths
+    <select name="lengths" form="uncertainty" data-submit-to="tree">{% for key, label in tree_modes %}
+      <option value="{{ key }}"{% if key == tree_lengths %} selected{% endif %}>{{ label }}</option>{% endfor %}
+    </select></label>
+  {# Sliders: the value shows as it moves; letting go redraws the tree (data-submit-to). #}
+  <label>Pie size <span class="slider-value">×<output>{{ pie_size }}</output></span>
+    <input type="range" name="pie_size" form="uncertainty" data-submit-to="tree" min="{{ pie_bounds.0 }}" max="{{ pie_bounds.1 }}" step="0.1" value="{{ pie_size }}"
+           oninput="this.previousElementSibling.querySelector('output').value = this.value"></label>
+  <label>Tip spacing <span class="slider-value">×<output>{{ spacing }}</output></span>
+    <input type="range" name="spacing" form="uncertainty" data-submit-to="tree" min="{{ spacing_bounds.0 }}" max="{{ spacing_bounds.1 }}" step="0.1" value="{{ spacing }}"
+           oninput="this.previousElementSibling.querySelector('output').value = this.value"></label>
+</div>
+<p class="hint"><strong>The bigger the pie, the more that ancestor's reconstructions differ.</strong>
+  Click a pie for its sites. <button type="button" class="help-dot" popovertarget="help-pie-tree" aria-label="About each ancestor on the tree">?</button><span class="help-popover" popover id="help-pie-tree"><strong>Each ancestor on the tree</strong><span>The tree of {{ summary.reference }} (the reference). Each pie is one ancestor: its area is the length of its bar, and its slices are the bar's parts in the same colours.</span></span>{% if d.note %} {{ d.note }}{% endif %}</p>
+<div class="track-scroll">
+<figure class="plot uncertainty-tree" data-tips data-filename="uncertainty.{{ mode }}.tree"><div class="pp-tip" hidden></div>
+  <div class="plot-tools">Download <button type="button" class="link" data-plot-download="png">PNG</button> · <button type="button" class="link" data-plot-download="svg">SVG</button></div>
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {{ d.width }} {{ d.height }}" width="{{ d.width }}" height="{{ d.height }}"
+       font-family="system-ui, -apple-system, 'Segoe UI', sans-serif" role="img"
+       aria-label="The reference tree, with each ancestor's uncertainty as a pie">
+    {% include "phylobot/_uncertainty_patterns.html" with prefix="pt" %}
+    <g transform="translate(0 {{ d.top }})">
+    {% if d.stem_from is not None %}<line x1="{{ d.stem_from }}" x2="{{ d.root_x }}" y1="{{ d.root_y }}" y2="{{ d.root_y }}" stroke="#b3bac5" stroke-width="1.4"/>{% endif %}
+    {% for c in d.connectors %}<line x1="{{ c.x }}" x2="{{ c.x }}" y1="{{ c.y1 }}" y2="{{ c.y2 }}" stroke="#b3bac5" stroke-width="1.4"/>{% endfor %}
+    {% for b in d.branches %}<line x1="{{ b.x1 }}" x2="{{ b.x2 }}" y1="{{ b.y }}" y2="{{ b.y }}" stroke="#b3bac5" stroke-width="1.4"{% if b.dashed %} stroke-dasharray="5 3"{% endif %}/>{% endfor %}
+    {% for leaf in d.leaves %}<text x="{{ leaf.x|add:6 }}" y="{{ leaf.y }}" dominant-baseline="middle" font-size="12" fill="#1d2330">{{ leaf.name }}</text>{% endfor %}
+    {% for p in pies %}<a href="{{ p.href }}"><g class="pie" data-tip="{{ p.tip }}">
+      <circle cx="{{ p.x }}" cy="{{ p.y }}" r="{{ p.r|add:1.5 }}" fill="#ffffff"/>
+      {% for path, fill, tip in p.slices %}<path d="{{ path }}" fill="{{ fill }}" data-tip="{{ tip }}"/>{% endfor %}
+    </g></a>{% endfor %}
+    {% if d.scale_bar %}<g font-size="11" fill="#5d6675"><line x1="{{ d.scale_bar.0 }}" x2="{{ d.scale_bar.1 }}" y1="{{ d.scale_bar.2 }}" y2="{{ d.scale_bar.2 }}" stroke="#1d2330" stroke-width="1.4"/>
+      <text x="{{ d.scale_bar.1|add:8 }}" y="{{ d.scale_bar.2 }}" dominant-baseline="middle">{{ d.scale_bar.3 }}</text></g>{% endif %}
+    </g>
+  </svg>
+</figure>
+</div>
+{% endwith %}

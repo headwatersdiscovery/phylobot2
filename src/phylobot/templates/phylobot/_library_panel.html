@@ -1,0 +1,83 @@
+{# The library page's controls, in a panel fixed to the right (the New Job page's #}
+{# .job-panel), so they stay in reach while the ancestors scroll. Threshold and palette #}
+{# act in place (library.js); the alignment and extant sequences reload the page. #}
+<aside id="library-panel" class="job-panel library-panel" aria-labelledby="library-panel-title">
+  {# The collapse handle sits on the panel's left edge, vertically centred, so it stays #}
+  {# reachable even when a wrapped top toolbar would cover a corner button. #}
+  <button type="button" class="job-panel-close" aria-label="Hide the controls"
+          title="Hide" aria-controls="library-panel">»</button>
+  <div class="job-panel-head">
+    <h2 id="library-panel-title">Controls</h2>
+  </div>
+  <form method="get" action="{{ request.path }}" id="library-controls" class="job-panel-body library-controls">
+    <div class="panel-field threshold-control">
+      <span class="threshold-label">Uncertainty Threshold {% include "phylobot/_help.html" with id="uncertainty-threshold" title="Uncertainty threshold" body="The lowest posterior probability an ancestor's ML residue must reach to be treated as confident. At a site below it, the residue is flagged uncertain and its strongest alternative is offered as an AltAll. Raising the threshold flags more sites, so the library samples more alternatives and the designed set grows larger and more diverse; lowering it trusts the ML residue at more sites, giving a smaller, more conservative set." %}</span>
+      <span class="threshold-inputs">
+        <input type="range" class="threshold-slider" value="{{ threshold }}" min="{{ threshold_min }}"
+               max="{{ threshold_max }}" step="0.01" aria-label="Uncertainty threshold slider">
+        <input type="number" name="altall" value="{{ threshold }}" min="{{ threshold_min }}"
+               max="{{ threshold_max }}" step="0.01" class="threshold-number" aria-label="Uncertainty threshold">
+      </span>
+    </div>
+    {% with layout=viewers.layout %}
+    {# The ancestors' layout (where the agree/disagree tracks appear) sits just under the #}
+    {# threshold, above the colour controls. #}
+    <label class="panel-field"><span class="panel-field-label">Map ancestors onto {% include "phylobot/_help.html" with id="ancestor-layout" title="Map ancestors onto" body="Maps the ancestors — and the members below — onto columns from a chosen alignment, which is helpful to see where the aligners agree and where they disagree. “Each alignment separately” keeps every combination on its own columns." %}</span>
+      <select name="aln" data-reload>{% for key, label in viewers.alignments %}
+        <option value="{{ key }}"{% if key == layout.alignment %} selected{% endif %}>{{ label }}</option>{% endfor %}
+      </select></label>
+    {# Colour applies to every sequence on the page: the viewers above and the site map #}
+    {# under each ancestor. The palette belongs to the posterior scheme alone, so it is #}
+    {# disabled under the others rather than left looking as though it still applied. #}
+    <label class="panel-field">Colour
+      <select name="scheme" data-scheme>{% for key, label in schemes %}
+        <option value="{{ key }}"{% if key == scheme %} selected{% endif %}>{{ label }}</option>{% endfor %}
+      </select></label>
+    <label class="panel-field palette-field{% if not by_posterior %} inactive{% endif %}">Palette
+      <select name="palette" data-palette{% if not by_posterior %} disabled{% endif %}>{% for key, label in palettes %}
+        <option value="{{ key }}"{% if key == palette %} selected{% endif %}>{{ label }}</option>{% endfor %}
+      </select></label>
+    <p class="library-legend{% if not by_posterior %} inactive{% endif %}" data-posterior-legend aria-hidden="true">{% for pp, style in legend %}<span class="sm-tile legend-tile" data-pp="{{ pp }}" style="{{ style }}">{{ pp|floatformat:2 }}</span>{% endfor %}</p>
+    {% if scheme_legend %}
+    <ul class="panel-field scheme-legend" data-scheme-legend>{% for label, colour in scheme_legend %}
+      <li><span class="swatch" style="background: {{ colour }}"></span>{{ label }}</li>{% endfor %}
+    </ul>
+    {% endif %}
+    {# Zoom moves the alignment viewers only, so its control sits on the viewer itself #}
+    {# (_library_viewers.html); the value rides here so a reload keeps it. #}
+    <input type="hidden" name="zoom" value="{{ zoom }}">
+    {# Chosen beside the members' viewer (Design section); kept here for the reloads. #}
+    <input type="hidden" name="members" value="{{ members_shown }}" data-save-members>
+    <fieldset class="panel-field extant-choice">
+      <legend>{% if layout.alignment == "sequence" %}Lay out on the sequence{% else %}Show extant sequences{% endif %}</legend>
+      <input type="search" class="extant-search" placeholder="Find a sequence" aria-label="Find a sequence">
+      <div class="extant-list">{% for name in viewers.extant %}
+        <label class="check"><input type="{% if layout.alignment == "sequence" %}radio{% else %}checkbox{% endif %}" name="extant" value="{{ name }}" data-reload{% if name in layout.extant %} checked{% endif %}> <span>{{ name }}</span></label>{% endfor %}
+      </div>
+    </fieldset>
+    {% endwith %}
+    <noscript><button type="submit">Show</button></noscript>
+  </form>
+  {# Export, Save and Duplicate act on the library, not the view, so they sit under the #}
+  {# controls rather than in the form. Each posts a form in the design section through #}
+  {# `form=` (that form carries the design and the view), so there is one state, not two. #}
+  {# Export is the page's goal, so it leads and is the prominent action. #}
+  <div class="job-panel-foot library-actions">
+    {% if designable and not too_many %}
+    <button type="submit" form="design-export" class="primary" data-busy="Exporting…"><svg class="btn-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg>Export ({{ design.budget }})</button>
+    <p class="saved-note hint">Writes the protein FASTA, a manifest, the names table and a
+      methods paragraph, and keeps them below with a receipt.</p>
+    {% endif %}
+    <button type="submit" form="design-save" data-busy="Saving…"><svg class="btn-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><path d="M17 21v-8H7v8"/><path d="M7 3v5h8"/></svg>Save</button>
+    <p class="saved-note hint">
+      {% if saved_at_display %}Saved {{ saved_at_display|timesince }} ago
+      {% elif has_design %}Saved
+      {% else %}Not saved yet — the design and the view live in the address{% endif %}</p>
+    <p class="saved-note hint">Save keeps this design and view with the library to reopen later.</p>
+    <form method="post" action="{% url 'library_duplicate' job.id library.id %}" data-busy="Copying the library…">{% csrf_token %}
+      <button type="submit"><svg class="btn-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>Duplicate library</button>
+      <span class="hint">the same ancestors and design, to vary separately</span>
+    </form>
+  </div>
+</aside>
+<button type="button" id="library-panel-tab" class="job-panel-tab" aria-controls="library-panel" hidden>Controls</button>

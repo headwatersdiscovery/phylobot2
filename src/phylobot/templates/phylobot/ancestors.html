@@ -1,0 +1,16 @@
+{% extends "phylobot/base.html" %}
+{% block title %}Ancestors · {{ job.name|default:"Job" }} · PhyloBot{% endblock %}
+{% block content %}
+{% load static %}<script src="{% static 'phylobot/ancestors.js' %}" defer></script><script src="{% static 'phylobot/property_help.js' %}" defer></script><script src="{% static 'phylobot/property_measure.js' %}" defer></script><script src="{% static 'phylobot/plots.js' %}" defer></script><script src="{% static 'phylobot/alignment.js' %}" defer></script>
+<p class="hint"><a href="{% url 'job_detail' job.id %}">← {{ job.name|default:"Job" }}</a></p>
+<h1>Ancestor Viewer</h1>
+{% include "phylobot/_ancestor_viewer.html" %}
+{# "Add to library" (_library_add.html): the viewer is a GET form, so this POST form #}
+{# lives outside it and survives the viewer's HTMX swaps. #}
+<form id="library-add-node" method="post" action="{% url 'library_add' job.id %}">{% csrf_token %}</form>
+<form id="ancestor-name" method="post" action="{% url 'ancestor_name' job.id %}">{% csrf_token %}</form>
+<form id="library-add-analogs" method="post" action="{% url 'library_add_analogs' job.id %}">{% csrf_token %}</form>
+{# "Measure them" in the property section (_property_offer.html), for the same reason. #}
+<form id="properties-measure" method="post" action="{% url 'properties_measure' job.id %}">{% csrf_token %}</form>
+<form id="properties-redraw" method="post" action="{% url 'properties_measure' job.id %}">{% csrf_token %}</form>
+{% endblock %}

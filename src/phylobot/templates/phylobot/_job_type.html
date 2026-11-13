@@ -1,0 +1,2 @@
+{% if static %}<span class="job-type {{ t.group }}{% if t.stage %} stage{% endif %}" title="{{ t.description }}">{{ t.label }}</span>{% else %}<a class="job-type {{ t.group }}{% if t.stage %} stage{% endif %}" href="{% url 'my_jobs' %}?type={{ t.key }}"
+   title="{{ t.description }}. Show only jobs that include this.">{{ t.label }}</a>{% endif %}

@@ -1,0 +1,21 @@
+{# About: the substitution models (phylobot.about.MATRICES, VARIANTS). Its heading is the page's. Shared with phylobot.com (website/). #}
+<p>Models are chosen from a fixed catalog, as an amino-acid matrix plus a rate and frequency
+  variant (for example <code>LG+F+G4</code>). Every one can be used as a fixed model or as a
+  ModelFinder candidate, except the site-profile mixtures, which are fixed models only;
+  RAxML-NG lacks {{ raxml_missing|join:", " }} and has no mixtures.</p>
+<div class="table-scroll">
+<table class="models">
+  <thead><tr><th>Matrix</th><th>Use</th><th>Reference</th></tr></thead>
+  <tbody>{% for row in matrices %}
+    <tr><td>{{ row.names|join:", " }}</td><td>{{ row.use }}</td>
+      <td>{% for ref in row.refs %}{% include "phylobot/_ref.html" %}{% endfor %}</td></tr>{% endfor %}
+  </tbody>
+</table>
+<table class="models">
+  <thead><tr><th>Variant</th><th>Meaning</th><th>Reference</th></tr></thead>
+  <tbody>{% for row in variants %}
+    <tr><td><code>{{ row.names|join:", " }}</code></td><td>{{ row.use }}</td>
+      <td>{% for ref in row.refs %}{% include "phylobot/_ref.html" %}{% if not forloop.last %}<br>{% endif %}{% empty %}—{% endfor %}</td></tr>{% endfor %}
+  </tbody>
+</table>
+</div>

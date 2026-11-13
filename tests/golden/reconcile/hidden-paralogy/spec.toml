@@ -1,0 +1,38 @@
+# Golden scenario: reconcile/hidden-paralogy.
+# Signed off by the owner 2026-10-18 as a known limitation, not an accuracy test:
+# GeneRax's tree is expected to go wrong here, and the test checks that the job says so
+# (thresholds in expected_metrics.json, run by tests/golden/test_reconcile.py). Species
+# tree: ../species.nwk.
+#
+# Twenty species in four clades of five, ((A,B),(C,D)), 0.5 substitutions per site from
+# root to tip, except one long branch (C1: 0.9 instead of 0.2). The family duplicates on
+# the stem just above the species root (0.02 before the first speciation), then loses
+# copies reciprocally: clade A keeps only copy a, clade B only copy b; C and D keep both
+# (30 genes). So A and B, sisters in the species tree, carry paralogs: an ancestor of
+# "A and B" never existed. The short stem makes the duplication hard to see in the
+# sequences; the long branch tempts misplacement.
+
+description = "Hidden paralogy: a duplication just above the root of 20 species, reciprocal losses in two sister clades, one long branch; LG+G4."
+
+[tree]
+file = "../species.nwk"
+
+[root]
+length = 300
+
+[model]
+substitution = "LG+G4{0.75}"
+
+[family]
+duplication = 0
+loss = 0
+origin = 0.1
+duplications = [{ clade = ["A1", "A2", "A3", "A4", "A5", "B1", "B2", "B3", "B4", "B5", "C1", "C2", "C3", "C4", "C5", "D1", "D2", "D3", "D4", "D5"], at = 0.8 }]
+losses = [
+  { clade = ["A1", "A2", "A3", "A4", "A5"], copy = "1b" },
+  { clade = ["B1", "B2", "B3", "B4", "B5"], copy = "1a" },
+]
+
+[simulation]
+image = "quay.io/biocontainers/iqtree:3.1.3--h8471819_0"
+seeds = [301, 302, 303, 304, 305, 306, 307, 308, 309, 310]  # first = quick tier

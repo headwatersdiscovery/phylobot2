@@ -1,0 +1,39 @@
+cff-version: 1.2.0
+message: >-
+  If you use PhyloBot 2 in published work, please cite the PhyloBot paper below,
+  together with the methods your analysis used (listed in the README under
+  "Included methods").
+title: PhyloBot 2
+abstract: >-
+  Automated ancestral sequence reconstruction (alignment, phylogeny, ASR) and
+  interactive exploration of the mutational paths between ancestral proteins.
+type: software
+authors:
+  - family-names: Hanson-Smith
+    given-names: Victor
+    email: hello@phylobot.com
+license: BSD-3-Clause
+repository-code: https://github.com/headwatersdiscovery/phylobot2
+url: https://phylobot.com
+keywords:
+  - ancestral sequence reconstruction
+  - phylogenetics
+  - protein evolution
+  - Nextflow
+preferred-citation:
+  type: article
+  title: >-
+    PhyloBot: A Web Portal for Automated Phylogenetics, Ancestral Sequence
+    Reconstruction, and Exploration of Mutational Trajectories
+  authors:
+    - family-names: Hanson-Smith
+      given-names: Victor
+    - family-names: Johnson
+      given-names: Alexander
+  journal: PLoS Computational Biology
+  volume: 12
+  issue: 7
+  start: e1004976
+  year: 2016
+  month: 7
+  doi: 10.1371/journal.pcbi.1004976

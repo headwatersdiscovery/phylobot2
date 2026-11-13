@@ -1,0 +1,133 @@
+{# The review of a finished homolog search (phylobot.homolog_views.review_context): #}
+{# filters with sliders, the count after each, histograms, actions (use in a job, #}
+{# downloads), and the hits, selected or not, each with a checkbox to include or #}
+{# exclude it by hand. Everything is one GET form: HTMX re-requests the page on each #}
+{# change, swaps in this panel and updates the address bar, so every view is shareable. #}
+{# homologs.js (loaded once by the page, not here: this part is swapped) pairs sliders with boxes and turns ticks into include/exclude fields. #}
+{# Plot styles are SVG attributes, not CSS, so a downloaded image looks as shown. #}
+<section id="homolog-filters" class="homolog-filters">
+  <h2>Filter the Hits</h2>
+  <p class="search-summary">{{ service }} ·
+    {{ search.database }}{% if search.database_created %} (release {{ search.database_created|slice:":10" }}){% endif %},
+    {{ search.database_sequences|floatformat:"0g" }} sequences · {{ search.program }} ·
+    query {{ search.query_length }} residues · {{ search.hits|length|floatformat:"0g" }} hits</p>
+  {% if search.truncated %}
+    <p class="warning">The search stopped at its limit ({{ search.hits|length|floatformat:"0g" }}
+      hits), so weaker homologs were never reported.</p>
+  {% endif %}
+  <form class="filter-controls" method="get" action="{{ panel_url }}"
+        hx-get="{{ panel_url }}" hx-target="#homolog-filters" hx-swap="outerHTML"
+        hx-push-url="true" hx-trigger="change, input[target.type=='number'] delay:500ms">
+    <div class="choices" hidden>
+      {% if selection.base != "filters" %}<input type="hidden" name="base" value="{{ selection.base }}">{% endif %}
+      {% for id in selection.include_ids %}<input type="hidden" name="include" value="{{ id }}">{% endfor %}
+      {% for id in selection.exclude_ids %}<input type="hidden" name="exclude" value="{{ id }}">{% endfor %}
+      {% for table in show %}<input type="hidden" name="show" value="{{ table }}">{% endfor %}
+      <input type="hidden" name="sort" value="{{ sort }}"{% if not sort %} disabled{% endif %}>
+    </div>
+    <p class="filter-field">{{ form.max_evalue.label_tag }} {{ form.max_evalue }}
+      {% for error in form.max_evalue.errors %}<span class="errors inline-error">{{ error }}</span>{% endfor %}</p>
+    {% for error in form.non_field_errors %}<p class="errors">{{ error }}</p>{% endfor %}
+    <noscript><button type="submit">Apply</button></noscript>
+
+    <ol class="filter-stages">
+      {% for stage in stages %}
+        <li{% if forloop.last %} class="final"{% endif %}><span class="count">{{ stage.remaining|floatformat:"0g" }}</span>
+          <span class="what">{{ stage.description }}</span></li>
+      {% endfor %}
+    </ol>
+    <div class="plots-row">
+      {% for h in histograms %}{% with f=h.frame %}
+      <div class="filter-column">
+      {% comment %}Each filter's controls above its histogram.{% endcomment %}
+      {% if h.key == "coverage" %}
+        <div class="filter-field">
+          {{ form.min_coverage.label_tag }}
+          <span class="slider-pair">
+            <input type="range" min="0" max="100" step="1" value="{{ form.min_coverage.value|default:70 }}"
+                   data-for="{{ form.min_coverage.id_for_label }}" aria-label="Query coverage at least (%), slider">
+            {{ form.min_coverage }}</span>
+          <span class="hint">{{ form.min_coverage.help_text }}</span>
+          {% for error in form.min_coverage.errors %}<span class="errors inline-error">{{ error }}</span>{% endfor %}
+        </div>
+      {% elif h.key == "identity" %}
+        <div class="filter-field identity-field">
+          <span class="field-label">Identity to the query (%):</span>
+          <span class="slider-pair"><label for="{{ form.min_identity.id_for_label }}">from</label>
+            <input type="range" min="0" max="100" step="1" value="{{ form.min_identity.value|default:30 }}"
+                   data-for="{{ form.min_identity.id_for_label }}" aria-label="Identity from (%), slider">
+            {{ form.min_identity }}</span>
+          <span class="slider-pair"><label for="{{ form.max_identity.id_for_label }}">to</label>
+            <input type="range" min="0" max="100" step="1" value="{{ form.max_identity.value|default:90 }}"
+                   data-for="{{ form.max_identity.id_for_label }}" aria-label="Identity to (%), slider">
+            {{ form.max_identity }}</span>
+          {% for error in form.min_identity.errors %}<span class="errors inline-error">{{ error }}</span>{% endfor %}
+          {% for error in form.max_identity.errors %}<span class="errors inline-error">{{ error }}</span>{% endfor %}
+        </div>
+      {% endif %}
+      <figure class="plot histogram homolog-histogram">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {{ f.width }} {{ f.height }}" width="{{ f.width }}" height="{{ f.height }}"
+             font-family="system-ui, -apple-system, 'Segoe UI', sans-serif" role="img"
+             aria-label="{{ h.title }}: histogram of the {{ h.total }} hits reaching this filter; {{ h.kept }} kept">
+          <rect class="background" width="{{ f.width }}" height="{{ f.height }}" fill="#ffffff"/>
+          <rect x="{{ h.band.0 }}" y="{{ f.top }}" width="{{ h.band.1 }}" height="{{ f.plot_height }}" fill="#2457a6" fill-opacity="0.07"/>
+          {% for y, label in h.y_ticks %}<line x1="{{ f.left }}" x2="{{ f.right }}" y1="{{ y }}" y2="{{ y }}" stroke="#d8dde5" stroke-width="1"/>
+          <text x="{{ f.left|add:'-6' }}" y="{{ y }}" text-anchor="end" dominant-baseline="middle" font-size="12" fill="#5d6675">{{ label }}</text>{% endfor %}
+          {% for bar in h.bars %}<g>
+            <title>{{ bar.label }}: {{ bar.kept_count }} kept, {{ bar.removed_count }} removed</title>
+            {% if bar.kept %}<rect x="{{ bar.x }}" y="{{ bar.kept.y }}" width="{{ bar.width }}" height="{{ bar.kept.height }}" fill="#2457a6"/>{% endif %}
+            {% if bar.removed %}<rect x="{{ bar.x }}" y="{{ bar.removed.y }}" width="{{ bar.width }}" height="{{ bar.removed.height }}" fill="#b3bac5"/>{% endif %}
+            <rect x="{{ bar.x }}" y="{{ f.top }}" width="{{ bar.width }}" height="{{ f.plot_height }}" fill="transparent"/>
+          </g>{% endfor %}
+          {% for m in h.markers %}<line x1="{{ m.x }}" x2="{{ m.x }}" y1="{{ f.top|add:'-4' }}" y2="{{ f.bottom }}" stroke="#1d2330" stroke-width="1.5" stroke-dasharray="4 3"/>
+          <text x="{{ m.x }}" y="{{ f.top|add:'-8' }}" text-anchor="{{ m.anchor }}" font-size="12" font-weight="600" fill="#1d2330">{{ m.label }}</text>{% endfor %}
+          {% for x, label in h.x_ticks %}<text x="{{ x }}" y="{{ f.bottom|add:'16' }}" text-anchor="middle" font-size="12" fill="#5d6675">{{ label }}</text>{% endfor %}
+          <text x="{{ f.center }}" y="{{ f.height|add:'-6' }}" text-anchor="middle" font-size="13" fill="#1d2330">{{ h.x_label }}</text>
+          <text transform="translate(13 {{ f.middle }}) rotate(-90)" text-anchor="middle" font-size="13" fill="#1d2330">Hits</text>
+        </svg>
+        <figcaption><strong>{{ h.title }}</strong> · {{ h.kept|floatformat:"0g" }} of {{ h.total|floatformat:"0g" }} kept
+          <span class="key"><svg width="12" height="12" aria-hidden="true"><rect width="12" height="12" rx="2" fill="#2457a6"/></svg>kept</span>
+          <span class="key"><svg width="12" height="12" aria-hidden="true"><rect width="12" height="12" rx="2" fill="#b3bac5"/></svg>removed</span></figcaption>
+      </figure>
+      </div>
+      {% endwith %}{% endfor %}
+    </div>
+
+    <div class="review-actions">
+      <a class="button primary" href="{{ use_url }}">Use these {{ usable|floatformat:"0g" }} sequences in a new job →</a>
+      <span class="downloads">Download FASTA:
+        <a href="{{ downloads.selected }}">selected ({{ usable|floatformat:"0g" }})</a> ·
+        <a href="{{ downloads.all }}">all hits ({{ search.hits|length|floatformat:"0g" }})</a> ·
+        <a href="{{ downloads.raw }}">raw BLAST result (XML)</a></span>
+      <p class="hint">Full-length sequences, not only the aligned part. The job page opens with
+        them in step 2, to review before you submit.{% if no_sequence %} {{ no_sequence }} selected
+        hit{{ no_sequence|pluralize }} had no full-length sequence at the database and
+        {{ no_sequence|pluralize:"is,are" }} left out.{% endif %}</p>
+    </div>
+
+    <details class="hits-table" data-table="hits"{% if "hits" in show %} open{% endif %}>
+      <summary>Search results: {{ selection.selected|length|floatformat:"0g" }} selected /
+        {{ not_selected|floatformat:"0g" }} not selected</summary>
+      <div class="hits-toolbar">
+        <span class="select-actions">Select:
+          <button type="button" class="link" data-select-base="all">all</button>,
+          <button type="button" class="link" data-select-base="none">none</button></span>
+        <a class="head-action" href="{{ reset_url }}" data-reset
+           title="Undo every tick by hand: the selection becomes what the filters above keep">Reset to the filters</a>
+        <a class="head-action" href="{{ downloads.csv }}">{% include "phylobot/_icon.html" with name="download" size=16 %}
+          Download table (CSV)</a>
+        {% if selection.included or selection.excluded %}
+        <span class="own-choices">Your own choices:
+          {% if selection.included %}{{ selection.included|length }} included{% endif %}{% if selection.included and selection.excluded %},{% endif %}
+          {% if selection.excluded %}{{ selection.excluded|length }} excluded{% endif %}
+          against the filters.</span>
+        {% endif %}
+      </div>
+      <p class="hint">Tick or untick a hit to include or exclude it whatever the filters say.
+        Prefer the filters: they apply one rule to every hit and can be reported in a methods
+        section; hand-picked hits are marked in the Note column so they stay visible. Click a
+        column's heading to sort by it, again to reverse.</p>
+      {% include "phylobot/_homolog_hits.html" %}
+    </details>
+  </form>
+</section>

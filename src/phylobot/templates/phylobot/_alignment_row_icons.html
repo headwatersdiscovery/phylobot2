@@ -1,0 +1,17 @@
+{% comment %}My alignments: a row's editor link, download(s) and "Use in a new job", as icons. Each
+  download is captioned with what it holds: nt (coding DNA, as codons) or aa (amino acids).{% endcomment %}
+{% if a.from_job %}<a class="icon-button" href="{% url 'alignment_editor' a.id %}" title="Edit a copy" aria-label="Edit a copy of {{ a.name }}">
+  {% include "phylobot/_icon.html" with name="edit-copy" size=20 %}</a>
+{% else %}<a class="icon-button" href="{% url 'alignment_editor' a.id %}" title="Edit" aria-label="Edit {{ a.name }}">
+  {% include "phylobot/_icon.html" with name="edit" size=20 %}</a>
+{% endif %}{% if a.seqtype == "codon" %}<a class="icon-button captioned" href="{% url 'alignment_download' a.id %}"
+  title="Download FASTA: coding DNA (codons)" aria-label="Download {{ a.name }} as coding DNA FASTA">
+  {% include "phylobot/_icon.html" with name="download" size=20 %}<span class="icon-caption" aria-hidden="true">nt</span></a>
+<a class="icon-button captioned" href="{% url 'alignment_download' a.id %}?states=amino"
+  title="Download FASTA: amino acids (translated)" aria-label="Download {{ a.name }} translated, as amino-acid FASTA">
+  {% include "phylobot/_icon.html" with name="download" size=20 %}<span class="icon-caption" aria-hidden="true">aa</span></a>
+{% else %}<a class="icon-button captioned" href="{% url 'alignment_download' a.id %}" title="Download FASTA: amino acids"
+  aria-label="Download {{ a.name }} as FASTA">
+  {% include "phylobot/_icon.html" with name="download" size=20 %}<span class="icon-caption" aria-hidden="true">aa</span></a>
+{% endif %}<a class="icon-button" href="{% url 'submit' %}?alignment={{ a.id }}" title="Use in a new job" aria-label="Use {{ a.name }} in a new job">
+  {% include "phylobot/_icon.html" with name="play" size=20 %}</a>

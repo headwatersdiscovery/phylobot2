@@ -1,0 +1,14 @@
+{% if chosen_job %}
+  {% if combination_choices %}
+    <p><label for="esr-combination">Combination</label>
+      <select name="combination" id="esr-combination">
+        {% for choice in combination_choices %}
+          <option value="{{ choice.key }}"{% if choice.key == combination %} selected{% endif %}>{{ choice.text }}</option>
+        {% endfor %}
+      </select></p>
+  {% else %}
+    <p class="hint">That job has no combination ESR can run on: it needs a protein
+      combination with its tree (codon models, and models other than +F, +I, +G and +R,
+      are not handled yet).</p>
+  {% endif %}
+{% endif %}

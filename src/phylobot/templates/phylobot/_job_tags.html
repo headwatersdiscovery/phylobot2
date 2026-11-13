@@ -1,0 +1,19 @@
+<div id="job-tags" class="tags">
+  {% for tag in job.tags.all %}
+    <span class="chip">#{{ tag.name }}
+      <form class="inline" method="post" action="{% url 'job_tags' job.id %}"
+            hx-post="{% url 'job_tags' job.id %}" hx-target="#job-tags" hx-swap="outerHTML">
+        {% csrf_token %}<input type="hidden" name="action" value="remove">
+        <input type="hidden" name="tags" value="{{ tag.name }}">
+        <button class="chip-remove" aria-label="Remove #{{ tag.name }}" title="Remove #{{ tag.name }}">×</button>
+      </form>
+    </span>
+  {% endfor %}
+  <form class="inline add-tag" method="post" action="{% url 'job_tags' job.id %}"
+        hx-post="{% url 'job_tags' job.id %}" hx-target="#job-tags" hx-swap="outerHTML">
+    {% csrf_token %}<input type="hidden" name="action" value="add">
+    <input name="tags" placeholder="#add tag" list="tag-suggestions" aria-label="Add tag" autocomplete="off">
+    <button>Add</button>
+  </form>
+  {% if tag_error %}<span class="errors inline-error">{{ tag_error }}</span>{% endif %}
+</div>

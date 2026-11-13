@@ -1,0 +1,170 @@
+/* Dark skin (phylobot.skins): Clean's layout (clean.css applies to both) with a dark
+   palette. Loaded after clean.css, so these tokens win. The Matrix, Dim and Abyss skins
+   build on this file too (their sheets load after it and redefine the tokens). Below the tokens: the light
+   colours that site.css and the server-drawn SVGs hard-code, remapped.
+   Figure downloads (PNG/SVG) serialise the SVG without this stylesheet, so they keep
+   their light colours, as a figure for a paper should. */
+:root:is([data-skin="dark"], [data-skin="matrix"], [data-skin="dim"], [data-skin="abyss"]) {
+  color-scheme: dark;       /* native scrollbars, checkboxes, file pickers */
+  --page: #14171c;
+  --bg: #1c2027;            /* cards, panels, tables */
+  --bar: #0e1014;           /* top bar: darker than the page */
+  --fg: #e2e6ec;
+  --fg-2: #c3cad4;
+  --muted: #98a1ae;
+  /* My usage's chart slots, stepped for this surface (validated on #1c2027). */
+  --viz-1: #3987e5; --viz-2: #d95926; --viz-3: #199e70; --viz-4: #c98500; --viz-5: #d55181;
+  --viz-6: #9654bd; --viz-7: #3aa7c4; --viz-8: #b71532;
+  --viz-grid: #2c323c;
+  --line: #2a3039;
+  --edge: #353c47;
+  --accent: #74a6f0;
+  --sim: #c39be6;
+  --recon: #6fd0cf;
+  --cmp-yes: #5fcf8a; --cmp-partial: #e0a84a; --cmp-yes-bg: rgba(95, 207, 138, .14);
+  --sim-soft: rgba(195, 155, 230, .12);
+  --imported: #e3b260; --imported-soft: rgba(227, 178, 96, .12);
+  --accent-soft: rgba(116, 166, 240, .14);
+  --accent-ring: rgba(116, 166, 240, .32);
+  --title-rim: var(--accent);
+  --title-shadow: #c9862a;
+  --accent-hover: #8fb7f4;
+  --on-accent: #0c1424;
+  --link-line: rgba(116, 166, 240, .4);
+  --subtle: #232832;
+  --shadow: 0 1px 2px rgba(0, 0, 0, .25), 0 2px 10px rgba(0, 0, 0, .18);
+  --hover: #242a33;
+  --hover-edge: #4b5461;
+  --row-hover: #212630;
+  --glass: rgba(255, 255, 255, .07);
+  --track: #2e343e;
+  --danger: #f08a7e;
+  --danger-edge: #6e3b36;
+  --danger-soft: rgba(240, 138, 126, .1);
+  --danger-fill: #c94a3d;
+  --neutral-bg: #2b3039; --neutral-fg: #b9c1cc;
+  --running-bg: rgba(116, 166, 240, .18); --running-fg: #a2c4f7;
+  --ok-bg: rgba(76, 190, 124, .16); --ok-fg: #84d6a4;
+  --bad-bg: rgba(240, 106, 94, .16); --bad-fg: #f5a69d;
+  --warn-fg: #e9b86c;
+  --select-arrow: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%2398a1ae' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");
+
+  & header nav :is(a[aria-current="page"], summary.current) { background: var(--subtle); }
+  & dialog { background: var(--bg); color: var(--fg); border: 1px solid var(--edge); }
+  & dialog::backdrop { background: rgba(0, 0, 0, .55); }
+  & .errors { color: var(--bad-fg); background: var(--bad-bg); }
+  & .job-failure { background: var(--bad-bg); border-color: var(--edge); }
+  & .job-failure:is(.interrupted, .runtime, .image, .disk) { background: transparent; border-color: var(--edge); border-left-color: #d39b2a; }
+  & :is(.warning, .rooting-warning, .required-tag, .property-outside) { color: var(--warn-fg); }
+  & .paralogy-flag { background: rgba(233, 184, 108, .12); color: var(--warn-fg); border-color: var(--warn-fg); }
+  & .paralogy.mixes { background: rgba(233, 184, 108, .12); border-left-color: var(--warn-fg); }
+  & .species-summary.warn, & .species-summary.pending, & table.species tr.pending { background: rgba(233, 184, 108, .12); }
+  & .species-summary.warn, & .species-summary.pending { border-left-color: var(--warn-fg); }
+  & table.species .status { color: var(--warn-fg); }
+  & .species-offer-line { background: rgba(120, 160, 220, .14); }
+  & .warn-text { color: var(--warn-fg); }
+  & .job-panel-tab { color: var(--on-accent); }
+  & .chip.muted { background: var(--neutral-bg); }
+  & a.chip:hover { background: rgba(116, 166, 240, .26); }
+  & .deleted thead th { background: var(--subtle); }
+  & .speed.fast, & .tag.included { background: var(--ok-bg); color: var(--ok-fg); }
+  & .speed.slow { background: rgba(233, 184, 108, .15); color: var(--warn-fg); }
+  & .tag.excluded { background: var(--bad-bg); color: var(--bad-fg); }
+  & tr.choice-included td { background: rgba(76, 190, 124, .08); }
+  & tr.choice-excluded td { background: rgba(240, 106, 94, .08); }
+  & table.results tr.outlier td { background: rgba(233, 184, 108, .1); }
+  & .work-delta.up { background: rgba(233, 184, 108, .15); color: var(--warn-fg); }
+  & .work-delta.down { background: var(--ok-bg); color: var(--ok-fg); }
+
+  /* Results tables: the server tints cells light (inline style); an inset shadow paints
+     over the background but under the text, darkening the tint while keeping its hue. */
+  & table.results td[style*="background-color"], & .legend .swatch {
+    box-shadow: inset 0 0 0 999px rgba(18, 21, 26, .6); }
+
+  /* Ancestor and path tables (the probability tiles keep their own colours). */
+  & td.tile.gap, & table.path-table td.gap { background: var(--subtle); }
+  & table.ancestor-sites td.extant { background: var(--subtle); }
+  & table.path-table tr.compare td { background: var(--row-hover); }
+  & table.path-table td.changed { outline-color: #f2f4f7; }
+  & table.path-table td.silent { outline-color: #f2f4f7; }
+  & .change.synonymous { background: transparent; border-color: #5d6675; }
+  & .change { background: var(--neutral-bg); }
+  & .change.gain { background: rgba(76, 190, 124, .2); }
+  & .change.loss { background: rgba(240, 106, 94, .2); }
+  & table.ancestor-sites tr.flash td.column { animation-name: flash-dark; }
+
+  /* Server-drawn SVG (tree viewer, support plots, homolog histograms): their colours are
+     presentation attributes, which any CSS rule overrides. Map each light-theme colour. */
+  & svg :is([fill="#ffffff"]) { fill: var(--bg); }
+  & svg [stroke="#ffffff"] { stroke: var(--bg); }  /* text halos */
+  & svg [fill="#1d2330"] { fill: var(--fg); }
+  & svg [stroke="#1d2330"] { stroke: var(--fg); }
+  & svg [fill="#5d6675"] { fill: var(--muted); }
+  & svg [fill="#2457a6"] { fill: var(--accent); }
+  & svg [stroke="#2457a6"] { stroke: var(--accent); }  /* collapsed-clade triangle's default border */
+  & svg [fill="#c0392b"] { fill: #ff7b72; }   /* property plots: the f(ML) label */
+  & svg [fill="#8e44ad"] { fill: #c792ea; }   /* property plots: the f(AltAll) label */
+  & svg [stroke="#d8dde5"] { stroke: var(--line); }
+  & svg [fill="#b3bac5"] { fill: #5a626e; }
+  & svg [stroke="#b3bac5"] { stroke: #5a626e; }  /* the Uncertainty explainer's arrows and boxes */
+  /* The --viz slots as SVG attributes (the Uncertainty page's figures): their dark steps. */
+  & svg [fill="#2a78d6"] { fill: #3987e5; }  & svg [stroke="#2a78d6"] { stroke: #3987e5; }
+  & svg [fill="#eb6834"] { fill: #d95926; }  & svg [stroke="#eb6834"] { stroke: #d95926; }
+  & svg [fill="#1baf7a"] { fill: #199e70; }  & svg [stroke="#1baf7a"] { stroke: #199e70; }
+  & svg [fill="#eda100"] { fill: #c98500; }  & svg [stroke="#eda100"] { stroke: #c98500; }
+  & svg [fill="#e87ba4"] { fill: #d55181; }  & svg [stroke="#e87ba4"] { stroke: #d55181; }
+  & svg [fill="#7d3c98"] { fill: #9654bd; }  & svg [stroke="#7d3c98"] { stroke: #9654bd; }
+  /* Plot line styles (ancestors.LINE_STYLES): the dark and near-black lines. */
+  & svg [stroke="#1f4e8c"] { stroke: #7eaaea; }
+  & svg [stroke="#0072b2"] { stroke: #56b4e9; }
+  & svg [stroke="#111111"] { stroke: #e6e9ee; }
+  & svg [stroke="#000000"] { stroke: #ffffff; }
+  & svg [stroke="#444444"] { stroke: #b6bdc7; }
+  & svg [stroke="#6e6e6e"] { stroke: #9ea6b1; }
+  & svg [stroke="#8e44ad"] { stroke: #c792ea; stroke-opacity: 0.65; }  /* branch-site foreground */
+  & svg [stroke="#c0392b"] { stroke: #ff7b72; }  /* reconciliation: duplication */
+  & svg [stroke="#b0b0b0"] { stroke: #6b7380; }
+
+  /* Steps graph, "simple" scheme: dark boxes. The other schemes were drawn for a light
+     ground, so they get a light panel of their own (light tokens, locally). */
+  & .stage-graph:not([data-scheme="vivid"], [data-scheme="mono"], [data-scheme="safe"]) {
+    & .links path { stroke: #3a414c; }
+    & .links path.done { stroke: #5f6d80; }
+    & .links path.flowing { stroke: var(--accent); }
+    & .stage .box { fill: var(--bg); stroke: var(--edge); }
+    & .stage .time { fill: var(--muted); }
+    & .stage .dot { fill: #5b6470; }
+    & .stage.succeeded .dot { fill: #4cbe7c; }
+    & .stage.running .box { fill: rgba(116, 166, 240, .14); stroke: var(--accent); }
+    & .stage.running :is(.state, .dot) { fill: var(--accent); }
+    & .stage.failed .box { fill: rgba(240, 106, 94, .12); stroke: var(--danger); }
+    & .stage.failed .state { fill: var(--bad-fg); }
+    & .stage.failed .dot { fill: var(--danger); }
+    & .stage:is(.waiting, .stopped, .not-run) .box { fill: var(--subtle); }
+    & .stage:is(.waiting, .not-run) .dot { stroke: #6b7380; }
+    & .stage:is(.waiting, .not-run) .name { fill: var(--muted); }
+  }
+  & .stage-graph:is([data-scheme="vivid"], [data-scheme="mono"], [data-scheme="safe"]) {
+    color-scheme: light; --fg: #1f2733; --fg-2: #3a4452; --muted: #5d6675; --bg: #ffffff;
+    --edge: #d6dae0; --subtle: #eef0f3; background: #eef0f3; color: var(--fg); }
+  & .aln-wrap { --aln-band: #232832; --aln-muted: #98a1ae; --aln-quiet: #333a46;  /* alignment viewer canvas */
+                --aln-selected: rgba(116, 166, 240, .34); }
+  & .aln-edit-bar, & table.alignments tr.group th { background: var(--subtle); }  /* alignment editor */
+  & .viewer-icon { filter: invert(.9); }  /* job page tiles: dark ink on transparent PNGs */
+}
+@keyframes flash-dark { from { background: rgba(233, 184, 108, .45); } to { background: transparent; } }
+
+/* The landing and About pages' backdrop (backdrop.js), cooler than Clean's and at a higher
+   alpha: a dark page swallows faint strokes. Dark only, so the Matrix skin -- which shares
+   the tokens above -- keeps its top-bar rain and nothing else. */
+:root[data-skin="dark"] .backdrop {
+  --backdrop-colors: #93a7c4, #a79bc0, #8fb8a6, #c3b08f;
+  --backdrop-count: 9;
+  --backdrop-alpha: .42;
+}
+
+/* The logo's black outline and tree vanish on a dark page: a thin light rim around the
+   drawing brings them back (Matrix recolours the logo its own way). */
+:root[data-skin="dark"] .title-page .logo {
+  filter: drop-shadow(0 0 1px rgba(226, 232, 242, .95)) drop-shadow(0 0 1px rgba(226, 232, 242, .6));
+}

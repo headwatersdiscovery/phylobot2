@@ -1,0 +1,82 @@
+# What phylobot.com says about itself. `make website` reads this file; nothing else on the
+# page is edited here (the text comes from website/templates/ and the app's own About
+# partials, the citations from phylobot.about).
+
+# Where the site lives: the canonical link and the preview card's image need a full URL.
+url = "https://phylobot.com/"
+repository = "https://github.com/headwatersdiscovery/phylobot2"
+contact = "hello@phylobot.com"
+
+[tutorial]
+# The tutorial video. Paste the YouTube ID (the eleven characters after "v=" in the video's
+# address) and rebuild: the page gains a "Watch the Tutorial" section after the pipeline, a
+# button in the title and a link among the section links. While this is empty the page has
+# none of them.
+youtube_id = ""
+title = "Watch the Tutorial"
+# One line under the heading: what the video covers and how long it runs. Optional.
+blurb = ""
+# An image in website/static/ to show until the reader presses play (16:9). Optional:
+# without one the video's place is a plain panel with a play button. Nothing is fetched
+# from YouTube until the reader presses play.
+poster = ""
+
+# The screenshots of "A Look Inside", in the order shown. Each `key` needs
+# <key>-light.webp and <key>-dark.webp in website/static/shots/ (the dark one shows under
+# the dark skins). `caption` goes under the picture; width and height are the picture's
+# own, so the page keeps its place while it loads. Only ever public example data:
+# website/README.md says what these show and how they were taken.
+
+[[shots]]
+key = "tree"
+caption = "The tree viewer, with one ancestor's panel open."
+title = "Trees You Can Read"
+text = "Each tree is drawn with its ancestral nodes and their branch support. Click a node to open that ancestor, name it, fold its clade away, or find the same ancestor in every other analysis."
+alt = "The tree viewer: a phylogeny of twenty kinases with numbered ancestral nodes and support values. One node's panel is open, offering View ancestor, Collapse clade, a name field, and the same ancestor in three other combinations."
+width = 1600
+height = 958
+
+[[shots]]
+key = "compare"
+caption = "The ancestor viewer: one ancestor, found again in the job's other alignments and models."
+title = "The Same Ancestor, Across Alignments and Models"
+text = "An ancestor depends on the alignment, tree and model behind it. PhyloBot finds each ancestor again in every other combination you ran and lays them side by side, so you can see which residues hold and which depend on one choice."
+alt = "The ancestor viewer's comparison panel: Node10 matched to its counterparts under MUSCLE and under another model, with their identity to it, and the three sequences drawn on one alignment under a track of where the aligners agree."
+width = 1600
+height = 1278
+
+[[shots]]
+key = "path"
+caption = "The mutational path page: the path drawn to scale, and the changes on each branch."
+title = "Mutational Paths Between Ancestors"
+text = "Pick an ancestor and a descendant. PhyloBot lists the substitutions, gains and losses on each branch, and marks which of them the other alignments and models agree on."
+alt = "The mutational path page: a line from Node3 through five ancestors to a human kinase, with branch lengths, and under it every change on each branch, such as T11R and K15R, marked by how many other combinations make the same change."
+width = 1600
+height = 1071
+
+[[shots]]
+key = "structure"
+caption = "The structure page: the changes between an ancestor and its descendant, on PDB 1QCF."
+title = "Ancestors on a Structure"
+text = "Attach a PDB entry or an AlphaFold model and paint it with an ancestor: its support, or the residues that change along a path. Coordinates are never altered: the page paints, it does not model."
+alt = "The structure page: a kinase drawn as a grey ribbon in 3D, with the residues that differ between an ancestor and its human descendant in orange, and a legend for unchanged, substituted, lost and gained residues."
+width = 1600
+height = 1287
+
+[[shots]]
+key = "properties"
+caption = "The ancestor viewer's properties panel: each property measured over draws from the posterior."
+title = "Biophysical Properties of Ancestors"
+text = "Net charge, hydrophobic moment and other properties are measured over an ancestor's whole posterior distribution, so each value comes with an interval."
+alt = "The ancestor viewer's properties panel: histograms of net charge, hydrophobic regions and hydrophobic moment over draws from the ancestor's posterior, each with its mean, 95% interval and the value of the single most likely sequence."
+width = 1600
+height = 1113
+
+[[shots]]
+key = "library"
+caption = "An ancestral library: every construct named, with its controls, drawn on one alignment."
+title = "Ancestors Ready for the Bench"
+text = "Collect ancestors into a library and choose how to cover their uncertain sites within the number of constructs you can order: the most likely sequence, its AltAll control, draws from the posterior. Export named sequences with a manifest and a methods paragraph."
+alt = "The library page: 24 named constructs from seven ancestors, such as SRCABL-C1-N3-ML-P and its AltAll and posterior draws, drawn as rows coloured by posterior probability on one alignment."
+width = 1600
+height = 1136

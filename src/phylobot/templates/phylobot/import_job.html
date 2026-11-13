@@ -1,0 +1,22 @@
+{% extends "phylobot/base.html" %}
+{% block title %}Import a Job · PhyloBot{% endblock %}
+{% block content %}
+<h1>Import a Job</h1>
+<section class="step import-name">
+  <p>You already have a job named <strong>“{{ original }}”</strong>. Choose a name for the
+    imported one.</p>
+  <p class="hint">From the ZIP: {{ record.status }}{% if record.created_at %}, submitted
+    {{ record.created_at|slice:":10" }}{% endif %}.</p>
+  {% if error %}<p class="errors">{{ error }}</p>{% endif %}
+  <form method="post" action="{% url 'import_job_name' token %}">
+    {% csrf_token %}
+    <p><label for="import-name">Name</label>
+      <input id="import-name" name="name" value="{{ name }}" maxlength="100" required autofocus
+             size="50"></p>
+    <p class="actions">
+      <button type="submit" class="primary">Import</button>
+      <button type="submit" formaction="{% url 'import_job_cancel' token %}" formnovalidate>Cancel</button>
+    </p>
+  </form>
+</section>
+{% endblock %}

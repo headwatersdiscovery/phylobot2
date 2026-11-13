@@ -1,0 +1,39 @@
+{# Structures of the proteins a name matched (structure_views.find), swapped into #}
+{# #structure-lookup-results. One form: tick any number of structures, attach them together. #}
+{% if find_error %}
+  <p class="errors">{{ find_error }}</p>
+{% elif found is not None %}
+  {% if found %}
+  <form method="post" action="{% url 'structure_attach' job.id %}" class="structure-found" data-structure-found>{% csrf_token %}
+    <input type="hidden" name="consent" value="on">
+    {% for p in found %}
+    <details class="structure-protein"{% if forloop.first and p.entries %} open{% endif %}>
+      <summary><strong>{{ p.protein|default:p.entry_id }}</strong>{% if p.gene %} · {{ p.gene }}{% endif %}
+        · <em>{{ p.organism }}</em> · {{ p.length }} aa
+        {% if p.reviewed %}<span class="speed fast" title="Swiss-Prot: manually reviewed">reviewed</span>{% endif %}
+        <span class="hint">· {{ p.entries|length|add:p.more }} PDB entr{{ p.entries|length|add:p.more|pluralize:"y,ies" }}{% if p.alphafold %} · AlphaFold model{% endif %}</span></summary>
+      <p><a href="{{ p.url }}" target="_blank" rel="noopener noreferrer">{{ p.accession }}</a>
+        {% if p.alphafold %}· {% if p.accession in attached_models %}<span class="hint">AlphaFold model attached</span>{% else %}<label><input type="checkbox" name="pick" value="alphafold:{{ p.accession }}"> its AlphaFold model</label>{% endif %}{% endif %}</p>
+      {% if p.entries %}
+      <table class="hits">
+        <thead><tr><th></th><th>PDB</th><th>Method</th><th class="num">Resolution</th><th>Chains = residues</th></tr></thead>
+        <tbody>{% for e in p.entries %}
+          <tr><td>{% if e.pdb_id in attached_pdb %}<span class="hint">attached</span>{% else %}<input type="checkbox" name="pick" value="rcsb:{{ e.pdb_id }}" aria-label="Attach {{ e.pdb_id }}">{% endif %}</td>
+            <td><a href="{{ e.url }}" target="_blank" rel="noopener noreferrer">{{ e.pdb_id }}</a></td>
+            <td>{{ e.method }}</td><td class="num">{{ e.resolution|default:"—" }}</td><td>{{ e.chains }}</td></tr>{% endfor %}
+        </tbody>
+      </table>
+      {% if p.more %}<p class="hint">{{ p.more }} more at <a href="{{ p.url }}#structure" target="_blank" rel="noopener noreferrer">UniProt</a>; attach one of those by its ID.</p>{% endif %}
+      {% endif %}
+    </details>
+    {% endfor %}
+    <p class="structure-found-actions"><button type="submit" class="primary" data-structure-attach disabled>Attach the ticked structures</button>
+      <span class="hint" data-structure-ticked>Tick the structures to attach, up to {{ max_at_once }} at a time.</span></p>
+  </form>
+  <p class="hint">Entries are listed best resolution first. “Chains = residues” is the stretch of the
+    protein each entry holds: a structure of one domain covers only part of an ancestor.</p>
+  {% else %}
+  <p class="hint">No matches at UniProt. Try the protein name instead of the gene (or the other way
+    round), or another spelling of the species.</p>
+  {% endif %}
+{% endif %}

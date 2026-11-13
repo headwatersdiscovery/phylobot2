@@ -1,0 +1,22 @@
+{# The home page's latest jobs and homolog searches (home_views.recent_work). It asks for itself again while any is unfinished. #}
+<section class="snippet home-panel" id="home-work"
+         {% if work_unfinished %}hx-get="{% url 'home_work' %}" hx-trigger="every 10s" hx-swap="outerHTML"{% endif %}>
+  <h2>Recent Jobs</h2>
+  {% if work %}
+  <ol class="work-list">
+    {% for row in work %}
+    <li>
+      <span class="status {{ row.status }}">{{ row.status }}</span>
+      <span class="what"><a href="{{ row.url }}">{{ row.name }}</a>{% if row.simulated %}
+        <span class="badge simulated" title="Simulated data, not real sequences">simulated</span>{% endif %}
+        {% if row.search %}<span class="job-types"><span class="job-type homolog" title="A homolog search at a remote service">Homolog search</span></span>{% else %}{% include "phylobot/_job_types.html" with types=row.types static=True %}{% endif %}</span>
+      <span class="when">{{ row.note }}</span>
+    </li>
+    {% endfor %}
+  </ol>
+  <p class="panel-foot"><a href="{% url 'my_jobs' %}">All My Jobs</a></p>
+  {% else %}
+  <p>No jobs yet. <a href="{% url 'submit' %}">New Job</a> has example datasets ready to load,
+    if you would like to try one before bringing your own sequences.</p>
+  {% endif %}
+</section>

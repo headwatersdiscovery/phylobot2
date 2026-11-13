@@ -1,0 +1,32 @@
+{# Results of a "find a sequence by name" lookup (homolog_views.find_sequence). Swapped #}
+{# into #lookup-results by HTMX; "Use this sequence" fills the search box (homologs.html). #}
+{% if lookup_error %}
+  <p class="errors">{{ lookup_error }}</p>
+{% elif lookup_results is not None %}
+  {% if lookup_results %}
+  <table class="hits sequence-lookup">
+    <thead><tr><th>Protein</th><th>Gene</th><th>Organism</th><th class="num">Length</th>
+      <th>UniProt</th><th></th></tr></thead>
+    <tbody>
+      {% for f in lookup_results %}
+        <tr>
+          <td>{{ f.protein|default:"—" }}{% if f.reviewed %}
+            <span class="speed fast" title="Swiss-Prot: manually reviewed">reviewed</span>{% endif %}</td>
+          <td>{{ f.gene|default:"—" }}</td>
+          <td><em>{{ f.organism }}</em></td>
+          <td class="num">{{ f.length }} aa</td>
+          <td><a href="{{ f.url }}" target="_blank" rel="noopener noreferrer">{{ f.accession }}</a></td>
+          <td><button type="button" class="link use-sequence"
+                data-sequence="{{ f.sequence }}" data-name="{{ f.job_name }}">Use this sequence ↓</button></td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  <p class="hint">{{ lookup_results|length }} match{{ lookup_results|length|pluralize:"es" }} at
+    UniProt{% if lookup_results|length == 25 %} (showing the first 25){% endif %}. “Use this
+    sequence” drops the residues into the search box below — check it is the right protein first.</p>
+  {% else %}
+  <p class="hint">No matches at UniProt. Try the protein name instead of the gene (or the other way
+    round), a different spelling of the species, or untick “Reviewed entries only”.</p>
+  {% endif %}
+{% endif %}

@@ -1,0 +1,32 @@
+.git/
+.gitignore
+
+# Python / uv
+.venv/
+__pycache__/
+*.pyc
+*.egg-info/
+dist/
+build/
+
+# Tool caches
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# Secrets
+.env
+
+# Pipeline data and Nextflow scratch
+data/
+work/
+.nextflow/
+.nextflow.log*
+results/
+jobs/
+.nextflow-home/
+
+# OS / editor
+.DS_Store
+.idea/
+.vscode/
