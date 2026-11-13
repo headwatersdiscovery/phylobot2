@@ -16,8 +16,11 @@ docker-cpus:  ## Show Docker's VM CPUs and the PHYLOBOT_DOCKER_CPUSET to set in 
 	@./scripts/docker-cpus.sh
 
 up: no-running-jobs env tools-image ml-image  ## Build and start the full local stack (refuses while jobs run; FORCE=1)
-	docker compose up --build -d
+	@# Storage first: web's health check needs the bucket, and worker and searches wait for
+	@# a healthy web, so on a first install the bucket must exist before web starts.
+	docker compose up -d --wait db garage
 	./scripts/garage-init.sh
+	docker compose up --build -d
 
 no-running-jobs:  # make up recreates the worker, which stops its jobs
 	@./scripts/check-no-jobs.sh
