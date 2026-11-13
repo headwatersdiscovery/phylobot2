@@ -1,0 +1,56 @@
+# Builds phylobot.com (website/build.py -> one static folder) and deploys it to GitHub
+# Pages. website/ is the source, not the site: the build puts the app's About text,
+# citations, skins and fonts into the page, so the folder deployed is the build's output.
+#
+# Runs on every push to main, which in the public repository is one push per release,
+# and by hand from the Actions tab. One-time setup in the repository: Settings -> Pages ->
+# Source: "GitHub Actions". Every action is pinned to a commit (its version beside it).
+name: Website
+
+on:
+  push:
+    branches: ["main"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    # Only the public repository has Pages; anywhere else the job is skipped.
+    if: github.repository == 'headwatersdiscovery/phylobot2'
+    runs-on: ubuntu-24.04
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Check out
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          version: "0.13.6"
+
+      - name: Build the site
+        # Python from .python-version, packages from uv.lock (the core and web groups:
+        # the builder renders the About partials with Django's template engine).
+        run: uv run --locked --no-dev --group web python website/build.py --out _site
+
+      - name: Set up Pages
+        uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6.0.0
+
+      - name: Upload the site
+        uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
+        with:
+          path: _site
+
+      - name: Deploy
+        id: deployment
+        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1

@@ -7,8 +7,9 @@ make website          # build into website/dist/
 make website-serve    # build, then preview at http://localhost:8001
 ```
 
-`website/dist/` is the whole site: plain files with relative links, about 3 MB. Upload the
-folder to any static host (GitHub Pages, Cloudflare Pages, Netlify, an S3 bucket); it
+`website/dist/` is the whole site: plain files with relative links, about 3 MB. The public
+repository deploys it to GitHub Pages by itself (`.github/workflows/website.yml`, on every
+push to `main`). It can also go on any static host (Cloudflare Pages, Netlify, an S3 bucket); it
 works from the root of a domain, from a folder, or opened straight from disk
 (`dist/index.html`). It is not committed: rebuild it before each upload.
 
